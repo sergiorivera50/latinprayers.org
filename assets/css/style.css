@@ -1,0 +1,174 @@
+/* latinprayers.org — hand-authored styles.
+   No frameworks, no external fonts. System serif stack for a classical feel. */
+
+:root {
+  --ink:        #2b2118;   /* near-black warm brown, body text */
+  --ink-soft:   #5c5043;   /* secondary text */
+  --parchment:  #f7f1e3;   /* page background */
+  --paper:      #fffdf7;   /* card / content background */
+  --gold:       #8a6d2b;   /* accents, rules, links */
+  --gold-deep:  #6b531d;   /* link hover */
+  --crimson:    #7a1f24;   /* liturgical red, sparing accents */
+  --rule:       #e0d6bf;   /* hairline borders */
+
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
+           Georgia, "Times New Roman", serif;
+  --measure: 38rem;        /* comfortable reading width */
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { font-size: 18px; -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--serif);
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--parchment);
+}
+
+.wrap {
+  width: 100%;
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+a { color: var(--gold); text-decoration: none; }
+a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+}
+.skip-link:focus {
+  left: 1rem; top: 1rem;
+  background: var(--paper);
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--gold);
+  z-index: 10;
+}
+
+/* ---- Header ---- */
+.site-header {
+  background: var(--paper);
+  border-bottom: 2px solid var(--gold);
+  text-align: center;
+  padding: 1.75rem 0 1.5rem;
+}
+.site-title {
+  display: inline-block;
+  font-size: 2rem;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  font-variant: small-caps;
+}
+.site-title:hover, .site-title:focus { text-decoration: none; color: var(--gold-deep); }
+.site-motto {
+  margin: 0.4rem 0 0;
+  font-style: italic;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+/* ---- Main ---- */
+.site-main { padding: 2.5rem 0 3rem; }
+
+.intro { text-align: center; max-width: var(--measure); margin: 0 auto 2.5rem; }
+.intro-title { font-size: 2.1rem; margin: 0 0 0.75rem; font-variant: small-caps; }
+.intro-lead { color: var(--ink-soft); font-size: 1.05rem; }
+
+/* ---- Category sections + prayer list (homepage) ---- */
+.category { margin: 0 auto 2.5rem; max-width: 46rem; }
+.category-title {
+  font-size: 1.1rem;
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
+  color: var(--gold-deep);
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.4rem;
+  margin: 0 0 1rem;
+}
+.prayer-list { list-style: none; margin: 0; padding: 0; }
+.prayer-list li { margin: 0; }
+.prayer-link {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  margin-bottom: 0.6rem;
+}
+.prayer-link:hover, .prayer-link:focus {
+  text-decoration: none;
+  border-color: var(--gold);
+  box-shadow: 0 1px 6px rgba(138, 109, 43, 0.12);
+}
+.prayer-link .name { font-size: 1.2rem; color: var(--ink); }
+.prayer-link .name[lang="la"] { }
+.prayer-link .gloss { color: var(--ink-soft); font-style: italic; font-size: 0.95rem; }
+
+/* ---- Single prayer ---- */
+.breadcrumb { max-width: 50rem; margin: 0 auto 1.25rem; font-size: 0.95rem; }
+
+.prayer { max-width: 50rem; margin: 0 auto; }
+.prayer-header { text-align: center; margin-bottom: 2rem; }
+.prayer-title { font-size: 2.4rem; margin: 0; font-variant: small-caps; letter-spacing: 0.01em; }
+.prayer-subtitle { margin: 0.3rem 0 0; color: var(--ink-soft); font-style: italic; font-size: 1.05rem; }
+.prayer-description { margin: 0.9rem auto 0; max-width: var(--measure); color: var(--ink-soft); font-size: 0.98rem; }
+
+.prayer-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--gold);
+  border-radius: 4px;
+  padding: 2rem 2rem 2.25rem;
+}
+.col-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--gold-deep);
+  margin: 0 0 0.75rem;
+  font-weight: normal;
+}
+.prayer-text { margin: 0; font-size: 1.15rem; line-height: 1.75; }
+.prayer-latin .prayer-text { font-style: italic; }
+.prayer-text .amen { }
+
+/* ---- Footer ---- */
+.site-footer {
+  border-top: 1px solid var(--rule);
+  background: var(--paper);
+  text-align: center;
+  padding: 1.75rem 0;
+  margin-top: 2rem;
+}
+.footer-motto { font-style: italic; color: var(--gold-deep); margin: 0 0 0.3rem; }
+.footer-note { color: var(--ink-soft); font-size: 0.85rem; margin: 0; }
+
+/* ---- Responsive: stack the two columns on small screens ---- */
+@media (max-width: 38rem) {
+  .prayer-body {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+    padding: 1.5rem 1.25rem;
+  }
+  .prayer-english { border-top: 1px solid var(--rule); padding-top: 1.5rem; }
+  .site-title { font-size: 1.6rem; }
+  .prayer-title { font-size: 1.9rem; }
+}
+
+/* ---- Print: clean, ink-friendly ---- */
+@media print {
+  body { background: #fff; color: #000; }
+  .site-header, .site-footer, .breadcrumb, .skip-link { display: none; }
+  .prayer-body { border: none; box-shadow: none; padding: 0; }
+}

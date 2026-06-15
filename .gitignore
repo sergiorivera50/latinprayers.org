@@ -1,0 +1,12 @@
+# Generated site output — built by build.py, published by CI, never committed.
+dist/
+
+# Python
+__pycache__/
+*.pyc
+
+# Claude Code local/machine-specific settings
+.claude/settings.local.json
+
+# macOS
+.DS_Store

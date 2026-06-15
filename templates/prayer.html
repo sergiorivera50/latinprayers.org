@@ -1,0 +1,26 @@
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <a href="{{root}}index.html">← All prayers</a>
+</nav>
+
+<article class="prayer">
+  <header class="prayer-header">
+    <h1 class="prayer-title" lang="la">{{title}}</h1>
+    <p class="prayer-subtitle">{{subtitle}}</p>
+    {{description}}
+  </header>
+
+  <div class="prayer-body">
+    <section class="prayer-col prayer-latin" lang="la">
+      <h2 class="col-label">Latin</h2>
+      <p class="prayer-text">
+{{latin_lines}}
+      </p>
+    </section>
+    <section class="prayer-col prayer-english" lang="en">
+      <h2 class="col-label">English</h2>
+      <p class="prayer-text">
+{{english_lines}}
+      </p>
+    </section>
+  </div>
+</article>
