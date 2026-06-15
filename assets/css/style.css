@@ -150,6 +150,27 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
 .intro-title { font-size: 2.1rem; margin: 0 0 0.75rem; font-variant: small-caps; }
 .intro-lead { color: var(--ink-soft); font-size: 1.05rem; }
 
+/* Centered devotional roundel above the title. A circle, deliberately distinct
+   from the Manifesto's rectangular figures. The outer gold ring frames the
+   medallion; the inner .placeholder is swapped for an <img> when art exists. */
+.intro-roundel {
+  width: 9.5rem;
+  margin: 0 auto 1.5rem;
+  padding: 0.4rem;
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+}
+.intro-roundel .placeholder,
+.intro-roundel img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.intro-roundel .placeholder { border-style: solid; }
+.intro-roundel img { border: 1px solid var(--rule); object-position: center 22%; }
+
 /* ---- Category sections + prayer list (homepage) ---- */
 .category { margin: 0 auto 2.5rem; max-width: 46rem; }
 .category-title {
