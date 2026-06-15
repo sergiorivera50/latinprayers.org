@@ -14,6 +14,10 @@
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
            Georgia, "Times New Roman", serif;
   --measure: 38rem;        /* comfortable reading width */
+
+  /* Seamless header pattern (a faint gold diaper lattice). Swap this for
+     url(/assets/img/header-pattern.png) to use a real tiling image. */
+  --header-pattern: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='40'%20height='40'%3E%3Cpath%20d='M0%2020L20%200L40%2020L20%2040Z'%20fill='none'%20stroke='%238a6d2b'%20stroke-opacity='0.13'/%3E%3C/svg%3E");
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -52,17 +56,20 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
 
 /* ---- Header ---- */
 .site-header {
-  background: var(--paper);
-  border-bottom: 2px solid var(--gold);
-  padding: 0.3rem 0;
+  background-color: var(--parchment);
+  background-image: var(--header-pattern); /* tiles seamlessly, no zoom/crop */
+  border-top: 1px solid var(--gold);
+  padding: 0;
 }
 
 /* ---- Primary nav (its own slim row, set just below the identity row) ---- */
 .site-nav {
   background: var(--paper);
-  border-top: 2px solid var(--gold);
-  border-bottom: 2px solid var(--gold);
-  margin-top: 0.3rem;
+  border-top: 1px solid var(--gold);
+  border-bottom: 1px solid var(--gold);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 .site-nav .wrap {
   display: flex;
@@ -89,44 +96,51 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
   color: #b8afa0;
   cursor: not-allowed;
 }
-/* Brand + motto share one row, centered together as a group; the brand thus
-   sits just left of center without any hardcoded offset. Wraps gracefully. */
+/* Full-bleed patterned banner; brand+motto sit on a paper panel on top of it. */
 .site-header .wrap {
   max-width: none;
+  padding: 0;
   display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.3rem 1.5rem;
+  align-items: stretch;
+  justify-content: center;
 }
-.site-title {
-  display: inline-flex;
+/* Centred paper panel over the pattern; the pattern shows on either side and
+   simply tiles outward as the viewport widens (no zoom, no crop). */
+.brand-lockup {
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: row;       /* sacred heart | text */
   align-items: center;
-  gap: 0.3rem;
+  justify-content: center;
+  gap: 0.9rem;
+  padding: 0.5rem 2.5rem;
+  background: var(--paper);
+  border-left: 1px solid var(--gold);
+  border-right: 1px solid var(--gold);
+  text-decoration: none;     /* the whole lockup is the link */
+}
+.brand-lockup:hover, .brand-lockup:focus { text-decoration: none; }
+.brand-lockup:hover .brand-name,
+.brand-lockup:focus .brand-name { color: var(--gold-deep); }
+.brand-mark {
+  flex: none;
+  width: auto;
+  height: 3.4rem;
+}
+/* Brand name over motto, stacked to the right of the mark. */
+.brand-text { display: flex; flex-direction: column; align-items: flex-start; }
+.brand-name {
   font-size: 1.4rem;
+  line-height: 1.1;
   letter-spacing: 0.02em;
   color: var(--ink);
   font-variant: small-caps;
 }
-.site-title:hover, .site-title:focus { text-decoration: none; color: var(--gold-deep); }
-.brand-mark {
-  flex: none;
-  width: auto;
-  height: 2.2rem;
-}
 .site-motto {
-  margin: 0 1.5rem 0 0;
+  margin: 0;
   font-style: italic;
   color: #9b9081;
   font-size: 0.85rem;
-}
-/* Too narrow for one row: stack brand over motto, both horizontally centered. */
-@media (max-width: 52rem) {
-  .site-header .wrap {
-    flex-direction: column;
-    text-align: center;
-  }
-  .site-motto { margin: 0; }
 }
 
 /* ---- Main ---- */
