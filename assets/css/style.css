@@ -61,7 +61,7 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
 .site-header .wrap {
   max-width: none;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.3rem 1.5rem;
@@ -82,10 +82,18 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
   height: 2.2rem;
 }
 .site-motto {
-  margin: 0;
+  margin: 0 1.5rem 0 0;
   font-style: italic;
   color: var(--ink-soft);
   font-size: 0.85rem;
+}
+/* Too narrow for one row: stack brand over motto, both horizontally centered. */
+@media (max-width: 52rem) {
+  .site-header .wrap {
+    flex-direction: column;
+    text-align: center;
+  }
+  .site-motto { margin: 0; }
 }
 
 /* ---- Main ---- */
