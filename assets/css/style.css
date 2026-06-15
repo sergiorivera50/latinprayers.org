@@ -54,29 +54,38 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
 .site-header {
   background: var(--paper);
   border-bottom: 2px solid var(--gold);
-  padding: 0.45rem 0;
+  padding: 0.3rem 0;
 }
 /* Brand + motto share one row, centered together as a group; the brand thus
    sits just left of center without any hardcoded offset. Wraps gracefully. */
 .site-header .wrap {
+  max-width: none;
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: center;
-  gap: 0.3rem 8rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.3rem 1.5rem;
 }
 .site-title {
-  font-size: 1.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 1.4rem;
   letter-spacing: 0.02em;
   color: var(--ink);
   font-variant: small-caps;
 }
 .site-title:hover, .site-title:focus { text-decoration: none; color: var(--gold-deep); }
+.brand-mark {
+  flex: none;
+  width: auto;
+  height: 2.2rem;
+}
 .site-motto {
   margin: 0;
   font-style: italic;
   color: var(--ink-soft);
-  font-size: 0.95rem;
+  font-size: 0.85rem;
 }
 
 /* ---- Main ---- */
@@ -155,11 +164,10 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
   border-top: 1px solid var(--rule);
   background: var(--paper);
   text-align: center;
-  padding: 1.75rem 0;
+  padding: 0.9rem 0;
   margin-top: 2rem;
 }
-.footer-motto { font-style: italic; color: var(--gold-deep); margin: 0 0 0.3rem; }
-.footer-note { color: var(--ink-soft); font-size: 0.85rem; margin: 0; }
+.footer-motto { font-style: italic; color: var(--gold-deep); font-size: 0.9rem; margin: 0; }
 
 /* ---- Responsive: stack the two columns on small screens ---- */
 @media (max-width: 38rem) {
