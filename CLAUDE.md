@@ -134,6 +134,12 @@ Actions"** (not "Deploy from a branch"). DNS is configured at Cloudflare (apex
 ## Conventions
 
 - IDs / filenames: kebab-case, ASCII (e.g. `gloria-patri`).
+- **Clean URLs.** Each prayer is emitted as `dist/prayers/<id>/index.html` and served
+  at `/prayers/<id>/` (no `.html` suffix). The homepage is `/`. All in-page links and
+  asset references use **absolute paths from root** (`/`, `/prayers/<id>/`,
+  `/assets/...`). This relies on the site being served from the domain root — true
+  for the apex custom domain and for `serve.py`. (Consequence: opening a built file
+  directly via `file://` won't load assets; always preview with `serve.py`.)
 - Latin gets `lang="la"`, English gets `lang="en"` in markup.
 - Never hand-edit generated files; edit the source (`data/`, `templates/`, `assets/`)
   and rebuild.

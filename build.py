@@ -108,7 +108,6 @@ def build_prayer_page(prayer: dict, base_tpl: str, prayer_tpl: str) -> str:
 
     content = render(
         prayer_tpl,
-        root="../",
         title=esc(prayer["title"]),
         subtitle=esc(prayer["subtitle"]),
         description=description,
@@ -119,7 +118,6 @@ def build_prayer_page(prayer: dict, base_tpl: str, prayer_tpl: str) -> str:
     page_desc = prayer["description"] or f'{prayer["title"]} — {prayer["subtitle"]} in Latin and English.'
     return render(
         base_tpl,
-        root="../",
         page_title=esc(f'{prayer["title"]} — {prayer["subtitle"]}'),
         page_description=esc(page_desc),
         content=content,
@@ -138,7 +136,7 @@ def build_index_page(prayers: list[dict], base_tpl: str, index_tpl: str) -> str:
         links = []
         for p in items:
             links.append(
-                '        <li><a class="prayer-link" href="prayers/{id}.html">'
+                '        <li><a class="prayer-link" href="/prayers/{id}/">'
                 '<span class="name" lang="la">{title}</span>'
                 '<span class="gloss">{subtitle}</span></a></li>'.format(
                     id=esc(p["id"]),
@@ -157,7 +155,6 @@ def build_index_page(prayers: list[dict], base_tpl: str, index_tpl: str) -> str:
     content = render(index_tpl, categories="\n\n".join(blocks))
     return render(
         base_tpl,
-        root="",
         page_title="Prayers in Latin",
         page_description=(
             "A reverent repository of Catholic prayers in Latin, set beside a "
@@ -191,11 +188,13 @@ def build() -> int:
         if src.is_file():
             shutil.copy2(src, DIST_DIR / name)
 
-    # Render prayer pages.
+    # Render prayer pages as directory indexes (prayers/<id>/index.html) so the
+    # public URL is a clean /prayers/<id>/ with no .html suffix.
     prayers_out = DIST_DIR / "prayers"
-    prayers_out.mkdir()
     for prayer in prayers:
-        out = prayers_out / f'{prayer["id"]}.html'
+        page_dir = prayers_out / prayer["id"]
+        page_dir.mkdir(parents=True)
+        out = page_dir / "index.html"
         out.write_text(build_prayer_page(prayer, base_tpl, prayer_tpl), encoding="utf-8")
         print(f"  wrote {out.relative_to(ROOT)}")
 
