@@ -54,19 +54,26 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
 .site-header {
   background: var(--paper);
   border-bottom: 2px solid var(--gold);
-  text-align: center;
-  padding: 1.75rem 0 1.5rem;
+  padding: 0.45rem 0;
+}
+/* Brand + motto share one row, centered together as a group; the brand thus
+   sits just left of center without any hardcoded offset. Wraps gracefully. */
+.site-header .wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.3rem 8rem;
 }
 .site-title {
-  display: inline-block;
-  font-size: 2rem;
+  font-size: 1.7rem;
   letter-spacing: 0.02em;
   color: var(--ink);
   font-variant: small-caps;
 }
 .site-title:hover, .site-title:focus { text-decoration: none; color: var(--gold-deep); }
 .site-motto {
-  margin: 0.4rem 0 0;
+  margin: 0;
   font-style: italic;
   color: var(--ink-soft);
   font-size: 0.95rem;
