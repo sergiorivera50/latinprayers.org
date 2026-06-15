@@ -15,8 +15,10 @@ Usage:
 
 from __future__ import annotations
 
+import datetime
 import html
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -30,7 +32,20 @@ DIST_DIR = ROOT / "dist"
 # Files copied verbatim into dist/ if present (publishing metadata).
 STATIC_FILES = ("CNAME", ".nojekyll")
 
+BUILD_YEAR = str(datetime.date.today().year)
+
 REQUIRED_FIELDS = ("id", "title", "subtitle", "category", "latin", "english")
+
+# Standalone pages: (url slug / template stem, <title>, meta description).
+# Each renders templates/<slug>.html into dist/<slug>/index.html at /<slug>/.
+STANDALONE_PAGES = (
+    (
+        "manifesto",
+        "Manifesto",
+        "The manifesto of latinprayers.org: in the defense of Tradition, the "
+        "Tridentine Mass, and Catholic living.",
+    ),
+)
 
 
 # --------------------------------------------------------------------------- #
@@ -96,9 +111,18 @@ def load_prayers() -> list[dict]:
 # --------------------------------------------------------------------------- #
 # Rendering
 # --------------------------------------------------------------------------- #
+# Whole-word "Amen" with its trailing period, wrapped after escaping so it can
+# be coloured liturgical red in the stylesheet.
+AMEN_RE = re.compile(r"\bAmen\.?")
+
+
 def render_lines(lines: list[str]) -> str:
     """Render an array of text lines into <br>-separated, escaped HTML."""
-    return "<br>\n".join("        " + esc(line) for line in lines)
+    rendered = []
+    for line in lines:
+        safe = AMEN_RE.sub(r'<span class="amen">\g<0></span>', esc(line))
+        rendered.append("        " + safe)
+    return "<br>\n".join(rendered)
 
 
 def build_prayer_page(prayer: dict, base_tpl: str, prayer_tpl: str) -> str:
@@ -121,6 +145,7 @@ def build_prayer_page(prayer: dict, base_tpl: str, prayer_tpl: str) -> str:
         page_title=esc(f'{prayer["title"]} — {prayer["subtitle"]}'),
         page_description=esc(page_desc),
         content=content,
+        year=BUILD_YEAR,
     )
 
 
@@ -162,6 +187,7 @@ def build_index_page(prayers: list[dict], base_tpl: str, index_tpl: str) -> str:
             "Tridentine Mass, and Catholic living."
         ),
         content=content,
+        year=BUILD_YEAR,
     )
 
 
@@ -203,13 +229,33 @@ def build() -> int:
     index_out.write_text(build_index_page(prayers, base_tpl, index_tpl), encoding="utf-8")
     print(f"  wrote {index_out.relative_to(ROOT)}")
 
+    # Render standalone pages (content held directly in their templates).
+    for slug, title, description in STANDALONE_PAGES:
+        page_tpl = load_template(f"{slug}.html")
+        page_dir = DIST_DIR / slug
+        page_dir.mkdir()
+        out = page_dir / "index.html"
+        out.write_text(
+            render(
+                base_tpl,
+                page_title=esc(title),
+                page_description=esc(description),
+                content=page_tpl,
+                year=BUILD_YEAR,
+            ),
+            encoding="utf-8",
+        )
+        print(f"  wrote {out.relative_to(ROOT)}")
+
     return len(prayers)
 
 
 def main() -> None:
     if "--check" in sys.argv[1:]:
         prayers = load_prayers()
-        for name in ("base.html", "prayer.html", "index.html"):
+        templates = ["base.html", "prayer.html", "index.html"]
+        templates += [f"{slug}.html" for slug, _, _ in STANDALONE_PAGES]
+        for name in templates:
             load_template(name)
         print(f"OK: {len(prayers)} prayer(s) and templates validated.")
         return

@@ -121,6 +121,16 @@ site into `dist/`. **Do not commit `dist/`** — it is gitignored and rebuilt by
 3. Commit **only** the new JSON (and any template/asset changes). Never the HTML.
 4. Push to `main`; CI builds and publishes.
 
+## Standalone pages (e.g. the Manifesto)
+
+Pages that aren't prayers (Manifesto, and later About/etc.) are plain content
+templates rendered through `base.html`. To add one: create `templates/<slug>.html`
+holding the content block, then register it in the `STANDALONE_PAGES` tuple in
+`build.py` as `(slug, title, description)`. It is emitted to `dist/<slug>/index.html`
+and served at the clean URL `/<slug>/`. Link to it with an absolute path
+(`/<slug>/`). Image placeholders use `<div class="placeholder">` with a fixed
+`aspect-ratio`; replace each with an `<img>` (in `assets/img/`) when the art exists.
+
 ## Deployment
 
 Push to `main` → GitHub Actions (`.github/workflows/deploy.yml`) runs `python3
