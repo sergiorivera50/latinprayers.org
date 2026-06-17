@@ -225,7 +225,26 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
 .prayer-link .gloss { color: var(--ink-soft); font-style: italic; font-size: 0.95rem; }
 
 /* ---- Single prayer ---- */
-.breadcrumb { max-width: 50rem; margin: 0 auto 1.25rem; font-size: 0.95rem; }
+.breadcrumb { max-width: 50rem; margin: 0 auto 1.25rem; }
+/* A small-caps "back" control; the gold arrow slides left on hover. */
+.backlink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-variant: small-caps;
+  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+.backlink:hover, .backlink:focus { color: var(--gold-deep); text-decoration: none; }
+.backlink-arrow {
+  color: var(--gold);
+  font-size: 0.95rem;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+.backlink:hover .backlink-arrow,
+.backlink:focus .backlink-arrow { transform: translateX(-0.2rem); }
 
 .prayer { max-width: 50rem; margin: 0 auto; }
 .prayer-header { text-align: center; margin-bottom: 2rem; }
@@ -258,7 +277,12 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
   padding-left: 1.9rem;
   border-left: 1px solid var(--rule);
 }
-.prayer-text { margin: 0; font-size: 1.15rem; line-height: 1.75; }
+.prayer-text {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.75;
+  text-shadow: 0 0.5px 0.5px rgba(43, 33, 24, 0.18);  /* slight lift off the paper */
+}
 .amen { color: #b3122b; font-weight: bold; }
 
 /* ---- Manifesto ---- */
