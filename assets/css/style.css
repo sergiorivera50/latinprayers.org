@@ -106,6 +106,55 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
 }
 /* Centred paper panel over the pattern; the pattern shows on either side and
    simply tiles outward as the viewport widens (no zoom, no crop). */
+/* Alpha & Omega flank the brand panel, filling the patterned side space.
+   "Ego sum Alpha et Omega" — the beginning and the end (Apoc. 22:13). Purely
+   decorative (aria-hidden); each grows to share the side space equally so the
+   centred panel stays centred, and the glyph sits in the middle of its side. */
+.header-flank {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  font-size: 3rem;
+  line-height: 1;
+  color: var(--gold);
+  user-select: none;
+}
+.header-flank--left  { justify-content: flex-end;  padding: 0 2.2rem 0 1.7rem; }
+.header-flank--right { justify-content: flex-start; padding: 0 1.7rem 0 2.2rem; }
+
+/* Each side band reads as a deliberate illuminated rule spanning corner to
+   panel — a diamond bookend at the outer edge, a faint gold bar, then the
+   glyph — instead of a lonely letter in blank space. The diamond and rule are
+   reordered to sit outboard of the Α/Ω via `order`. */
+.header-flank--left::before,        /* the connecting rule */
+.header-flank--right::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  background: rgba(138, 109, 43, 0.45);
+}
+.header-flank--left::after {        /* outer diamond bookend (left) */
+  content: "";
+  flex: 0 0 auto;
+  width: 0.4rem;
+  height: 0.4rem;
+  background: var(--gold);
+  transform: rotate(45deg);
+}
+.header-flank--right::before {      /* outer cross bookend (right) */
+  content: "✝";
+  flex: 0 0 auto;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--gold);
+}
+.header-flank--left::after  { order: -2; }   /* outer ◆, then rule, then Α */
+.header-flank--left::before { order: -1; }   /* rule (Α is text, order 0) */
+.header-flank--right::after  { order: 1; }   /* rule (Ω is text, order 0), then ◆ */
+.header-flank--right::before { order: 2; }   /* outer ◆ */
+
 .brand-lockup {
   flex: 0 1 auto;
   display: flex;
@@ -380,6 +429,7 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
     padding: 1.5rem 1.25rem;
   }
   .prayer-english { border-top: 1px solid var(--rule); padding-top: 1.5rem; }
+  .header-flank { display: none; }   /* no room beside the panel on phones */
   .site-title { font-size: 1.6rem; }
   .prayer-title { font-size: 1.9rem; }
 }

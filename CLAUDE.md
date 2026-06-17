@@ -53,7 +53,7 @@ on every push by GitHub Actions and published from the `dist/` artifact.
 ```
 /
 ├── data/
-│   └── prayers/<id>.json # SOURCE OF TRUTH for each prayer
+│   └── prayers.csv       # SOURCE OF TRUTH — one row per prayer
 ├── templates/
 │   ├── base.html         # outer HTML shell (header, footer, <head>)
 │   ├── index.html        # homepage content block
@@ -80,23 +80,29 @@ Never hand-edit anything in `dist/`; edit the source and rebuild.
 
 ## The content model (a prayer)
 
-Each prayer is one JSON file in `data/prayers/`. Schema:
+All prayers live in a single spreadsheet, `data/prayers.csv` — **one row per
+prayer**. It is plain UTF-8 CSV, so it opens and saves as a normal sheet in Excel
+or Google Sheets, and `build.py` parses it with the stdlib `csv` module (no
+dependency). Columns (header row, in order):
 
-```json
-{
-  "id": "pater-noster",            // kebab-case; must equal the filename stem
-  "title": "Pater Noster",         // Latin title (the primary heading)
-  "subtitle": "The Lord's Prayer", // common English name
-  "category": "Common Prayers",    // grouping for the index
-  "order": 10,                     // sort key within category (lower = first)
-  "description": "…",             // 1–2 sentences of context, optional
-  "latin":   ["line 1", "line 2", "…"],   // array of lines, in order
-  "english": ["line 1", "line 2", "…"]    // faithful translation, line-aligned
-}
-```
+| column        | meaning                                                              |
+|---------------|----------------------------------------------------------------------|
+| `slug`        | kebab-case id; must be unique. Becomes the URL `/prayers/<slug>/`.   |
+| `title`       | Latin title (the primary heading).                                   |
+| `subtitle`    | common English name.                                                 |
+| `category`    | grouping for the index.                                              |
+| `order`       | integer sort key within category (lower = first); blank → 1000.      |
+| `description` | 1–2 sentences of context; optional (may be blank).                   |
+| `la`          | Latin text — **one line per line**, line breaks *inside the cell*.   |
+| `en`          | faithful English translation, line-aligned with `la`.               |
 
-- `latin` and `english` are **arrays of lines** so the two columns align line-by-line.
-  Keep the arrays parallel (same logical lines) where the translation allows.
+- `slug`, `title`, `subtitle`, `category`, `la`, `en` are required and non-empty.
+- `la` and `en` hold **multiple lines within a single cell** (Alt/Option+Enter in
+  a spreadsheet). `build.py` splits each cell on newlines into the line array, so
+  the two columns still align line-by-line. Keep them parallel (same logical lines)
+  where the translation allows. Blank lines within a cell are dropped.
+- Column names `la`/`en` are the ISO 639-1 codes; markup tags them `lang="la"` /
+  `lang="en"`.
 - Display is **Latin + English side-by-side** (collapses to stacked on small screens).
 
 ## How to build and preview
@@ -110,15 +116,17 @@ python3 serve.py --watch  # also rebuild automatically when source files change
 python3 serve.py --port 8080
 ```
 
-`build.py` reads every `data/prayers/*.json`, validates it, and renders the static
+`build.py` reads `data/prayers.csv`, validates every row, and renders the static
 site into `dist/`. **Do not commit `dist/`** — it is gitignored and rebuilt by CI.
 
 ## How to add a prayer (the common task)
 
-1. Create `data/prayers/<id>.json` following the schema above. Use authentic
-   traditional Latin and a faithful traditional English translation.
+1. Open `data/prayers.csv` (in Excel/Google Sheets or any editor) and add **one
+   row** following the columns above. Put each verse on its own line within the
+   `la`/`en` cells. Use authentic traditional Latin and a faithful traditional
+   English translation.
 2. Preview with `python3 serve.py --watch` and review the rendered page.
-3. Commit **only** the new JSON (and any template/asset changes). Never the HTML.
+3. Commit **only** `data/prayers.csv` (and any template/asset changes). Never the HTML.
 4. Push to `main`; CI builds and publishes.
 
 ## Standalone pages (e.g. the Manifesto)

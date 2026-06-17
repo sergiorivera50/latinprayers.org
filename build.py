@@ -15,16 +15,16 @@ Usage:
 
 from __future__ import annotations
 
+import csv
 import datetime
 import html
-import json
 import re
 import shutil
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-DATA_DIR = ROOT / "data" / "prayers"
+DATA_FILE = ROOT / "data" / "prayers.csv"
 TEMPLATE_DIR = ROOT / "templates"
 ASSETS_DIR = ROOT / "assets"
 DIST_DIR = ROOT / "dist"
@@ -34,7 +34,9 @@ STATIC_FILES = ("CNAME", ".nojekyll")
 
 BUILD_YEAR = str(datetime.date.today().year)
 
-REQUIRED_FIELDS = ("id", "title", "subtitle", "category", "latin", "english")
+# CSV column → internal field. 'slug' becomes the prayer id; 'la'/'en' are split
+# into line arrays. These columns must be present and non-empty in every row.
+REQUIRED_COLUMNS = ("slug", "title", "subtitle", "category", "la", "en")
 
 # Standalone pages: (url slug / template stem, <title>, meta description).
 # Each renders templates/<slug>.html into dist/<slug>/index.html at /<slug>/.
@@ -78,33 +80,58 @@ def esc(text: str) -> str:
 # --------------------------------------------------------------------------- #
 # Data loading & validation
 # --------------------------------------------------------------------------- #
+def _split_lines(cell: str) -> list[str]:
+    """A multi-line CSV cell (one line per row, as edited in a spreadsheet)
+    becomes an array of trimmed, non-empty lines."""
+    return [line.strip() for line in cell.replace("\r\n", "\n").split("\n") if line.strip()]
+
+
 def load_prayers() -> list[dict]:
-    if not DATA_DIR.is_dir():
-        fail(f"no data directory: {DATA_DIR.relative_to(ROOT)}")
+    if not DATA_FILE.is_file():
+        fail(f"no data file: {DATA_FILE.relative_to(ROOT)}")
+
+    with DATA_FILE.open(encoding="utf-8", newline="") as f:
+        rows = list(csv.DictReader(f))
+
+    if rows:
+        missing = [c for c in REQUIRED_COLUMNS if c not in rows[0]]
+        if missing:
+            fail(f"{DATA_FILE.name}: missing column(s): {', '.join(missing)}")
 
     prayers: list[dict] = []
-    for path in sorted(DATA_DIR.glob("*.json")):
+    seen_slugs: set[str] = set()
+    for n, row in enumerate(rows, start=2):  # row 1 is the header
+        where = f"{DATA_FILE.name} row {n}"
+        cells = {k: (v or "").strip() for k, v in row.items()}
+
+        for col in REQUIRED_COLUMNS:
+            if not cells.get(col):
+                fail(f"{where}: missing required column '{col}'")
+
+        slug = cells["slug"]
+        if slug in seen_slugs:
+            fail(f"{where}: duplicate slug '{slug}'")
+        seen_slugs.add(slug)
+
+        order_raw = cells.get("order", "")
         try:
-            prayer = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as exc:
-            fail(f"{path.name}: invalid JSON: {exc}")
+            order = int(order_raw) if order_raw else 1000
+        except ValueError:
+            fail(f"{where}: 'order' must be an integer, got '{order_raw}'")
 
-        for field in REQUIRED_FIELDS:
-            if field not in prayer or prayer[field] in ("", [], None):
-                fail(f"{path.name}: missing required field '{field}'")
-
-        if prayer["id"] != path.stem:
-            fail(f"{path.name}: id '{prayer['id']}' must match filename stem '{path.stem}'")
-
-        if not isinstance(prayer["latin"], list) or not isinstance(prayer["english"], list):
-            fail(f"{path.name}: 'latin' and 'english' must be arrays of lines")
-
-        prayer.setdefault("order", 1000)
-        prayer.setdefault("description", "")
-        prayers.append(prayer)
+        prayers.append({
+            "id": slug,
+            "title": cells["title"],
+            "subtitle": cells["subtitle"],
+            "category": cells["category"],
+            "order": order,
+            "description": cells.get("description", ""),
+            "latin": _split_lines(cells["la"]),
+            "english": _split_lines(cells["en"]),
+        })
 
     if not prayers:
-        fail(f"no prayer data found in {DATA_DIR.relative_to(ROOT)}")
+        fail(f"no prayer data found in {DATA_FILE.relative_to(ROOT)}")
     return prayers
 
 

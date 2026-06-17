@@ -24,8 +24,8 @@ from pathlib import Path
 import build
 
 ROOT = Path(__file__).resolve().parent
-WATCH_DIRS = (build.DATA_DIR, build.TEMPLATE_DIR, build.ASSETS_DIR)
-WATCH_FILES = (ROOT / "build.py",)
+WATCH_DIRS = (build.TEMPLATE_DIR, build.ASSETS_DIR)
+WATCH_FILES = (build.DATA_FILE, ROOT / "build.py")
 
 
 def snapshot() -> dict[Path, float]:

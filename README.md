@@ -26,15 +26,16 @@ python3 build.py
 
 ## Adding a prayer
 
-1. Create `data/prayers/<id>.json` (see the schema in [CLAUDE.md](CLAUDE.md)).
+1. Add one row to `data/prayers.csv` (see the columns in [CLAUDE.md](CLAUDE.md)).
+   Opens as a normal spreadsheet in Excel/Google Sheets.
 2. Preview with `python3 serve.py --watch`.
-3. Commit the new JSON and push — CI builds and publishes. **Never commit HTML.**
+3. Commit `data/prayers.csv` and push — CI builds and publishes. **Never commit HTML.**
 
 ## Project layout
 
 | Path                  | Purpose                                              |
 | --------------------- | ---------------------------------------------------- |
-| `data/prayers/*.json` | Source of truth for prayer content                   |
+| `data/prayers.csv`    | Source of truth for prayer content (one row each)    |
 | `templates/*.html`    | Page layout and templates                            |
 | `assets/`             | Hand-authored CSS and JS                             |
 | `build.py`            | Generates the site into `dist/`                      |
