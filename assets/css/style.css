@@ -29,7 +29,14 @@ body {
   font-family: var(--serif);
   line-height: 1.6;
   color: var(--ink);
-  background: var(--parchment);
+  /* A calm parchment reading surface lifted by a soft center-light vignette for
+     depth, with a whisper-faint letterpress lattice for paper grain. Both are
+     gentle and tonal — no grid behind the text — so reading stays easy. */
+  background-color: var(--parchment);
+  background-image:
+    radial-gradient(130% 95% at 50% -8%, rgba(255, 253, 247, 0.65) 0%, rgba(255, 253, 247, 0) 55%),
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='30'%20height='30'%3E%3Cpath%20d='M0%2015L15%200L30%2015L15%2030Z'%20fill='none'%20stroke='%23000000'%20stroke-opacity='0.03'/%3E%3Cpath%20d='M0%2016L15%201L30%2016L15%2031Z'%20fill='none'%20stroke='%23ffffff'%20stroke-opacity='0.45'/%3E%3C/svg%3E");
+  background-attachment: fixed;
 }
 
 .wrap {
@@ -54,118 +61,45 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
   z-index: 10;
 }
 
-/* ---- Header ---- */
+/* ---- Masthead: a single bar — brand at the left, primary nav at the right.
+   Sticky on desktop so the brand and nav stay in reach while reading; it
+   un-sticks on phones (below), where the bar stacks and would be too tall. */
 .site-header {
-  background-color: var(--parchment);
-  background-image: var(--header-pattern); /* tiles seamlessly, no zoom/crop */
-  border-top: 1px solid var(--gold);
-  padding: 0;
-}
-
-/* ---- Primary nav (its own slim row, set just below the identity row) ---- */
-.site-nav {
-  background: var(--paper);
-  border-top: 1px solid var(--gold);
-  border-bottom: 1px solid var(--gold);
+  /* A warm vellum plane rather than flat white: a soft top-down sheen for
+     material depth, an inset highlight like a lit page edge, and a faint
+     tone-on-tone lattice EMBOSS — a near-black line at 6% with a white
+     highlight 1px below it, so it reads as pressed/letterpress paper, not as
+     the old gold lines. Because the texture is tonal (no hue contrast) the nav
+     stays legible while the surface feels crafted instead of plain. */
+  background:
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='28'%20height='28'%3E%3Cpath%20d='M0%2014L14%200L28%2014L14%2028Z'%20fill='none'%20stroke='%23000000'%20stroke-opacity='0.06'/%3E%3Cpath%20d='M0%2015L14%201L28%2015L14%2029Z'%20fill='none'%20stroke='%23ffffff'%20stroke-opacity='0.6'/%3E%3C/svg%3E") repeat,
+    linear-gradient(180deg, #fbf6ea 0%, #f4ecd6 100%);
+  border-top: 1px solid var(--gold);       /* a single deliberate top band */
+  border-bottom: 1px solid var(--gold);   /* refined, book-like double rule */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),  /* crisp lit top edge (emboss) */
+    0 7px 16px -9px rgba(43, 33, 24, 0.25);   /* soft lift off the content */
   position: sticky;
   top: 0;
   z-index: 10;
 }
-.site-nav .wrap {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.2rem 1.9rem;
-  padding-top: 0.2rem;
-  padding-bottom: 0.2rem;
-}
-.site-nav a {
-  font-variant: small-caps;
-  letter-spacing: 0.08em;
-  font-size: 0.85rem;
-  color: var(--ink);
-}
-.site-nav a:hover, .site-nav a:focus {
-  color: var(--gold-deep);
-  text-decoration: none;
-}
-.site-nav .nav-disabled {
-  font-variant: small-caps;
-  letter-spacing: 0.08em;
-  font-size: 0.85rem;
-  color: #b8afa0;
-  cursor: not-allowed;
-}
-/* Full-bleed patterned banner; brand+motto sit on a paper panel on top of it. */
 .site-header .wrap {
-  max-width: none;
-  padding: 0;
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-}
-/* Centred paper panel over the pattern; the pattern shows on either side and
-   simply tiles outward as the viewport widens (no zoom, no crop). */
-/* Alpha & Omega flank the brand panel, filling the patterned side space.
-   "Ego sum Alpha et Omega" — the beginning and the end (Apoc. 22:13). Purely
-   decorative (aria-hidden); each grows to share the side space equally so the
-   centred panel stays centred, and the glyph sits in the middle of its side. */
-.header-flank {
-  flex: 1 1 0;
-  min-width: 0;
   display: flex;
   align-items: center;
-  gap: 1.2rem;
-  font-size: 3rem;
-  line-height: 1;
-  color: var(--gold);
-  user-select: none;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
 }
-.header-flank--left  { justify-content: flex-end;  padding: 0 2.2rem 0 1.7rem; }
-.header-flank--right { justify-content: flex-start; padding: 0 1.7rem 0 2.2rem; }
 
-/* Each side band reads as a deliberate illuminated rule spanning corner to
-   panel — a diamond bookend at the outer edge, a faint gold bar, then the
-   glyph — instead of a lonely letter in blank space. The diamond and rule are
-   reordered to sit outboard of the Α/Ω via `order`. */
-.header-flank--left::before,        /* the connecting rule */
-.header-flank--right::after {
-  content: "";
-  flex: 1 1 auto;
-  height: 1px;
-  background: rgba(138, 109, 43, 0.45);
-}
-.header-flank--left::after {        /* outer diamond bookend (left) */
-  content: "";
-  flex: 0 0 auto;
-  width: 0.4rem;
-  height: 0.4rem;
-  background: var(--gold);
-  transform: rotate(45deg);
-}
-.header-flank--right::before {      /* outer cross bookend (right) */
-  content: "✝";
-  flex: 0 0 auto;
-  font-size: 1.1rem;
-  line-height: 1;
-  color: var(--gold);
-}
-.header-flank--left::after  { order: -2; }   /* outer ◆, then rule, then Α */
-.header-flank--left::before { order: -1; }   /* rule (Α is text, order 0) */
-.header-flank--right::after  { order: 1; }   /* rule (Ω is text, order 0), then ◆ */
-.header-flank--right::before { order: 2; }   /* outer ◆ */
-
+/* ---- Brand lockup: mark beside a name-over-motto text block (bar left). */
 .brand-lockup {
-  flex: 0 1 auto;
   display: flex;
-  flex-direction: row;       /* sacred heart | text */
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  gap: 0.9rem;
-  padding: 0.5rem 2.5rem;
-  background: var(--paper);
-  border-left: 1px solid var(--gold);
-  border-right: 1px solid var(--gold);
+  gap: 0.85rem;
+  min-width: 0;              /* let the text block shrink rather than overflow */
   text-decoration: none;     /* the whole lockup is the link */
 }
 .brand-lockup:hover, .brand-lockup:focus { text-decoration: none; }
@@ -174,22 +108,50 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
 .brand-mark {
   flex: none;
   width: auto;
-  height: 3.4rem;
+  height: 3.2rem;
 }
-/* Brand name over motto, stacked to the right of the mark. */
-.brand-text { display: flex; flex-direction: column; align-items: flex-start; }
+.brand-text { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
 .brand-name {
-  font-size: 1.4rem;
+  font-size: clamp(1.25rem, 4.4vw, 1.6rem);
   line-height: 1.1;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
   color: var(--ink);
   font-variant: small-caps;
 }
 .site-motto {
-  margin: 0;
+  margin: 0.08rem 0 0;
   font-style: italic;
-  color: #9b9081;
-  font-size: 0.85rem;
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+  letter-spacing: 0.01em;
+}
+
+/* ---- Primary nav: inline at the right of the bar (wraps below on phones). */
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.2rem 1.6rem;
+}
+.site-nav a,
+.site-nav .nav-disabled {
+  font-variant: small-caps;
+  letter-spacing: 0.09em;
+  font-size: 0.88rem;
+  /* transparent rule reserves space so hover doesn't shift the row */
+  border-bottom: 1px solid transparent;
+  padding-bottom: 0.05rem;
+}
+.site-nav a { color: var(--ink); }
+.site-nav a:hover, .site-nav a:focus {
+  color: var(--gold-deep);
+  text-decoration: none;
+  border-bottom-color: var(--gold);
+}
+.site-nav .nav-disabled {
+  color: #b8afa0;
+  cursor: not-allowed;
 }
 
 /* ---- Main ---- */
@@ -411,15 +373,31 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
 }
 
 /* ---- Footer ---- */
+/* A slim grounding band that closes the page: deeper and warmer than the body
+   (the tonal opposite of the light masthead), with the Latin motto as a small
+   inscription. Deliberately not the header's material and not the diaper pattern. */
 .site-footer {
-  border-top: 1px solid var(--rule);
-  background: var(--paper);
+  margin-top: 2.25rem;
+  background: linear-gradient(180deg, #efe6cf 0%, #e6dabd 100%);
+  border-top: 1px solid var(--gold);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);  /* lit top edge */
   text-align: center;
-  padding: 0.9rem 0;
-  margin-top: 2rem;
+  padding: 0.6rem 0 0.65rem;
 }
-.footer-motto { font-style: italic; color: var(--gold-deep); font-size: 0.9rem; margin: 0; }
-.footer-copy { color: #9b9081; font-size: 0.78rem; margin: 0.4rem 0 0; }
+.footer-motto {
+  margin: 0;
+  font-variant: small-caps;
+  letter-spacing: 0.07em;
+  font-size: 0.9rem;
+  color: var(--gold-deep);
+}
+.footer-copy {
+  margin: 0.25rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  opacity: 0.8;
+}
 
 /* ---- Responsive: stack the two columns on small screens ---- */
 @media (max-width: 38rem) {
@@ -429,9 +407,43 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
     padding: 1.5rem 1.25rem;
   }
   .prayer-english { border-top: 1px solid var(--rule); padding-top: 1.5rem; }
-  .header-flank { display: none; }   /* no room beside the panel on phones */
-  .site-title { font-size: 1.6rem; }
   .prayer-title { font-size: 1.9rem; }
+
+  /* Stack the bar: brand on top, nav as a full-width row beneath it with a
+     hairline divider. The tall stacked bar no longer sticks. */
+  .site-header { position: static; }
+  .site-header .wrap {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding-top: 0.85rem;
+    padding-bottom: 0;
+  }
+  .brand-lockup { padding-bottom: 0.7rem; }
+  .brand-mark { height: 3rem; }
+  .brand-name { letter-spacing: 0.02em; }   /* size handled by clamp() */
+  .site-motto { font-size: 0.84rem; }
+  .site-nav {
+    justify-content: center;
+    gap: 0.3rem 0.7rem;   /* tight enough that all four fit one row at ≥390px */
+    border-top: 1px solid var(--rule);
+    padding: 0.55rem 0;
+  }
+  .site-nav a,
+  .site-nav .nav-disabled { font-size: 0.72rem; letter-spacing: 0.04em; }
+}
+
+/* Narrowest phones (≤~384px): a tidy 2×2 nav grid rather than an orphaned
+   "Manifesto" wrapping alone onto a second line. */
+@media (max-width: 24rem) {
+  .site-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem 1rem;
+    justify-items: center;
+  }
+  .site-nav a,
+  .site-nav .nav-disabled { font-size: 0.78rem; }
 }
 
 /* ---- Print: clean, ink-friendly ---- */
