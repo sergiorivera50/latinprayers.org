@@ -170,6 +170,18 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
   padding: 0.4rem;
   border: 1px solid var(--gold);
   border-radius: 50%;
+  position: relative;       /* anchor the inner halo overlay */
+}
+/* A soft halo of light within the medallion: an inset glow that sits over the
+   image, just inside the gold ring, so the radiance reads as coming from within
+   rather than as a shadow cast behind the frame. */
+.intro-roundel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: inset 0 0 1.4rem rgba(255, 240, 200, 0.6);
 }
 .intro-roundel .placeholder,
 .intro-roundel img {
