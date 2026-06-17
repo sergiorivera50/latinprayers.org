@@ -200,19 +200,28 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
   align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.85rem 1rem;
-  background: var(--paper);
+  padding: 0.9rem 1.15rem 0.95rem 1.2rem;
+  /* Paper with a faint top-down sheen, a gold "spine" down the left edge, and a
+     soft resting shadow so the card lifts off the parchment. */
+  background: linear-gradient(180deg, #fffdf7 0%, #f7f0df 100%);
   border: 1px solid var(--rule);
-  border-radius: 3px;
-  margin-bottom: 0.6rem;
+  border-left: 3px solid var(--gold);
+  border-radius: 4px;
+  margin-bottom: 0.65rem;
+  box-shadow: 0 1px 2px rgba(43, 33, 24, 0.05);
+  transition: transform 0.15s ease, box-shadow 0.15s ease,
+              border-color 0.15s ease, background 0.15s ease;
 }
 .prayer-link:hover, .prayer-link:focus {
   text-decoration: none;
   border-color: var(--gold);
-  box-shadow: 0 1px 6px rgba(138, 109, 43, 0.12);
+  border-left-color: var(--gold-deep);
+  background: linear-gradient(180deg, #fffefa 0%, #faf4e6 100%);
+  box-shadow: 0 5px 14px -5px rgba(138, 109, 43, 0.3);
+  transform: translateY(-2px);
 }
-.prayer-link .name { font-size: 1.2rem; color: var(--ink); }
-.prayer-link .name[lang="la"] { }
+.prayer-link .name { font-size: 1.2rem; color: var(--ink); transition: color 0.15s ease; }
+.prayer-link:hover .name, .prayer-link:focus .name { color: var(--gold-deep); }
 .prayer-link .gloss { color: var(--ink-soft); font-style: italic; font-size: 0.95rem; }
 
 /* ---- Single prayer ---- */
@@ -227,20 +236,27 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
 .prayer-body {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 2.5rem;
-  background: var(--paper);
+  gap: 0;                       /* the centre divider provides the separation */
+  /* Paper with a faint top-down sheen plus a fine, desaturated fractal-noise
+     grain so the panel reads like real paper stock; lifted off the parchment by
+     a soft shadow and a lit inner top edge. The grain is low-opacity and tonal,
+     so the prayer text stays crisp (and it degrades to just the gradient if a
+     browser can't render the SVG filter). */
+  background:
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='160'%20height='160'%3E%3Cfilter%20id='g'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.8'%20numOctaves='2'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='matrix'%20values='0%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200.12%200%200%200%200'/%3E%3C/filter%3E%3Crect%20width='160'%20height='160'%20filter='url(%23g)'/%3E%3C/svg%3E") repeat,
+    linear-gradient(180deg, #fdf6e6 0%, #f7eed9 100%);
   border: 1px solid var(--rule);
   border-top: 3px solid var(--gold);
   border-radius: 4px;
-  padding: 2rem 2rem 2.25rem;
+  padding: 2rem 2.25rem 2.25rem;
+  box-shadow: 0 3px 12px -5px rgba(43, 33, 24, 0.16),
+              inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
-.col-label {
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--gold-deep);
-  margin: 0 0 0.75rem;
-  font-weight: normal;
+/* A hairline rule runs between the parallel columns (Latin | English). */
+.prayer-latin  { padding-right: 1.9rem; }
+.prayer-english {
+  padding-left: 1.9rem;
+  border-left: 1px solid var(--rule);
 }
 .prayer-text { margin: 0; font-size: 1.15rem; line-height: 1.75; }
 .amen { color: #b3122b; font-weight: bold; }
@@ -403,10 +419,16 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
 @media (max-width: 38rem) {
   .prayer-body {
     grid-template-columns: 1fr;
-    gap: 1.75rem;
-    padding: 1.5rem 1.25rem;
+    gap: 0;
+    padding: 1.5rem 1.4rem 1.75rem;
   }
-  .prayer-english { border-top: 1px solid var(--rule); padding-top: 1.5rem; }
+  .prayer-latin { padding-right: 0; padding-bottom: 1.5rem; }
+  .prayer-english {
+    padding-left: 0;
+    border-left: none;                       /* vertical divider → horizontal */
+    border-top: 1px solid var(--rule);
+    padding-top: 1.5rem;
+  }
   .prayer-title { font-size: 1.9rem; }
 
   /* Stack the bar: brand on top, nav as a full-width row beneath it with a
