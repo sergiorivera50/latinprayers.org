@@ -432,6 +432,7 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
   margin-top: 2.25rem;
   background: linear-gradient(180deg, #efe6cf 0%, #e6dabd 100%);
   border-top: 1px solid var(--gold);
+  border-bottom: 1px solid var(--gold);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);  /* lit top edge */
   text-align: center;
   padding: 0.6rem 0 0.65rem;
