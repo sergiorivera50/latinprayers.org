@@ -448,6 +448,107 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
 }
 .prayer-context p:last-child { margin-bottom: 0; }
 
+/* ---- The Rosary ---- */
+.rosary { max-width: 50rem; margin: 0 auto; }
+.rosary-header { text-align: center; margin-bottom: 2.25rem; }
+.rosary-title { font-size: 2.4rem; margin: 0; font-variant: small-caps; letter-spacing: 0.01em; }
+.rosary-subtitle { margin: 0.3rem 0 0; color: var(--ink-soft); font-style: italic; font-size: 1.05rem; }
+
+.rosary-h2 {
+  font-size: 1.15rem;
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
+  color: var(--gold-deep);
+  text-align: center;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.4rem;
+  margin: 0 0 1.25rem;
+}
+
+.rosary-intro { max-width: 40rem; margin: 0 auto 2.75rem; }
+.rosary-intro p { margin: 0 0 1rem; color: var(--ink-soft); font-size: 1.02rem; line-height: 1.78; }
+.rosary-intro p:last-child { margin-bottom: 0; }
+.rosary-rule { border: none; border-top: 1px solid var(--rule); margin: 0 0 1.75rem; }
+
+/* How to pray: the bead diagram beside the numbered steps (stacks on phones). */
+.rosary-how { max-width: 44rem; margin: 0 auto 2.75rem; }
+.rosary-how-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; align-items: start; }
+.rosary-diagram { text-align: center; }
+.rosary-bead-svg { width: 8.5rem; height: auto; display: block; margin: 0 auto; }
+.rosary-steps { margin: 0; padding-left: 1.4rem; color: var(--ink); font-size: 1.02rem; line-height: 1.7; }
+.rosary-steps li { margin: 0 0 0.55rem; }
+.rosary-steps li::marker { color: var(--gold); }
+@media (min-width: 40rem) {
+  .rosary-how-grid { grid-template-columns: 10rem 1fr; gap: 2rem; }
+}
+
+/* Mystery sets and cards */
+.mystery-set { max-width: 46rem; margin: 0 auto 2.75rem; }
+.mystery-set-title { font-size: 1.2rem; font-variant: small-caps; letter-spacing: 0.05em; color: var(--gold-deep); text-align: center; margin: 0 0 0.2rem; }
+.mystery-set-en { color: var(--ink); }
+.mystery-set-days { text-align: center; margin: 0 0 1.25rem; font-size: 0.85rem; font-style: italic; color: var(--ink-soft); }
+.mystery-list { list-style: none; margin: 0; padding: 0; }
+.mystery {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  gap: 1rem;
+  align-items: start;
+  padding: 1rem 1.15rem;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(180deg, #fffdf7 0%, #f7f0df 100%);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--gold);
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(43, 33, 24, 0.05);
+}
+.mystery-figure {
+  margin: 0;
+  aspect-ratio: 1 / 1;
+  border: 1px dashed var(--gold);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.4);
+  color: var(--gold-deep);
+}
+.mystery-figure span { font-variant: small-caps; letter-spacing: 0.06em; font-size: 1.4rem; }
+.mystery-eyebrow { margin: 0 0 0.25rem; font-variant: small-caps; letter-spacing: 0.06em; font-size: 0.78rem; color: var(--gold-deep); }
+.mystery-name { margin: 0 0 0.2rem; font-size: 1.15rem; font-weight: normal; }
+.mystery-name [lang="la"] { font-variant: small-caps; letter-spacing: 0.01em; }
+.mystery-en { color: var(--ink-soft); font-style: italic; font-size: 0.95rem; }
+.mystery-sep { margin: 0 0.45rem; color: var(--ink-soft); opacity: 0.55; }
+.mystery-ref { margin: 0 0 0.5rem; font-size: 0.82rem; color: var(--ink-soft); }
+.mystery-fruit { color: var(--gold-deep); }
+.mystery-med { margin: 0; color: var(--ink); font-size: 0.98rem; line-height: 1.65; }
+@media (max-width: 32rem) {
+  .mystery { grid-template-columns: 1fr; }
+  .mystery-figure { width: 3.5rem; }
+}
+
+/* Concluding prayers (a short numbered sequence) */
+.rosary-close { max-width: 40rem; margin: 0 auto; }
+.rosary-close-intro { color: var(--ink-soft); margin: 0 0 1.25rem; }
+.rosary-close-steps { margin: 0; padding-left: 1.6rem; }
+.rosary-close-steps > li { margin: 0 0 1.6rem; }
+.rosary-close-steps > li:last-child { margin-bottom: 0; }
+.rosary-close-steps > li::marker { color: var(--gold); }
+.rosary-step-label { margin: 0 0 0.6rem; color: var(--ink); }
+.rosary-vr-block { margin: 0; }
+.rosary-vr-line { margin: 0 0 0.6rem; line-height: 1.6; }
+.rosary-vr-line:last-child { margin-bottom: 0; }
+.rosary-vr { color: var(--crimson); font-weight: bold; margin-right: 0.3rem; }
+.rosary-collect {
+  background: linear-gradient(180deg, #fbf6ea 0%, #f4ecd6 100%);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--gold);
+  border-radius: 4px;
+  padding: 1.3rem 1.5rem;
+}
+.rosary-collect p { margin: 0 0 0.9rem; line-height: 1.7; }
+.rosary-collect p[lang="la"] { font-size: 1.05rem; }
+.rosary-collect p:last-child { margin-bottom: 0; color: var(--ink-soft); }
+
 /* ---- Manifesto ---- */
 .manifesto { max-width: 54rem; margin: 0 auto; }
 

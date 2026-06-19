@@ -19,6 +19,7 @@ import csv
 import datetime
 import html
 import json
+import math
 import re
 import shutil
 import sys
@@ -26,6 +27,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 DATA_FILE = ROOT / "data" / "prayers.csv"
+MYSTERIES_FILE = ROOT / "data" / "mysteries.csv"
 TEMPLATE_DIR = ROOT / "templates"
 ASSETS_DIR = ROOT / "assets"
 DIST_DIR = ROOT / "dist"
@@ -48,6 +50,19 @@ SITE_DESCRIPTION = (
 # CSV column → internal field. 'slug' becomes the prayer id; 'la'/'en' are split
 # into line arrays. These columns must be present and non-empty in every row.
 REQUIRED_COLUMNS = ("slug", "title", "subtitle", "category", "la", "en")
+
+# The Rosary. Required columns of data/mysteries.csv, the three traditional sets
+# in their fixed order (Latin name + the customary day each is prayed), and small
+# numeral maps. The Luminous Mysteries (added 2002) are deliberately omitted:
+# this is the traditional 15-decade Dominican Rosary.
+REQUIRED_MYSTERY_COLUMNS = ("set", "order", "la", "en", "scripture", "fruit", "meditation")
+ROSARY_SETS = (
+    ("Joyful", "Mysteria Gaudiosa", "Mondays and Thursdays"),
+    ("Sorrowful", "Mysteria Dolorosa", "Tuesdays and Fridays"),
+    ("Glorious", "Mysteria Gloriosa", "Wednesdays, Saturdays, and Sundays"),
+)
+ROMAN = {1: "I", 2: "II", 3: "III", 4: "IV", 5: "V"}
+ORDINAL = {1: "First", 2: "Second", 3: "Third", 4: "Fourth", 5: "Fifth"}
 
 # Standalone pages: (url slug / template stem, <title>, meta description).
 # Each renders templates/<slug>.html into dist/<slug>/index.html at /<slug>/.
@@ -158,6 +173,7 @@ def write_sitemap(prayers: list[dict], dist: Path) -> None:
     paths = ["/"]
     paths += [f"/prayers/{p['id']}/" for p in prayers]
     paths += [f"/{slug}/" for slug, _, _ in STANDALONE_PAGES]
+    paths.append("/rosary/")
     out = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
@@ -243,6 +259,48 @@ def load_prayers() -> list[dict]:
     if not prayers:
         fail(f"no prayer data found in {DATA_FILE.relative_to(ROOT)}")
     return prayers
+
+
+def load_mysteries() -> list[dict]:
+    """Load the Rosary mysteries from data/mysteries.csv (one row per mystery)."""
+    if not MYSTERIES_FILE.is_file():
+        fail(f"no data file: {MYSTERIES_FILE.relative_to(ROOT)}")
+
+    with MYSTERIES_FILE.open(encoding="utf-8", newline="") as f:
+        rows = list(csv.DictReader(f))
+
+    if rows:
+        missing = [c for c in REQUIRED_MYSTERY_COLUMNS if c not in rows[0]]
+        if missing:
+            fail(f"{MYSTERIES_FILE.name}: missing column(s): {', '.join(missing)}")
+
+    valid_sets = {name for name, _, _ in ROSARY_SETS}
+    mysteries: list[dict] = []
+    for n, row in enumerate(rows, start=2):  # row 1 is the header
+        where = f"{MYSTERIES_FILE.name} row {n}"
+        cells = {k: (v or "").strip() for k, v in row.items()}
+        for col in REQUIRED_MYSTERY_COLUMNS:
+            if not cells.get(col):
+                fail(f"{where}: missing required column '{col}'")
+        if cells["set"] not in valid_sets:
+            fail(f"{where}: unknown set '{cells['set']}'")
+        try:
+            order = int(cells["order"])
+        except ValueError:
+            fail(f"{where}: 'order' must be an integer, got '{cells['order']}'")
+        mysteries.append({
+            "set": cells["set"],
+            "order": order,
+            "la": cells["la"],
+            "en": cells["en"],
+            "scripture": cells["scripture"],
+            "fruit": cells["fruit"],
+            "meditation": cells["meditation"],
+        })
+
+    if not mysteries:
+        fail(f"no mystery data found in {MYSTERIES_FILE.relative_to(ROOT)}")
+    return mysteries
 
 
 # --------------------------------------------------------------------------- #
@@ -366,15 +424,140 @@ def build_index_page(prayers: list[dict], base_tpl: str, index_tpl: str) -> str:
     )
 
 
+def rosary_diagram_svg() -> str:
+    """A small decorative rosary as inline SVG (no dependency): the loop of five
+    decades, the centre medal, the short pendant, and the crucifix."""
+    gold, deep = "#8a6d2b", "#6b531d"
+    cx, cy, r = 100, 92, 78
+    parts = [
+        f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" '
+        f'stroke="{gold}" stroke-opacity="0.4" stroke-width="1"/>'
+    ]
+    # Loop: 54 beads = five runs of ten small (Hail Mary) beads separated by four
+    # large (Our Father) beads. The medal joins between the last and the first
+    # small bead, so the bottom of the loop is flanked by small beads.
+    n = 54
+    pater = {10, 21, 32, 43}
+    for i in range(n):
+        ang = math.radians(90 + (i + 0.5) * 360 / n)
+        x, y = cx + r * math.cos(ang), cy + r * math.sin(ang)
+        if i in pater:
+            parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4" fill="{deep}"/>')
+        else:
+            parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="2.4" fill="{gold}" fill-opacity="0.85"/>')
+    my = cy + r  # the join sits at the bottom of the loop
+    # Pendant: an Our Father bead at the medal, three Hail Mary beads, then a
+    # final Our Father bead above the crucifix (big, three small, big).
+    parts += [
+        f'<line x1="{cx}" y1="{my - 2}" x2="{cx}" y2="{my + 88}" stroke="{gold}" stroke-opacity="0.5" stroke-width="1"/>',
+        f'<circle cx="{cx}" cy="{my + 10}" r="6.5" fill="none" stroke="{deep}" stroke-width="1.5"/>',
+        f'<circle cx="{cx}" cy="{my + 25}" r="4" fill="{deep}"/>',
+    ]
+    for yy in (my + 39, my + 50, my + 61):
+        parts.append(f'<circle cx="{cx}" cy="{yy}" r="2.4" fill="{gold}" fill-opacity="0.85"/>')
+    parts.append(f'<circle cx="{cx}" cy="{my + 76}" r="4" fill="{deep}"/>')
+    base = my + 90
+    parts += [
+        f'<line x1="{cx}" y1="{base}" x2="{cx}" y2="{base + 44}" stroke="{deep}" stroke-width="3" stroke-linecap="round"/>',
+        f'<line x1="{cx - 14}" y1="{base + 15}" x2="{cx + 14}" y2="{base + 15}" stroke="{deep}" stroke-width="3" stroke-linecap="round"/>',
+    ]
+    h = base + 52
+    return (
+        f'<svg class="rosary-bead-svg" viewBox="0 0 200 {h}" role="img" '
+        f'aria-label="A rosary" xmlns="http://www.w3.org/2000/svg">'
+        + "".join(parts)
+        + "</svg>"
+    )
+
+
+def rosary_jsonld() -> str:
+    """Page-specific Article JSON-LD for the Rosary page."""
+    data = {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "How to Pray the Holy Rosary",
+        "name": "The Holy Rosary",
+        "description": (
+            "The traditional Holy Rosary: how to pray it, and the Joyful, "
+            "Sorrowful, and Glorious Mysteries in Latin and English."
+        ),
+        "inLanguage": "en",
+        "about": "The Holy Rosary",
+        "url": BASE_URL + "/rosary/",
+        "isPartOf": {"@type": "WebSite", "name": "latinprayers.org", "url": BASE_URL + "/"},
+        "publisher": {"@type": "Organization", "name": "latinprayers.org"},
+    }
+    return (
+        '<script type="application/ld+json">'
+        + json.dumps(data, ensure_ascii=False)
+        + "</script>"
+    )
+
+
+def build_rosary_page(mysteries: list[dict], base_tpl: str, rosary_tpl: str) -> str:
+    by_set: dict[str, list[dict]] = {}
+    for m in mysteries:
+        by_set.setdefault(m["set"], []).append(m)
+
+    blocks: list[str] = []
+    for name, latin, days in ROSARY_SETS:
+        items = sorted(by_set.get(name, []), key=lambda m: m["order"])
+        cards = []
+        for m in items:
+            num = m["order"]
+            cards.append(
+                '      <li class="mystery">\n'
+                f'        <figure class="mystery-figure" aria-hidden="true"><span>{ROMAN.get(num, num)}</span></figure>\n'
+                '        <div class="mystery-text">\n'
+                f'          <p class="mystery-eyebrow">{ORDINAL.get(num, "")} {esc(name)} Mystery</p>\n'
+                f'          <h3 class="mystery-name"><span lang="la">{esc(m["la"])}</span>'
+                f'<span class="mystery-sep" aria-hidden="true">/</span>'
+                f'<span class="mystery-en">{esc(m["en"])}</span></h3>\n'
+                f'          <p class="mystery-ref">{esc(m["scripture"])} '
+                f'<span class="mystery-fruit">Fruit: {esc(m["fruit"])}</span></p>\n'
+                f'          <p class="mystery-med">{esc(m["meditation"])}</p>\n'
+                "        </div>\n"
+                "      </li>"
+            )
+        slug = name.lower()
+        blocks.append(
+            f'<section class="mystery-set" id="{slug}" aria-labelledby="set-{slug}">\n'
+            f'  <h2 class="mystery-set-title" id="set-{slug}">'
+            f'<span lang="la">{esc(latin)}</span>'
+            f'<span class="mystery-sep" aria-hidden="true">/</span>'
+            f'<span class="mystery-set-en">The {esc(name)} Mysteries</span></h2>\n'
+            f'  <p class="mystery-set-days">Prayed on {esc(days)}</p>\n'
+            '  <ol class="mystery-list">\n'
+            + "\n".join(cards)
+            + "\n  </ol>\n</section>"
+        )
+
+    content = render(rosary_tpl, mysteries="\n\n".join(blocks), diagram=rosary_diagram_svg())
+    page_desc = (
+        "How to pray the traditional Holy Rosary, with the Joyful, Sorrowful, "
+        "and Glorious Mysteries in Latin and English, their Scripture and fruits."
+    )
+    return render(
+        base_tpl,
+        page_title="The Holy Rosary",
+        page_description=page_desc,
+        content=content,
+        year=BUILD_YEAR,
+        head_extra=head_extra("/rosary/") + "\n  " + rosary_jsonld(),
+    )
+
+
 # --------------------------------------------------------------------------- #
 # Build orchestration
 # --------------------------------------------------------------------------- #
 def build() -> int:
     """Render the whole site into a fresh dist/. Returns the prayer count."""
     prayers = load_prayers()
+    mysteries = load_mysteries()
     base_tpl = load_template("base.html")
     prayer_tpl = load_template("prayer.html")
     index_tpl = load_template("index.html")
+    rosary_tpl = load_template("rosary.html")
 
     # Start from a clean, self-contained output directory.
     if DIST_DIR.exists():
@@ -423,6 +606,14 @@ def build() -> int:
         )
         print(f"  wrote {out.relative_to(ROOT)}")
 
+    # The Rosary: its own data-driven page at /rosary/.
+    rosary_dir = DIST_DIR / "rosary"
+    rosary_dir.mkdir()
+    (rosary_dir / "index.html").write_text(
+        build_rosary_page(mysteries, base_tpl, rosary_tpl), encoding="utf-8"
+    )
+    print("  wrote dist/rosary/index.html")
+
     # robots.txt and sitemap.xml, generated so their URLs derive from BASE_URL.
     write_robots(DIST_DIR)
     write_sitemap(prayers, DIST_DIR)
@@ -449,11 +640,12 @@ def build() -> int:
 def main() -> None:
     if "--check" in sys.argv[1:]:
         prayers = load_prayers()
-        templates = ["base.html", "prayer.html", "index.html", "404.html"]
+        mysteries = load_mysteries()
+        templates = ["base.html", "prayer.html", "index.html", "404.html", "rosary.html"]
         templates += [f"{slug}.html" for slug, _, _ in STANDALONE_PAGES]
         for name in templates:
             load_template(name)
-        print(f"OK: {len(prayers)} prayer(s) and templates validated.")
+        print(f"OK: {len(prayers)} prayer(s), {len(mysteries)} mystery(ies), and templates validated.")
         return
 
     count = build()
