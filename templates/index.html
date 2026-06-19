@@ -10,4 +10,18 @@
   </p>
 </section>
 
+<form class="prayer-search" role="search" hidden>
+  <label class="prayer-search-label" for="prayer-search-input">Search prayers</label>
+  <input
+    type="search"
+    id="prayer-search-input"
+    class="prayer-search-input"
+    placeholder="Search prayers by name or category…"
+    autocomplete="off"
+    spellcheck="false"
+    enterkeyhint="search"
+    aria-describedby="prayer-search-status">
+  <p class="prayer-search-status" id="prayer-search-status" role="status" aria-live="polite"></p>
+</form>
+
 {{categories}}

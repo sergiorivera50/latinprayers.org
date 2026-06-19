@@ -252,6 +252,53 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
 .prayer-link:hover .name, .prayer-link:focus .name { color: var(--gold-deep); }
 .prayer-link .gloss { color: var(--ink-soft); font-style: italic; font-size: 0.95rem; }
 
+/* ---- Homepage search (progressive enhancement) ----
+   Rendered hidden in the markup; main.js reveals and wires it. Visitors without
+   JavaScript see the full, unfiltered list rather than a dead search box. */
+.prayer-search { max-width: 46rem; margin: 0 auto 2.25rem; }
+.prayer-search[hidden] { display: none; }   /* stay hidden until JS reveals it */
+.prayer-search-label {                        /* label kept for screen readers */
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%);
+  white-space: nowrap;
+}
+.prayer-search-input {
+  width: 100%;
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  color: var(--ink);
+  background-color: var(--paper);
+  /* a small, muted magnifier set into the left of the field */
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%235c5043'%20stroke-width='2'%20stroke-linecap='round'%3E%3Ccircle%20cx='10.5'%20cy='10.5'%20r='6.5'/%3E%3Cpath%20d='M21%2021l-4.5-4.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 0.95rem center;
+  background-size: 1.05rem;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 0.7rem 1rem 0.72rem 2.65rem;
+  box-shadow: inset 0 1px 2px rgba(43, 33, 24, 0.05);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.prayer-search-input::placeholder { color: var(--ink-soft); opacity: 0.75; font-style: italic; }
+.prayer-search-input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(138, 109, 43, 0.15), inset 0 1px 2px rgba(43, 33, 24, 0.05);
+}
+.prayer-search-status {
+  margin: 0.5rem 0.15rem 0;
+  min-height: 1.05rem;             /* reserve space so the list does not jump */
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--ink-soft);
+  text-align: right;
+  opacity: 0.85;
+}
+
 /* ---- Single prayer ---- */
 .breadcrumb { max-width: 50rem; margin: 0 auto 1.25rem; }
 /* A small-caps "back" control; the gold arrow slides left on hover. */

@@ -330,10 +330,14 @@ def build_index_page(prayers: list[dict], base_tpl: str, index_tpl: str) -> str:
         items.sort(key=lambda p: (p["order"], p["title"]))
         links = []
         for p in items:
+            # Lowercased haystack for the optional client-side filter (main.js):
+            # Latin name, English gloss, and category, so a query can match any.
+            search = esc(f'{p["title"]} {p["subtitle"]} {category}'.lower())
             links.append(
-                '        <li><a class="prayer-link" href="/prayers/{id}/">'
+                '        <li data-search="{search}"><a class="prayer-link" href="/prayers/{id}/">'
                 '<span class="name" lang="la">{title}</span>'
                 '<span class="gloss">{subtitle}</span></a></li>'.format(
+                    search=search,
                     id=esc(p["id"]),
                     title=esc(p["title"]),
                     subtitle=esc(p["subtitle"]),
