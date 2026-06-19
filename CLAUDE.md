@@ -27,6 +27,10 @@ traditional Catholic living and values.
   than improvising. Liturgical/devotional accuracy matters more than polish.
 - The maintainer is the doctrinal authority. When a content question is genuinely
   ambiguous, ask — do not guess on matters of faith.
+- **House style: no em-dashes.** Do not use the em-dash (`—`) in authored
+  prose/content (prayer `context`, `description`, page copy). Recast the sentence
+  with a comma, colon, semicolon, or parentheses instead. (En-dashes in numeric or
+  scripture ranges such as `6:9–13` are fine and should be kept.)
 
 ## Technical doctrine (non-negotiable)
 
@@ -95,6 +99,9 @@ dependency). Columns (header row, in order):
 | `description` | 1–2 sentences of context; optional (may be blank).                   |
 | `la`          | Latin text — **one line per line**, line breaks *inside the cell*.   |
 | `en`          | faithful English translation, line-aligned with `la`.               |
+| `context`     | longer prose on history/origin/use; optional. **Paragraphs** split on blank lines within the cell. Renders as the "About this prayer" section below the text. |
+| `source`      | optional label override for the link text. Blank → the link shows the route from `source_url` with the scheme stripped (e.g. `fisheaters.com/prayers.html`). |
+| `source_url`  | optional URL of the translation source. When present, a muted "Translation source" link is shown just below (outside) the text card. Both blank → no line. |
 
 - `slug`, `title`, `subtitle`, `category`, `la`, `en` are required and non-empty.
 - `la` and `en` hold **multiple lines within a single cell** (Alt/Option+Enter in
@@ -104,6 +111,21 @@ dependency). Columns (header row, in order):
 - Column names `la`/`en` are the ISO 639-1 codes; markup tags them `lang="la"` /
   `lang="en"`.
 - Display is **Latin + English side-by-side** (collapses to stacked on small screens).
+
+## Reference: translation sources (for vetting prayer text)
+
+When adding or checking a prayer's English, these were found useful. The site uses
+the **traditional Douay register** ("Holy Ghost," "world without end," "amongst
+women"); **keep that form even when a source has modernized it.** Most mainstream
+sites have changed "Holy Ghost" → "Holy Spirit" and "amongst" → "among," so prefer
+the traditional sources for exact-match citations.
+
+- **[fisheaters.com/prayers.html](https://fisheaters.com/prayers.html)** — traditional Catholic prayer collection; preserves the traditional forms ("amongst women," "trespasses"). Currently cited as the `source` for the three common prayers.
+- **[catholicity.com](https://www.catholicity.com/prayer/prayers.html)** — matches the traditional Pater Noster and Ave Maria verbatim (incl. "amongst women").
+- **[ourcatholicprayers.com](https://www.ourcatholicprayers.com/Latin-Prayers.html)** and **[prayinglatin.com](https://www.prayinglatin.com/prayers-of-the-rosary-in-latin/)** — Latin + English, traditional wording.
+- **[EWTN — Rosary in English & Latin](https://www.ewtn.com/catholicism/teachings/prayers-of-the-rosary-in-english-and-latin-164)** — authoritative, but modernized ("Holy Spirit," "among women").
+- **Vatican** — Compendium of the Catechism, appendix of common prayers (vatican.va): authoritative Latin, modernized English.
+- **Baltimore Catechism** (hosted as PDF on fisheaters) — classic pre-conciliar reference.
 
 ## How to build and preview
 

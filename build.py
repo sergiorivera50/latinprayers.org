@@ -41,12 +41,15 @@ REQUIRED_COLUMNS = ("slug", "title", "subtitle", "category", "la", "en")
 # Standalone pages: (url slug / template stem, <title>, meta description).
 # Each renders templates/<slug>.html into dist/<slug>/index.html at /<slug>/.
 STANDALONE_PAGES = (
-    (
-        "manifesto",
-        "Manifesto",
-        "The manifesto of latinprayers.org: in the defense of Tradition, the "
-        "Tridentine Mass, and Catholic living.",
-    ),
+    # Manifesto is written but not yet publishing-ready (WIP): its source stays
+    # in templates/manifesto.html, but it is neither built nor linked. To
+    # publish, uncomment this entry and restore the nav link in base.html.
+    # (
+    #     "manifesto",
+    #     "Manifesto",
+    #     "The manifesto of latinprayers.org: in the defense of Tradition, the "
+    #     "Tridentine Mass, and Catholic living.",
+    # ),
 )
 
 
@@ -84,6 +87,21 @@ def _split_lines(cell: str) -> list[str]:
     """A multi-line CSV cell (one line per row, as edited in a spreadsheet)
     becomes an array of trimmed, non-empty lines."""
     return [line.strip() for line in cell.replace("\r\n", "\n").split("\n") if line.strip()]
+
+
+def _split_paragraphs(cell: str) -> list[str]:
+    """A multi-line CSV cell becomes a list of paragraphs, split on blank lines.
+    Lines within a paragraph are joined into one flowing paragraph, so prose may
+    be wrapped freely in the spreadsheet cell."""
+    text = cell.replace("\r\n", "\n").strip()
+    if not text:
+        return []
+    paragraphs = re.split(r"\n\s*\n", text)
+    return [
+        " ".join(seg for seg in (ln.strip() for ln in para.split("\n")) if seg)
+        for para in paragraphs
+        if para.strip()
+    ]
 
 
 def load_prayers() -> list[dict]:
@@ -126,6 +144,9 @@ def load_prayers() -> list[dict]:
             "category": cells["category"],
             "order": order,
             "description": cells.get("description", ""),
+            "context": cells.get("context", ""),
+            "source": cells.get("source", ""),
+            "source_url": cells.get("source_url", ""),
             "latin": _split_lines(cells["la"]),
             "english": _split_lines(cells["en"]),
         })
@@ -157,6 +178,36 @@ def build_prayer_page(prayer: dict, base_tpl: str, prayer_tpl: str) -> str:
     if prayer["description"]:
         description = f'<p class="prayer-description">{esc(prayer["description"])}</p>'
 
+    # Optional richer context (history, origin, liturgical use) rendered as a
+    # prose section of one or more paragraphs beneath the prayer text.
+    context = ""
+    paragraphs = _split_paragraphs(prayer["context"])
+    if paragraphs:
+        body = "\n".join(f"      <p>{esc(p)}</p>" for p in paragraphs)
+        context = (
+            '<section class="prayer-context" aria-labelledby="prayer-context-title">\n'
+            '      <h2 class="prayer-context-title" id="prayer-context-title">'
+            "About this prayer</h2>\n"
+            f"{body}\n"
+            "    </section>"
+        )
+
+    # Optional muted "translation source" line at the foot of the text card.
+    # `source` is the visible label; `source_url`, if present, makes it a link.
+    source = ""
+    if prayer["source_url"]:
+        url = prayer["source_url"]
+        # Show the full route by default (only the scheme stripped); `source`
+        # overrides the link text when a friendlier label is wanted.
+        display = prayer["source"] or re.sub(r"^https?://", "", url)
+        link = (
+            f'<a href="{esc(url)}" '
+            f'target="_blank" rel="noopener noreferrer">{esc(display)}</a>'
+        )
+        source = f'<p class="prayer-source">Translation source: {link}</p>'
+    elif prayer["source"]:
+        source = f'<p class="prayer-source">Translation source: {esc(prayer["source"])}</p>'
+
     content = render(
         prayer_tpl,
         title=esc(prayer["title"]),
@@ -164,12 +215,14 @@ def build_prayer_page(prayer: dict, base_tpl: str, prayer_tpl: str) -> str:
         description=description,
         latin_lines=render_lines(prayer["latin"]),
         english_lines=render_lines(prayer["english"]),
+        context=context,
+        source=source,
     )
 
-    page_desc = prayer["description"] or f'{prayer["title"]} — {prayer["subtitle"]} in Latin and English.'
+    page_desc = prayer["description"] or f'{prayer["title"]}, {prayer["subtitle"]} in Latin and English.'
     return render(
         base_tpl,
-        page_title=esc(f'{prayer["title"]} — {prayer["subtitle"]}'),
+        page_title=esc(f'{prayer["title"]}, {prayer["subtitle"]}'),
         page_description=esc(page_desc),
         content=content,
         year=BUILD_YEAR,
