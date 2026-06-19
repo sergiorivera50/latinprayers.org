@@ -299,6 +299,59 @@ a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
   opacity: 0.85;
 }
 
+/* ---- Suggest a prayer (homepage call to action) ---- */
+.suggest {
+  max-width: 46rem;
+  margin: 3rem auto 0;
+  padding: 1.75rem 1.5rem 1.9rem;
+  text-align: center;
+  background: linear-gradient(180deg, #fffdf7 0%, #f7f0df 100%);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--gold);
+  border-radius: 4px;
+  box-shadow: 0 3px 12px -5px rgba(43, 33, 24, 0.16),
+              inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.suggest-title {
+  margin: 0 0 0.55rem;
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
+  font-size: 1.2rem;
+  color: var(--gold-deep);
+}
+.suggest-lead {
+  margin: 0 auto 1.25rem;
+  max-width: 32rem;
+  color: var(--ink-soft);
+  font-size: 1rem;
+}
+.suggest-link {
+  display: inline-block;
+  font-variant: small-caps;
+  letter-spacing: 0.08em;
+  font-size: 0.95rem;
+  color: var(--gold-deep);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  padding: 0.55rem 1.3rem;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.suggest-link:hover, .suggest-link:focus {
+  text-decoration: none;
+  background: var(--gold);
+  color: #fffdf7;
+  border-color: var(--gold-deep);
+}
+.suggest-address {
+  margin: 0.9rem 0 0;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  opacity: 0.85;
+}
+.suggest-address a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.suggest-address a:hover, .suggest-address a:focus { color: var(--gold-deep); }
+
 /* ---- Single prayer ---- */
 .breadcrumb { max-width: 50rem; margin: 0 auto 1.25rem; }
 /* A small-caps "back" control; the gold arrow slides left on hover. */
