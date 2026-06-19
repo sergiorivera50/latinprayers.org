@@ -18,6 +18,7 @@ from __future__ import annotations
 import csv
 import datetime
 import html
+import json
 import re
 import shutil
 import sys
@@ -33,6 +34,16 @@ DIST_DIR = ROOT / "dist"
 STATIC_FILES = ("CNAME", ".nojekyll")
 
 BUILD_YEAR = str(datetime.date.today().year)
+
+# Absolute site origin (no trailing slash). The single source of truth for every
+# absolute URL the build emits: canonical links, the sitemap, and JSON-LD.
+BASE_URL = "https://latinprayers.org"
+
+# Short site description, reused in the WebSite JSON-LD.
+SITE_DESCRIPTION = (
+    "Traditional Catholic prayers in Latin set beside a faithful English "
+    "translation, with notes on each prayer's history, origin, and use."
+)
 
 # CSV column → internal field. 'slug' becomes the prayer id; 'la'/'en' are split
 # into line arrays. These columns must be present and non-empty in every row.
@@ -78,6 +89,84 @@ def render(template: str, **values: str) -> str:
 
 def esc(text: str) -> str:
     return html.escape(text, quote=True)
+
+
+# --------------------------------------------------------------------------- #
+# SEO helpers: canonical links, structured data, robots.txt, sitemap.xml
+# --------------------------------------------------------------------------- #
+def site_jsonld() -> str:
+    """Site-wide WebSite + Organization JSON-LD (publisher identity), emitted on
+    every indexable page. Built with json.dumps so the markup is always valid
+    and correctly escaped."""
+    data = {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "latinprayers.org",
+        "url": BASE_URL + "/",
+        "inLanguage": "en",
+        "description": SITE_DESCRIPTION,
+        "publisher": {
+            "@type": "Organization",
+            "name": "latinprayers.org",
+            "url": BASE_URL + "/",
+            "logo": {
+                "@type": "ImageObject",
+                "url": BASE_URL + "/assets/img/sacred-heart.png",
+            },
+        },
+    }
+    return (
+        '<script type="application/ld+json">'
+        + json.dumps(data, ensure_ascii=False)
+        + "</script>"
+    )
+
+
+def head_extra(path: str | None) -> str:
+    """Per-page <head> additions, indented two spaces to match base.html.
+
+    `path` is the site-absolute path of the page (e.g. "/prayers/ave-maria/"):
+    it yields a self-referencing canonical link plus the site-wide JSON-LD.
+    Pass None for the 404 page, which stands in for many unknown URLs and so is
+    marked noindex with no canonical."""
+    if path is None:
+        return '  <meta name="robots" content="noindex">'
+    return (
+        f'  <link rel="canonical" href="{BASE_URL + path}">\n'
+        f"  {site_jsonld()}"
+    )
+
+
+def write_robots(dist: Path) -> None:
+    """Write robots.txt: allow all, allow the major AI crawlers explicitly, and
+    point to the sitemap. The AI-bot allowances are a deliberate, documented
+    choice to maximise reach (see docs/seo-audit-and-plan.md)."""
+    lines = ["User-agent: *", "Allow: /", "", "# AI and answer-engine crawlers (explicitly allowed)"]
+    for bot in ("GPTBot", "OAI-SearchBot", "ClaudeBot", "anthropic-ai",
+                "PerplexityBot", "Google-Extended", "CCBot"):
+        lines += [f"User-agent: {bot}", "Allow: /", ""]
+    lines.append(f"Sitemap: {BASE_URL}/sitemap.xml")
+    (dist / "robots.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print("  wrote dist/robots.txt")
+
+
+def write_sitemap(prayers: list[dict], dist: Path) -> None:
+    """Write sitemap.xml covering the homepage, every prayer, and any standalone
+    page. lastmod is the build date for now; a per-prayer date can replace it
+    later."""
+    today = datetime.date.today().isoformat()
+    paths = ["/"]
+    paths += [f"/prayers/{p['id']}/" for p in prayers]
+    paths += [f"/{slug}/" for slug, _, _ in STANDALONE_PAGES]
+    out = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ]
+    for p in paths:
+        out.append(f"  <url><loc>{BASE_URL}{p}</loc><lastmod>{today}</lastmod></url>")
+    out.append("</urlset>")
+    (dist / "sitemap.xml").write_text("\n".join(out) + "\n", encoding="utf-8")
+    print(f"  wrote dist/sitemap.xml ({len(paths)} urls)")
 
 
 # --------------------------------------------------------------------------- #
@@ -226,6 +315,7 @@ def build_prayer_page(prayer: dict, base_tpl: str, prayer_tpl: str) -> str:
         page_description=esc(page_desc),
         content=content,
         year=BUILD_YEAR,
+        head_extra=head_extra(f'/prayers/{prayer["id"]}/'),
     )
 
 
@@ -268,6 +358,7 @@ def build_index_page(prayers: list[dict], base_tpl: str, index_tpl: str) -> str:
         ),
         content=content,
         year=BUILD_YEAR,
+        head_extra=head_extra("/"),
     )
 
 
@@ -322,10 +413,31 @@ def build() -> int:
                 page_description=esc(description),
                 content=page_tpl,
                 year=BUILD_YEAR,
+                head_extra=head_extra(f"/{slug}/"),
             ),
             encoding="utf-8",
         )
         print(f"  wrote {out.relative_to(ROOT)}")
+
+    # robots.txt and sitemap.xml, generated so their URLs derive from BASE_URL.
+    write_robots(DIST_DIR)
+    write_sitemap(prayers, DIST_DIR)
+
+    # Custom 404 page. GitHub Pages serves /404.html for unknown paths; it is
+    # marked noindex (it stands in for many URLs) and carries no canonical.
+    not_found_tpl = load_template("404.html")
+    (DIST_DIR / "404.html").write_text(
+        render(
+            base_tpl,
+            page_title="Page Not Found",
+            page_description="The page you sought is not here.",
+            content=not_found_tpl,
+            year=BUILD_YEAR,
+            head_extra=head_extra(None),
+        ),
+        encoding="utf-8",
+    )
+    print("  wrote dist/404.html")
 
     return len(prayers)
 
@@ -333,7 +445,7 @@ def build() -> int:
 def main() -> None:
     if "--check" in sys.argv[1:]:
         prayers = load_prayers()
-        templates = ["base.html", "prayer.html", "index.html"]
+        templates = ["base.html", "prayer.html", "index.html", "404.html"]
         templates += [f"{slug}.html" for slug, _, _ in STANDALONE_PAGES]
         for name in templates:
             load_template(name)

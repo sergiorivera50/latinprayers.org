@@ -217,3 +217,10 @@ Actions"** (not "Deploy from a branch"). DNS is configured at Cloudflare (apex
 - Sections beyond prayers: the Tridentine Mass (Ordinary, propers), the Rosary,
   Litanies, the Divine Office, catechetical/essay content on Tradition.
 - Copy-to-clipboard and print-friendly stylesheet.
+- **SEO / discoverability.** A full audit and prioritized plan lives in
+  [`docs/seo-audit-and-plan.md`](docs/seo-audit-and-plan.md). The P0 build-time
+  foundations are implemented in `build.py`: `robots.txt` (with AI-crawler policy),
+  generated `sitemap.xml`, canonical links from a single `BASE_URL`, site-wide
+  `WebSite`/`Organization` JSON-LD, and a noindex `404.html`. Still open (P1/P2):
+  Open Graph cards, per-prayer `CreativeWork`/`BreadcrumbList` JSON-LD, an About
+  page, `llms.txt`, title/description tuning, and the `www`-to-apex 301 (DNS).
