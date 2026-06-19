@@ -117,6 +117,7 @@ def site_jsonld() -> str:
         "@context": "https://schema.org",
         "@type": "WebSite",
         "name": "latinprayers.org",
+        "alternateName": "Latin Prayers",
         "url": BASE_URL + "/",
         "inLanguage": "en",
         "description": SITE_DESCRIPTION,
@@ -412,11 +413,11 @@ def build_index_page(prayers: list[dict], base_tpl: str, index_tpl: str) -> str:
     content = render(index_tpl, categories="\n\n".join(blocks))
     return render(
         base_tpl,
-        page_title="Prayers in Latin",
+        page_title="Latin Prayers with English Translations",
         page_description=(
-            "A reverent repository of Catholic prayers in Latin, set beside a "
-            "faithful English translation. In the defense of Tradition, the "
-            "Tridentine Mass, and Catholic living."
+            "Latin prayers with faithful English translations: the Pater Noster, "
+            "Ave Maria, Salve Regina, the Rosary, and other traditional Catholic "
+            "prayers."
         ),
         content=content,
         year=BUILD_YEAR,
