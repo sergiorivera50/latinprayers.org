@@ -49,6 +49,22 @@ body {
 a { color: var(--gold); text-decoration: none; }
 a:hover, a:focus { color: var(--gold-deep); text-decoration: underline; }
 
+/* ---- Page transitions ---- */
+/* A gentle cross-fade between pages (cross-document View Transitions), so moving
+   from the index to a prayer and back feels calm rather than abrupt. Pure
+   progressive enhancement: browsers without support simply navigate instantly,
+   and it is switched off for visitors who prefer reduced motion. */
+@view-transition { navigation: auto; }
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.1s;
+  animation-timing-function: ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation: none; }
+}
+
 .skip-link {
   position: absolute;
   left: -999px;
