@@ -151,6 +151,29 @@ site into `dist/`. **Do not commit `dist/`** — it is gitignored and rebuilt by
 3. Commit **only** `data/prayers.csv` (and any template/asset changes). Never the HTML.
 4. Push to `main`; CI builds and publishes.
 
+## Populating many prayers: work incrementally, one row at a time
+
+When adding prayers in bulk, **add them to `data/prayers.csv` one row at a time, not
+in a single large dump.** For each prayer: obtain its text from a recommended
+traditional source and verify the wording, append that one row, run
+`python3 build.py --check`, then move to the next. Do **not** fetch or draft a dozen
+prayers and then write them all back from memory in one pass.
+
+Why: these are sacred texts where accuracy is the whole point. One row at a time
+keeps every text verifiable on its own, isolates any error to a single row, and
+avoids relying on recall to reproduce many texts at once.
+
+Append programmatically with the stdlib `csv` module (read the existing file, add
+the one new row, write it back); this keeps multi-line `la`/`en` cells and embedded
+quotes correctly escaped. Never hand-edit the CSV's quoting. Because the prior rows
+are re-read from disk rather than retyped, earlier work is never disturbed.
+
+A note on sourcing: `WebFetch` will often refuse to echo a source page that carries
+a site-level copyright notice, even for public-domain liturgical text. Verify
+wording with small, targeted questions (one or two short prayers at a time), or by
+asking it to confirm and correct a text you supply, rather than asking it to
+reproduce a whole page.
+
 ## Standalone pages (e.g. the Manifesto)
 
 Pages that aren't prayers (Manifesto, and later About/etc.) are plain content
