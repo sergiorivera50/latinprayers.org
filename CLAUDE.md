@@ -39,6 +39,13 @@ traditional Catholic living and values.
 - **No frameworks. No runtime dependencies.** No React/Vue/Tailwind/jQuery, no CDN
   libraries. Vanilla everything. JS is for *progressive enhancement only* — every
   page must be fully readable with JS disabled.
+- **Self-hosted fonts are allowed; third-party font CDNs are not.** The two faces
+  (Cormorant Garamond for display headings, EB Garamond for reading text) live as
+  committed `.woff2` files in `assets/fonts/`, declared via `@font-face` in
+  `style.css` and preloaded in `base.html`. Nothing is fetched from Google Fonts or
+  any CDN at runtime, so this stays within "everything centralized in this repo."
+  Subsets are split by `unicode-range` (latin / latin-ext) so the extended face is
+  fetched only when an extended glyph actually appears (today's content needs none).
 - **A build step is allowed, but only at build time.** Content lives once in
   `data/`; `build.py` (Python 3, **standard library only** — nothing to `pip install`)
   renders it through `templates/` into committed static HTML. The published output
@@ -57,13 +64,16 @@ on every push by GitHub Actions and published from the `dist/` artifact.
 ```
 /
 ├── data/
-│   └── prayers.csv       # SOURCE OF TRUTH — one row per prayer
+│   ├── prayers.csv       # SOURCE OF TRUTH — one row per prayer
+│   ├── mysteries.csv     # the fifteen Rosary mysteries (one row each)
+│   └── categories.csv    # optional one-line blurb per homepage category
 ├── templates/
 │   ├── base.html         # outer HTML shell (header, footer, <head>)
 │   ├── index.html        # homepage content block
 │   └── prayer.html       # single-prayer content block
 ├── assets/
 │   ├── css/style.css     # hand-authored styles
+│   ├── fonts/            # self-hosted woff2 (Cormorant Garamond, EB Garamond)
 │   └── js/main.js        # hand-authored, minimal, optional-enhancement only
 ├── build.py              # the generator (stdlib only) — emits dist/
 ├── serve.py              # local dev server: build + serve dist/ (stdlib only)

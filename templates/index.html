@@ -1,15 +1,29 @@
-<section class="intro">
-  <figure class="intro-roundel">
-    <img src="/assets/img/christ.webp" alt="Christ the King, His right hand raised in blessing.">
+<section class="hero" aria-labelledby="hero-title">
+  <div class="hero-text">
+    <p class="hero-kicker">Traditional Catholic Prayers</p>
+    <h1 class="hero-title" id="hero-title">Prayers in Latin</h1>
+    <p class="hero-lead">
+      For sixteen centuries the voice of the Western Church. Here the received Latin
+      prayers stand beside a faithful English translation, as they were handed down.
+    </p>
+    <div class="hero-actions">
+      <a class="hero-cta" href="#prayers">Browse the prayers</a>
+      <a class="hero-link" href="/rosary/">Pray the Rosary <span class="hero-link-arrow" aria-hidden="true">&rarr;</span></a>
+    </div>
+    <p class="hero-popular">
+      <span class="hero-popular-label">Begin with</span>
+      <a href="/prayers/signum-crucis/">Signum Crucis</a>
+      <a href="/prayers/pater-noster/">Pater Noster</a>
+      <a href="/prayers/ave-maria/">Ave Maria</a>
+    </p>
+  </div>
+  <figure class="hero-figure">
+    <img src="/assets/img/christ.webp" alt="Christ the King, His right hand raised in blessing." width="425" height="627">
   </figure>
-  <h1 class="intro-title">Prayers in Latin</h1>
-  <p class="intro-lead">
-    For sixteen centuries Latin was the voice of the Western Church, the tongue of her liturgy, her councils, 
-    and her saints, from the Roman catacombs to the altars of Christendom. These are some of the prayers as they were 
-    handed down, the Latin received through that unbroken line, faithfully translated to the vernacular.
-  </p>
 </section>
 
+<div id="prayers" class="prayer-index">
+  <h2 class="index-title">Browse the prayers</h2>
 <form class="prayer-search" role="search" hidden>
   <label class="prayer-search-label" for="prayer-search-input">Search prayers</label>
   <input
@@ -25,6 +39,7 @@
 </form>
 
 {{categories}}
+</div>
 
 <section class="suggest" aria-labelledby="suggest-title">
   <h2 class="suggest-title" id="suggest-title">Suggest a prayer</h2>

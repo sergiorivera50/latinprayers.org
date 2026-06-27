@@ -71,9 +71,42 @@
     });
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initSearch);
-  } else {
+  // Smooth-scroll in-page anchor links (e.g. the hero "Browse the prayers" CTA).
+  // Backs up the CSS `scroll-behavior: smooth`, and honours reduced-motion by
+  // simply not intercepting (the browser then jumps instantly).
+  function initSmoothScroll() {
+    if (
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
+    var links = Array.prototype.slice.call(
+      document.querySelectorAll('a[href^="#"]:not(.skip-link)')
+    );
+    links.forEach(function (link) {
+      link.addEventListener("click", function (e) {
+        var id = link.getAttribute("href").slice(1);
+        if (!id) return;
+        var target = document.getElementById(id);
+        if (!target) return;
+        e.preventDefault();
+        // scrollIntoView respects the target's scroll-margin-top, so it clears
+        // the sticky masthead.
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (history.replaceState) history.replaceState(null, "", "#" + id);
+      });
+    });
+  }
+
+  function init() {
     initSearch();
+    initSmoothScroll();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
   }
 })();

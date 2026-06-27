@@ -28,6 +28,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 DATA_FILE = ROOT / "data" / "prayers.csv"
 MYSTERIES_FILE = ROOT / "data" / "mysteries.csv"
+CATEGORIES_FILE = ROOT / "data" / "categories.csv"
 TEMPLATE_DIR = ROOT / "templates"
 ASSETS_DIR = ROOT / "assets"
 DIST_DIR = ROOT / "dist"
@@ -304,6 +305,24 @@ def load_mysteries() -> list[dict]:
     return mysteries
 
 
+def load_category_descriptions() -> dict[str, str]:
+    """Optional one-line description per category, keyed by the exact category
+    name used in prayers.csv (data/categories.csv: columns 'category',
+    'description'). A missing file, or a category without a row, is fine: the
+    category simply renders without a blurb."""
+    if not CATEGORIES_FILE.is_file():
+        return {}
+    with CATEGORIES_FILE.open(encoding="utf-8", newline="") as f:
+        rows = list(csv.DictReader(f))
+    descriptions: dict[str, str] = {}
+    for row in rows:
+        cells = {k: (v or "").strip() for k, v in row.items()}
+        category, description = cells.get("category", ""), cells.get("description", "")
+        if category and description:
+            descriptions[category] = description
+    return descriptions
+
+
 # --------------------------------------------------------------------------- #
 # Rendering
 # --------------------------------------------------------------------------- #
@@ -378,7 +397,9 @@ def build_prayer_page(prayer: dict, base_tpl: str, prayer_tpl: str) -> str:
     )
 
 
-def build_index_page(prayers: list[dict], base_tpl: str, index_tpl: str) -> str:
+def build_index_page(
+    prayers: list[dict], base_tpl: str, index_tpl: str, descriptions: dict[str, str]
+) -> str:
     # Group by category, preserving first-seen category order; sort within by order.
     categories: dict[str, list[dict]] = {}
     for prayer in prayers:
@@ -402,9 +423,12 @@ def build_index_page(prayers: list[dict], base_tpl: str, index_tpl: str) -> str:
                     subtitle=esc(p["subtitle"]),
                 )
             )
+        desc = descriptions.get(category, "")
+        desc_html = f'  <p class="category-desc">{esc(desc)}</p>\n' if desc else ""
         blocks.append(
             '<section class="category">\n'
             f'  <h2 class="category-title">{esc(category)}</h2>\n'
+            f"{desc_html}"
             '  <ul class="prayer-list">\n'
             + "\n".join(links)
             + "\n  </ul>\n</section>"
@@ -428,7 +452,7 @@ def build_index_page(prayers: list[dict], base_tpl: str, index_tpl: str) -> str:
 def rosary_diagram_svg() -> str:
     """A small decorative rosary as inline SVG (no dependency): the loop of five
     decades, the centre medal, the short pendant, and the crucifix."""
-    gold, deep = "#8a6d2b", "#6b531d"
+    gold, deep = "#9c7b2e", "#7a5e1f"
     cx, cy, r = 100, 92, 78
     parts = [
         f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" '
@@ -555,6 +579,7 @@ def build() -> int:
     """Render the whole site into a fresh dist/. Returns the prayer count."""
     prayers = load_prayers()
     mysteries = load_mysteries()
+    category_descriptions = load_category_descriptions()
     base_tpl = load_template("base.html")
     prayer_tpl = load_template("prayer.html")
     index_tpl = load_template("index.html")
@@ -585,7 +610,10 @@ def build() -> int:
 
     # Render the homepage.
     index_out = DIST_DIR / "index.html"
-    index_out.write_text(build_index_page(prayers, base_tpl, index_tpl), encoding="utf-8")
+    index_out.write_text(
+        build_index_page(prayers, base_tpl, index_tpl, category_descriptions),
+        encoding="utf-8",
+    )
     print(f"  wrote {index_out.relative_to(ROOT)}")
 
     # Render standalone pages (content held directly in their templates).
