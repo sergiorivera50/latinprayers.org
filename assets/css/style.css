@@ -279,7 +279,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 /* --------------------------------------------------------------------------- */
 /* Main                                                                         */
 /* --------------------------------------------------------------------------- */
-.site-main { padding: 3.5rem 0 4rem; }
+.site-main { padding: 3.5rem 0 2rem; }
 
 /* ---- Homepage hero: a horizontal split — copy and entry points on the left,
    a framed devotional image on the right. Collapses to one centred column on
@@ -744,7 +744,15 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 /* The Rosary                                                                   */
 /* --------------------------------------------------------------------------- */
 .rosary { max-width: 50rem; margin: 0 auto; }
-.rosary-header { text-align: center; margin-bottom: 2.5rem; }
+.rosary-header { text-align: center; margin-bottom: 2rem; }
+.rosary-eyebrow {
+  margin: 0 0 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--gold-deep);
+}
 .rosary-title {
   font-family: var(--display);
   font-weight: 600;
@@ -756,6 +764,13 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 }
 .rosary-subtitle { margin: 0.5rem 0 0; color: var(--ink-soft); font-style: italic; font-size: 1.15rem; }
 
+/* Hero band: a wide devotional image between the title and the intro prose,
+   reusing the .ph-figure treatment (cover-fit, bordered, rounded). */
+/* Doubled class outranks the later `.ph-figure { margin: 0 }` so the bottom
+   margin (space before the intro prose) actually applies. */
+.ph-figure.rosary-hero { margin: 0 auto 3rem; }
+.rosary-hero img { aspect-ratio: 12 / 5; }
+
 .rosary-h2 {
   font-family: var(--display);
   font-weight: 600;
@@ -764,6 +779,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   color: var(--ink);
   text-align: center;
   margin: 0 0 1.5rem;
+  scroll-margin-top: 5.5rem;   /* clears the sticky masthead for in-page links */
 }
 .rosary-h2::after {
   content: "";
@@ -777,19 +793,12 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 .rosary-intro { max-width: 40rem; margin: 0 auto 3rem; }
 .rosary-intro p { margin: 0 0 1.1rem; color: var(--ink-soft); font-size: 1.06rem; line-height: 1.8; }
 .rosary-intro p:last-child { margin-bottom: 0; }
-.rosary-rule {
-  border: none;
-  height: 9px;
-  margin: 0 auto 1.75rem;
-  width: 4.5rem;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent) center/100% 1px no-repeat;
-}
 
 /* How to pray: diagram beside numbered steps (stacks on phones) */
 .rosary-how { max-width: 44rem; margin: 0 auto 3rem; }
 .rosary-how-grid { display: grid; grid-template-columns: 1fr; gap: 1.75rem; align-items: start; }
 .rosary-diagram { text-align: center; }
-.rosary-bead-svg { width: 9rem; height: auto; display: block; margin: 0 auto; }
+.rosary-diagram img { width: 11rem; max-width: 100%; height: auto; display: block; margin: 0 auto; }
 .rosary-steps {
   margin: 0;
   padding-left: 1.4rem;
@@ -821,64 +830,198 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   .rosary-how-grid { grid-template-columns: 11rem 1fr; gap: 2.5rem; }
 }
 
-/* Mystery sets and cards */
-.mystery-set { max-width: 46rem; margin: 0 auto 3rem; }
-.mystery-set-title {
-  font-family: var(--display);
-  font-weight: 600;
-  font-size: 1.7rem;
-  letter-spacing: 0.005em;
-  color: var(--ink);
+/* The Mysteries: a segmented toggle (Joyful / Sorrowful / Glorious) over three
+   panels. Each panel holds a carousel of five decade cards (one image per
+   mystery). With no JS every panel renders and each carousel is a swipeable
+   scroll-snap track; main.js shows one set at a time (opening today's) and adds
+   carousel controls. */
+.mysteries { max-width: 50rem; margin: 0 auto 3rem; }
+.mysteries-lead {
+  max-width: 40rem;
+  margin: 0 auto 1.75rem;
   text-align: center;
-  margin: 0 0 0.25rem;
+  color: var(--ink-soft);
+  font-size: 1.04rem;
+  line-height: 1.75;
 }
-.mystery-set-en { color: var(--ink); }
-.mystery-set-days { text-align: center; margin: 0 0 1.5rem; font-size: 0.86rem; font-style: italic; color: var(--ink-soft); }
-.mystery-list { list-style: none; margin: 0; padding: 0; }
-.mystery {
+
+/* Segmented toggle */
+.mysteries-tabs {
   display: grid;
-  grid-template-columns: 4rem 1fr;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.3rem;
+  max-width: 34rem;
+  margin: 0 auto 1.75rem;
+  padding: 0.3rem;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+.mysteries-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.05rem;
+  padding: 0.5rem 0.4rem;
+  border-radius: 999px;
+  color: var(--ink-soft);
+  text-decoration: none;
+  text-align: center;
+  transition: background 0.18s var(--ease), color 0.18s var(--ease);
+}
+.mysteries-tab:hover,
+.mysteries-tab:focus,
+.mysteries-tab:focus-visible {
+  background: var(--gold-tint);
+  color: var(--gold-deep);
+  text-decoration: none;
+}
+.mysteries-tab-name { font-family: var(--display); font-weight: 600; font-size: 1.08rem; }
+.mysteries-tab-days { font-size: 0.7rem; letter-spacing: 0.02em; color: inherit; opacity: 0.8; }
+.mysteries-tab[aria-selected="true"] {
+  background: var(--gold);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Panels: stacked & all visible without JS; one at a time with it. */
+.mysteries-panels { display: grid; gap: 2rem; scroll-margin-top: 5.5rem; }
+/* min-width:0 lets this grid item shrink instead of expanding to the carousel's
+   full scroll width (so the track can actually overflow-scroll). */
+.mysteries-panel { margin: 0; min-width: 0; }
+.js-mysteries .mysteries-panel[hidden] { display: none; }
+
+/* Decade carousel: each set's five mysteries as horizontally scroll-snapping
+   cards (one image per mystery). The track is natively swipeable with no JS;
+   main.js (.js-carousel) hides the scrollbar and adds prev/next + dot controls. */
+.decade-carousel { position: relative; }
+.decade-track {
+  display: flex;
   gap: 1.25rem;
-  align-items: start;
-  padding: 1.25rem 1.4rem;
-  margin-bottom: 0.7rem;
+  margin: 0;
+  /* generous bottom padding so the cards' soft drop shadow renders fully
+     inside the scroll clip instead of being cut off (matching the hero). */
+  padding: 0.25rem 0 1.75rem;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+.js-carousel .decade-track { scrollbar-width: none; }
+.js-carousel .decade-track::-webkit-scrollbar { display: none; }
+
+.decade-card {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  display: grid;
+  grid-template-columns: 1fr;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
 }
-.mystery-figure {
+.decade-figure {
   margin: 0;
-  width: 4rem; height: 4rem;
-  border-radius: 50%;
-  border: 1px solid var(--gold);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  aspect-ratio: 4 / 5;          /* stacked (mobile): a portrait, matching the art */
   background: var(--gold-tint);
-  color: var(--gold-deep);
 }
-.mystery-figure span { font-family: var(--display); font-weight: 600; font-size: 1.5rem; }
-.mystery-eyebrow {
-  margin: 0 0 0.3rem;
+.decade-figure img,
+.decade-figure .placeholder {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  object-fit: cover;
+  border: none;
+  border-radius: 0;
+}
+.decade-figure .placeholder { background: var(--gold-tint); color: var(--gold-deep); }
+.decade-figure .placeholder span {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.15rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+.decade-body { padding: 1.5rem 1.5rem 1.6rem; min-width: 0; }
+.decade-eyebrow {
+  margin: 0 0 0.35rem;
   text-transform: uppercase;
   letter-spacing: 0.14em;
   font-size: 0.68rem;
   font-weight: 600;
   color: var(--gold-deep);
 }
-.mystery-name { margin: 0 0 0.25rem; font-size: 1.3rem; font-weight: normal; line-height: 1.15; }
-.mystery-name [lang="la"] { font-family: var(--display); font-weight: 600; }
-.mystery-en { color: var(--ink-soft); font-style: italic; font-size: 1rem; }
+.mystery-name { margin: 0 0 0.35rem; font-family: var(--display); font-weight: 600; font-size: 1.4rem; line-height: 1.12; color: var(--ink); }
+.mystery-ref { margin: 0 0 0.75rem; font-size: 0.84rem; color: var(--ink-soft); }
 .mystery-sep { margin: 0 0.5rem; color: var(--gold); opacity: 0.7; }
-.mystery-ref { margin: 0 0 0.5rem; font-size: 0.84rem; color: var(--ink-soft); }
 .mystery-fruit { color: var(--gold-deep); }
-.mystery-med { margin: 0; color: var(--ink); font-size: 1.01rem; line-height: 1.7; }
-@media (max-width: 32rem) {
-  .mystery { grid-template-columns: 1fr; }
-  .mystery-figure { width: 3.25rem; height: 3.25rem; }
-  .mystery-figure span { font-size: 1.25rem; }
+.mystery-med { margin: 0; color: var(--ink); font-size: 1rem; line-height: 1.7; }
+
+/* Controls (injected by main.js): prev/next buttons flanking a row of dots. */
+.decade-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.1rem;
+  margin-top: 0;   /* the track's bottom padding already provides the gap */
 }
+.decade-nav {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--gold-deep);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.18s var(--ease), border-color 0.18s var(--ease), opacity 0.18s var(--ease);
+}
+.decade-nav:not([disabled]):hover,
+.decade-nav:not([disabled]):focus-visible { background: var(--gold-tint); border-color: var(--gold); }
+.decade-nav[disabled] { opacity: 0.3; cursor: default; }
+.decade-dots { display: flex; align-items: center; gap: 0.5rem; }
+.decade-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--line);
+  cursor: pointer;
+  transition: background 0.18s var(--ease), transform 0.18s var(--ease);
+}
+.decade-dot:hover { background: var(--gold-deep); }
+.decade-dot[aria-current="true"] { background: var(--gold); transform: scale(1.3); }
+
+/* Desktop: image left, text right within each card. A min-height keeps every
+   card (and every set) the same size and a little taller; flex-stretch still
+   equalises them, and a longer meditation simply grows the card rather than
+   overflowing. The body is centred so shorter cards don't pool whitespace. The
+   image is absolutely positioned so it fills its column by cover without
+   imposing its intrinsic height (which would make image cards taller). */
+@media (min-width: 44rem) {
+  .decade-card { grid-template-columns: 20rem 1fr; min-height: 21rem; }
+  .decade-figure { aspect-ratio: auto; height: 100%; position: relative; }
+  .decade-figure img { position: absolute; inset: 0; }
+  .decade-body { padding: 2rem 2.25rem; align-self: center; }
+}
+
+/* These mysteries carry their key figure at the very top (the risen/ascending
+   Christ, the descending Dove, the crowning), so anchor their crop upward to
+   keep it in view on desktop rather than centre-cropping it. */
+#decade-glorious-1 .decade-figure img,
+#decade-glorious-2 .decade-figure img,
+#decade-glorious-3 .decade-figure img,
+#decade-glorious-5 .decade-figure img { object-position: center top; }
 
 /* Concluding prayers */
 .rosary-close { max-width: 40rem; margin: 0 auto; }
@@ -888,9 +1031,6 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 .rosary-close-steps > li:last-child { margin-bottom: 0; }
 .rosary-close-steps > li::marker { color: var(--gold); }
 .rosary-step-label { margin: 0 0 0.7rem; color: var(--ink); }
-.rosary-vr-block { margin: 0; }
-.rosary-vr-line { margin: 0 0 0.7rem; line-height: 1.6; }
-.rosary-vr-line:last-child { margin-bottom: 0; }
 .rosary-vr { color: var(--crimson); font-weight: 600; margin-right: 0.3rem; }
 .rosary-collect {
   background: var(--surface);
@@ -902,6 +1042,38 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 .rosary-collect p { margin: 0 0 1rem; line-height: 1.75; }
 .rosary-collect p[lang="la"] { font-size: 1.08rem; }
 .rosary-collect p:last-child { margin-bottom: 0; color: var(--ink-soft); }
+
+/* Closing image: Our Lady on a transparent ground — a quiet benediction to end
+   the page. No frame; she floats on the background, with the last words of the
+   Salve Regina beneath. */
+/* Container is wider than the image so the caption keeps to one line on desktop;
+   the image is capped and centred. */
+.rosary-mary { max-width: 25rem; margin: 3.5rem auto 0; text-align: center; }
+.rosary-mary img {
+  display: block;
+  width: 100%;
+  max-width: 18rem;
+  height: auto;
+  margin: 0 auto;
+  /* Fade the top few pixels to transparent so the hard top crop of the
+     artwork dissolves into the page instead of cutting off abruptly. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 6px);
+  mask-image: linear-gradient(to bottom, transparent, #000 6px);
+}
+.rosary-mary figcaption {
+  margin-top: 1rem;
+  font-style: italic;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+.rosary-mary figcaption [lang="la"] {
+  display: block;
+  font-family: var(--display);
+  font-style: normal;
+  font-size: 1.2rem;
+  color: var(--ink);
+  margin-bottom: 0.15rem;
+}
 
 /* --------------------------------------------------------------------------- */
 /* Manifesto                                                                    */
@@ -1026,7 +1198,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 /* Footer                                                                       */
 /* --------------------------------------------------------------------------- */
 .site-footer {
-  margin-top: 4rem;
+  margin-top: 2rem;
   text-align: center;
   padding: 1.6rem 1.5rem 1.75rem;
   color: var(--ink-faint);
@@ -1055,7 +1227,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 
 /* Stack the two prayer columns; restack the masthead. */
 @media (max-width: 38rem) {
-  .site-main { padding: 2.5rem 0 3rem; }
+  .site-main { padding: 2.5rem 0 1.5rem; }
 
   .prayer-body {
     grid-template-columns: 1fr;

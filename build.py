@@ -19,7 +19,6 @@ import csv
 import datetime
 import html
 import json
-import math
 import re
 import shutil
 import sys
@@ -57,10 +56,12 @@ REQUIRED_COLUMNS = ("slug", "title", "subtitle", "category", "la", "en")
 # numeral maps. The Luminous Mysteries (added 2002) are deliberately omitted:
 # this is the traditional 15-decade Dominican Rosary.
 REQUIRED_MYSTERY_COLUMNS = ("set", "order", "la", "en", "scripture", "fruit", "meditation")
+# (name, Latin name, full day phrase, short day label for the toggle, weekday
+# numbers JS uses to open today's set by default — 0=Sunday … 6=Saturday).
 ROSARY_SETS = (
-    ("Joyful", "Mysteria Gaudiosa", "Mondays and Thursdays"),
-    ("Sorrowful", "Mysteria Dolorosa", "Tuesdays and Fridays"),
-    ("Glorious", "Mysteria Gloriosa", "Wednesdays, Saturdays, and Sundays"),
+    ("Joyful", "Mysteria Gaudiosa", "Mondays and Thursdays", "Mon & Thu", (1, 4)),
+    ("Sorrowful", "Mysteria Dolorosa", "Tuesdays and Fridays", "Tue & Fri", (2, 5)),
+    ("Glorious", "Mysteria Gloriosa", "Wednesdays, Saturdays, and Sundays", "Wed, Sat & Sun", (3, 6, 0)),
 )
 ROMAN = {1: "I", 2: "II", 3: "III", 4: "IV", 5: "V"}
 ORDINAL = {1: "First", 2: "Second", 3: "Third", 4: "Fourth", 5: "Fifth"}
@@ -276,7 +277,7 @@ def load_mysteries() -> list[dict]:
         if missing:
             fail(f"{MYSTERIES_FILE.name}: missing column(s): {', '.join(missing)}")
 
-    valid_sets = {name for name, _, _ in ROSARY_SETS}
+    valid_sets = {name for name, *_ in ROSARY_SETS}
     mysteries: list[dict] = []
     for n, row in enumerate(rows, start=2):  # row 1 is the header
         where = f"{MYSTERIES_FILE.name} row {n}"
@@ -449,52 +450,6 @@ def build_index_page(
     )
 
 
-def rosary_diagram_svg() -> str:
-    """A small decorative rosary as inline SVG (no dependency): the loop of five
-    decades, the centre medal, the short pendant, and the crucifix."""
-    gold, deep = "#9c7b2e", "#7a5e1f"
-    cx, cy, r = 100, 92, 78
-    parts = [
-        f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" '
-        f'stroke="{gold}" stroke-opacity="0.4" stroke-width="1"/>'
-    ]
-    # Loop: 54 beads = five runs of ten small (Hail Mary) beads separated by four
-    # large (Our Father) beads. The medal joins between the last and the first
-    # small bead, so the bottom of the loop is flanked by small beads.
-    n = 54
-    pater = {10, 21, 32, 43}
-    for i in range(n):
-        ang = math.radians(90 + (i + 0.5) * 360 / n)
-        x, y = cx + r * math.cos(ang), cy + r * math.sin(ang)
-        if i in pater:
-            parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4" fill="{deep}"/>')
-        else:
-            parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="2.4" fill="{gold}" fill-opacity="0.85"/>')
-    my = cy + r  # the join sits at the bottom of the loop
-    # Pendant: an Our Father bead at the medal, three Hail Mary beads, then a
-    # final Our Father bead above the crucifix (big, three small, big).
-    parts += [
-        f'<line x1="{cx}" y1="{my - 2}" x2="{cx}" y2="{my + 88}" stroke="{gold}" stroke-opacity="0.5" stroke-width="1"/>',
-        f'<circle cx="{cx}" cy="{my + 10}" r="6.5" fill="none" stroke="{deep}" stroke-width="1.5"/>',
-        f'<circle cx="{cx}" cy="{my + 25}" r="4" fill="{deep}"/>',
-    ]
-    for yy in (my + 39, my + 50, my + 61):
-        parts.append(f'<circle cx="{cx}" cy="{yy}" r="2.4" fill="{gold}" fill-opacity="0.85"/>')
-    parts.append(f'<circle cx="{cx}" cy="{my + 76}" r="4" fill="{deep}"/>')
-    base = my + 90
-    parts += [
-        f'<line x1="{cx}" y1="{base}" x2="{cx}" y2="{base + 44}" stroke="{deep}" stroke-width="3" stroke-linecap="round"/>',
-        f'<line x1="{cx - 14}" y1="{base + 15}" x2="{cx + 14}" y2="{base + 15}" stroke="{deep}" stroke-width="3" stroke-linecap="round"/>',
-    ]
-    h = base + 52
-    return (
-        f'<svg class="rosary-bead-svg" viewBox="0 0 200 {h}" role="img" '
-        f'aria-label="A rosary" xmlns="http://www.w3.org/2000/svg">'
-        + "".join(parts)
-        + "</svg>"
-    )
-
-
 def rosary_jsonld() -> str:
     """Page-specific Article JSON-LD for the Rosary page."""
     data = {
@@ -519,45 +474,94 @@ def rosary_jsonld() -> str:
     )
 
 
+def mystery_image(set_slug: str, order: int) -> str | None:
+    """Web path to a mystery's illustration if one has been added under
+    assets/img/mysteries/<set>-<order>.<ext>, else None (a placeholder shows).
+    Lets art be dropped in per mystery without touching the build."""
+    for ext in ("webp", "jpg", "jpeg", "png"):
+        rel = f"img/mysteries/{set_slug}-{order}.{ext}"
+        if (ASSETS_DIR / rel).is_file():
+            return "/assets/" + rel
+    return None
+
+
 def build_rosary_page(mysteries: list[dict], base_tpl: str, rosary_tpl: str) -> str:
     by_set: dict[str, list[dict]] = {}
     for m in mysteries:
         by_set.setdefault(m["set"], []).append(m)
 
-    blocks: list[str] = []
-    for name, latin, days in ROSARY_SETS:
+    # The mysteries render as one tabbed card: a toggle (Joyful / Sorrowful /
+    # Glorious) over three panels, each a wide card with a set image on the left
+    # and its five mysteries on the right. Every panel is present in the markup
+    # (fully readable with no JS); main.js turns the toggle on and opens today's
+    # set. data-days carries the weekday numbers it keys the default off.
+    tabs: list[str] = []
+    panels: list[str] = []
+    for name, _latin, _days, short, weekdays in ROSARY_SETS:
+        slug = name.lower()
+        wd = ",".join(str(d) for d in weekdays)
+        tabs.append(
+            f'    <a class="mysteries-tab" id="tab-{slug}" href="#panel-{slug}" '
+            f'aria-controls="panel-{slug}" data-days="{wd}">'
+            f'<span class="mysteries-tab-name">{esc(name)}</span>'
+            f'<span class="mysteries-tab-days">{esc(short)}</span></a>'
+        )
+
         items = sorted(by_set.get(name, []), key=lambda m: m["order"])
         cards = []
         for m in items:
             num = m["order"]
+            ordinal = ORDINAL.get(num, "")
+            img = mystery_image(slug, num)
+            if img:
+                figure = f'<img src="{img}" alt="{esc(m["en"])}" loading="lazy">'
+            else:
+                figure = (
+                    '<div class="placeholder" aria-hidden="true">'
+                    f'<span>{esc(m["en"])}</span></div>'
+                )
             cards.append(
-                '      <li class="mystery">\n'
-                f'        <figure class="mystery-figure" aria-hidden="true"><span>{ROMAN.get(num, num)}</span></figure>\n'
-                '        <div class="mystery-text">\n'
-                f'          <p class="mystery-eyebrow">{ORDINAL.get(num, "")} {esc(name)} Mystery</p>\n'
-                f'          <h3 class="mystery-name"><span lang="la">{esc(m["la"])}</span>'
+                f'          <li class="decade-card" id="decade-{slug}-{num}" '
+                f'aria-label="{esc(ordinal)} {esc(name)} Mystery: {esc(m["en"])}">\n'
+                f'            <figure class="decade-figure">{figure}</figure>\n'
+                '            <div class="decade-body">\n'
+                f'              <p class="decade-eyebrow">{esc(ordinal)} {esc(name)} Mystery</p>\n'
+                f'              <h4 class="mystery-name">{esc(m["en"])}</h4>\n'
+                f'              <p class="mystery-ref">{esc(m["scripture"])}'
                 f'<span class="mystery-sep" aria-hidden="true">/</span>'
-                f'<span class="mystery-en">{esc(m["en"])}</span></h3>\n'
-                f'          <p class="mystery-ref">{esc(m["scripture"])} '
-                f'<span class="mystery-fruit">Fruit: {esc(m["fruit"])}</span></p>\n'
-                f'          <p class="mystery-med">{esc(m["meditation"])}</p>\n'
-                "        </div>\n"
-                "      </li>"
+                f'<span class="mystery-fruit">{esc(m["fruit"])}</span></p>\n'
+                f'              <p class="mystery-med">{esc(m["meditation"])}</p>\n'
+                "            </div>\n"
+                "          </li>"
             )
-        slug = name.lower()
-        blocks.append(
-            f'<section class="mystery-set" id="{slug}" aria-labelledby="set-{slug}">\n'
-            f'  <h2 class="mystery-set-title" id="set-{slug}">'
-            f'<span lang="la">{esc(latin)}</span>'
-            f'<span class="mystery-sep" aria-hidden="true">/</span>'
-            f'<span class="mystery-set-en">The {esc(name)} Mysteries</span></h2>\n'
-            f'  <p class="mystery-set-days">Prayed on {esc(days)}</p>\n'
-            '  <ol class="mystery-list">\n'
+
+        panels.append(
+            f'    <article class="mysteries-panel" id="panel-{slug}" '
+            f'aria-labelledby="tab-{slug}" data-set="{slug}">\n'
+            '      <div class="decade-carousel">\n'
+            f'        <ol class="decade-track" aria-label="The {esc(name)} Mysteries">\n'
             + "\n".join(cards)
-            + "\n  </ol>\n</section>"
+            + "\n        </ol>\n"
+            "      </div>\n"
+            "    </article>"
         )
 
-    content = render(rosary_tpl, mysteries="\n\n".join(blocks), diagram=rosary_diagram_svg())
+    mysteries_html = (
+        '<section class="mysteries" aria-labelledby="mysteries-title">\n'
+        '  <h2 class="rosary-h2" id="mysteries-title">The Fifteen Mysteries</h2>\n'
+        "  <p class=\"mysteries-lead\">For each day the Church sets before us one of "
+        "the three sets of mysteries to contemplate. Choose a set to read its five "
+        "mysteries, with their Scripture and spiritual fruits.</p>\n"
+        '  <div class="mysteries-tabs" aria-label="The three sets of mysteries">\n'
+        + "\n".join(tabs)
+        + "\n  </div>\n"
+        '  <div class="mysteries-panels" id="mysteries">\n'
+        + "\n".join(panels)
+        + "\n  </div>\n"
+        "</section>"
+    )
+
+    content = render(rosary_tpl, mysteries=mysteries_html)
     page_desc = (
         "How to pray the traditional Holy Rosary, with the Joyful, Sorrowful, "
         "and Glorious Mysteries in Latin and English, their Scripture and fruits."

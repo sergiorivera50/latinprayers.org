@@ -71,9 +71,204 @@
     });
   }
 
+  // The Mysteries toggle. The markup has three anchor "tabs" and three panels,
+  // all visible by default (fully readable with no JS). This upgrades them into
+  // a single-select tab group and opens the set proper to today's weekday.
+  function initMysteries() {
+    var section = document.querySelector(".mysteries");
+    if (!section) return;
+    var tablist = section.querySelector(".mysteries-tabs");
+    var tabs = Array.prototype.slice.call(
+      section.querySelectorAll(".mysteries-tab")
+    );
+    var panels = Array.prototype.slice.call(
+      section.querySelectorAll(".mysteries-panel")
+    );
+    if (tabs.length < 2 || !panels.length) return;
+
+    section.classList.add("js-mysteries");
+    if (tablist) tablist.setAttribute("role", "tablist");
+
+    function panelFor(tab) {
+      return document.getElementById(tab.getAttribute("aria-controls"));
+    }
+
+    function select(tab, focus) {
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute("aria-selected", on ? "true" : "false");
+        t.setAttribute("tabindex", on ? "0" : "-1");
+        var panel = panelFor(t);
+        if (panel) panel.hidden = !on;
+      });
+      if (focus) tab.focus();
+    }
+
+    tabs.forEach(function (tab, i) {
+      tab.setAttribute("role", "tab");
+      var panel = panelFor(tab);
+      if (panel) panel.setAttribute("role", "tabpanel");
+
+      tab.addEventListener("click", function (e) {
+        e.preventDefault();
+        select(tab, false);
+      });
+      tab.addEventListener("keydown", function (e) {
+        var dir = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+        if (!dir) return;
+        e.preventDefault();
+        select(tabs[(i + dir + tabs.length) % tabs.length], true);
+      });
+    });
+
+    // Default selection: a matching URL hash wins; otherwise today's set
+    // (data-days carries the weekday numbers, 0=Sun…6=Sat); else the first tab.
+    var def = tabs[0];
+    var hash = window.location.hash.replace("#", "");
+    var fromHash = hash
+      ? tabs.filter(function (t) {
+          return t.getAttribute("aria-controls") === hash;
+        })[0]
+      : null;
+    if (fromHash) {
+      def = fromHash;
+    } else {
+      var today = String(new Date().getDay());
+      tabs.forEach(function (t) {
+        if ((t.getAttribute("data-days") || "").split(",").indexOf(today) !== -1) {
+          def = t;
+        }
+      });
+    }
+    select(def, false);
+  }
+
+  // Decade carousels: each set's five mysteries sit in a horizontal scroll-snap
+  // track (swipeable on its own with no JS). This adds prev/next + dot controls
+  // and hides the scrollbar; the track stays the single source of position.
+  function initCarousels() {
+    var reduce =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var carousels = Array.prototype.slice.call(
+      document.querySelectorAll(".decade-carousel")
+    );
+
+    carousels.forEach(function (carousel) {
+      var track = carousel.querySelector(".decade-track");
+      if (!track) return;
+      var cards = Array.prototype.slice.call(
+        track.querySelectorAll(".decade-card")
+      );
+      if (cards.length < 2) return;
+
+      carousel.classList.add("js-carousel");
+
+      var controls = document.createElement("div");
+      controls.className = "decade-controls";
+
+      var prev = document.createElement("button");
+      prev.type = "button";
+      prev.className = "decade-nav decade-prev";
+      prev.setAttribute("aria-label", "Previous mystery");
+      prev.innerHTML = "‹";
+
+      var next = document.createElement("button");
+      next.type = "button";
+      next.className = "decade-nav decade-next";
+      next.setAttribute("aria-label", "Next mystery");
+      next.innerHTML = "›";
+
+      var dotsWrap = document.createElement("div");
+      dotsWrap.className = "decade-dots";
+      var dots = cards.map(function (card, i) {
+        var dot = document.createElement("button");
+        dot.type = "button";
+        dot.className = "decade-dot";
+        dot.setAttribute("aria-label", "Mystery " + (i + 1));
+        dot.addEventListener("click", function () {
+          go(i);
+        });
+        dotsWrap.appendChild(dot);
+        return dot;
+      });
+
+      controls.appendChild(prev);
+      controls.appendChild(dotsWrap);
+      controls.appendChild(next);
+      carousel.appendChild(controls);
+
+      var index = 0;
+
+      function liveIndex() {
+        var best = 0;
+        var min = Infinity;
+        for (var i = 0; i < cards.length; i++) {
+          var dist = Math.abs(cards[i].offsetLeft - track.scrollLeft);
+          if (dist < min) {
+            min = dist;
+            best = i;
+          }
+        }
+        return best;
+      }
+
+      function paint(i) {
+        for (var j = 0; j < dots.length; j++) {
+          dots[j].setAttribute("aria-current", j === i ? "true" : "false");
+        }
+        prev.disabled = i <= 0;
+        next.disabled = i >= cards.length - 1;
+      }
+
+      // Buttons drive a canonical index so rapid clicks chain even mid-scroll;
+      // a manual swipe re-syncs that index once the scroll settles. While a
+      // button-driven scroll is animating, `programmatic` keeps the target dot
+      // lit instead of flashing back to the position the scroll is passing.
+      var programmatic = false;
+      function go(i) {
+        index = Math.max(0, Math.min(cards.length - 1, i));
+        programmatic = true;
+        track.scrollTo({
+          left: cards[index].offsetLeft,
+          behavior: reduce ? "auto" : "smooth"
+        });
+        paint(index);
+      }
+
+      prev.addEventListener("click", function () {
+        go(index - 1);
+      });
+      next.addEventListener("click", function () {
+        go(index + 1);
+      });
+
+      var ticking = false;
+      var settle;
+      track.addEventListener("scroll", function () {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(function () {
+            ticking = false;
+            if (!programmatic) paint(liveIndex());
+          });
+        }
+        clearTimeout(settle);
+        settle = setTimeout(function () {
+          programmatic = false;
+          index = liveIndex();
+          paint(index);
+        }, 120);
+      });
+
+      paint(0);
+    });
+  }
+
   // Smooth-scroll in-page anchor links (e.g. the hero "Browse the prayers" CTA).
   // Backs up the CSS `scroll-behavior: smooth`, and honours reduced-motion by
-  // simply not intercepting (the browser then jumps instantly).
+  // simply not intercepting (the browser then jumps instantly). The Mysteries
+  // tabs are excluded — they switch panels rather than scroll.
   function initSmoothScroll() {
     if (
       window.matchMedia &&
@@ -82,7 +277,7 @@
       return;
     }
     var links = Array.prototype.slice.call(
-      document.querySelectorAll('a[href^="#"]:not(.skip-link)')
+      document.querySelectorAll('a[href^="#"]:not(.skip-link):not(.mysteries-tab)')
     );
     links.forEach(function (link) {
       link.addEventListener("click", function (e) {
@@ -101,6 +296,8 @@
 
   function init() {
     initSearch();
+    initMysteries();
+    initCarousels();
     initSmoothScroll();
   }
 
