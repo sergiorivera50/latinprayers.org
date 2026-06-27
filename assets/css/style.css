@@ -740,6 +740,68 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 }
 .prayer-context p:last-child { margin-bottom: 0; }
 
+/* ---- Pray-the-Rosary CTA (only on prayers the Rosary page links to) ---- */
+.rosary-cta {
+  max-width: 40rem;
+  margin: 3.25rem auto 0;
+  padding: 1.9rem 1.75rem 2rem;
+  text-align: center;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+.rosary-cta-eyebrow {
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--gold-deep);
+}
+.rosary-cta-title {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.5rem;
+  letter-spacing: 0.005em;
+  color: var(--ink);
+  margin: 0 0 0.55rem;
+}
+.rosary-cta-lead {
+  margin: 0 auto 1.4rem;
+  max-width: 32rem;
+  color: var(--ink-soft);
+  font-size: 1.02rem;
+  line-height: 1.7;
+}
+.rosary-cta-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.8rem;
+  color: var(--surface);
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  border-radius: 999px;
+  padding: 0.7rem 1.7rem;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.15s var(--ease), transform 0.15s var(--ease),
+              box-shadow 0.15s var(--ease);
+}
+.rosary-cta-link:hover, .rosary-cta-link:focus {
+  text-decoration: none;
+  color: var(--surface);
+  background: var(--btn-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+.rosary-cta-arrow { transition: transform 0.18s var(--ease); }
+.rosary-cta-link:hover .rosary-cta-arrow,
+.rosary-cta-link:focus .rosary-cta-arrow { transform: translateX(0.25rem); }
+
 /* --------------------------------------------------------------------------- */
 /* The Rosary                                                                   */
 /* --------------------------------------------------------------------------- */

@@ -341,7 +341,36 @@ def render_lines(lines: list[str]) -> str:
     return "<br>\n".join(rendered)
 
 
-def build_prayer_page(prayer: dict, base_tpl: str, prayer_tpl: str) -> str:
+# Prayer links inside the Rosary page (e.g. /prayers/pater-noster/). The prayers
+# the Rosary leans on get a CTA back to /rosary/; deriving the set from the
+# template keeps a single source of truth, so it follows the page automatically.
+ROSARY_LINK_RE = re.compile(r"/prayers/([a-z0-9-]+)/")
+
+
+def rosary_prayer_slugs(rosary_tpl: str) -> set[str]:
+    """The slugs of every prayer linked from the Rosary template."""
+    return set(ROSARY_LINK_RE.findall(rosary_tpl))
+
+
+def render_rosary_cta(prayer: dict) -> str:
+    """A card at the foot of a prayer page inviting the reader to the Rosary.
+    Shown only on prayers the Rosary itself links to (see rosary_prayer_slugs)."""
+    return (
+        '<aside class="rosary-cta" aria-labelledby="rosary-cta-title">\n'
+        '  <p class="rosary-cta-eyebrow">Special devotion</p>\n'
+        '  <h2 class="rosary-cta-title" id="rosary-cta-title">Pray the Holy Rosary</h2>\n'
+        f'  <p class="rosary-cta-lead">{esc(prayer["subtitle"])} is one of the '
+        "prayers of the Holy Rosary. See how it is woven through the mysteries, "
+        "and learn to pray the whole devotion.</p>\n"
+        '  <a class="rosary-cta-link" href="/rosary/">Pray the Rosary '
+        '<span class="rosary-cta-arrow" aria-hidden="true">&rarr;</span></a>\n'
+        "</aside>"
+    )
+
+
+def build_prayer_page(
+    prayer: dict, base_tpl: str, prayer_tpl: str, rosary_slugs: set[str]
+) -> str:
     description = ""
     if prayer["description"]:
         description = f'<p class="prayer-description">{esc(prayer["description"])}</p>'
@@ -376,6 +405,8 @@ def build_prayer_page(prayer: dict, base_tpl: str, prayer_tpl: str) -> str:
     elif prayer["source"]:
         source = f'<p class="prayer-source">Translation source: {esc(prayer["source"])}</p>'
 
+    rosary_cta = render_rosary_cta(prayer) if prayer["id"] in rosary_slugs else ""
+
     content = render(
         prayer_tpl,
         title=esc(prayer["title"]),
@@ -385,6 +416,7 @@ def build_prayer_page(prayer: dict, base_tpl: str, prayer_tpl: str) -> str:
         english_lines=render_lines(prayer["english"]),
         context=context,
         source=source,
+        rosary_cta=rosary_cta,
     )
 
     page_desc = prayer["description"] or f'{prayer["title"]}, {prayer["subtitle"]} in Latin and English.'
@@ -604,12 +636,16 @@ def build() -> int:
 
     # Render prayer pages as directory indexes (prayers/<id>/index.html) so the
     # public URL is a clean /prayers/<id>/ with no .html suffix.
+    rosary_slugs = rosary_prayer_slugs(rosary_tpl)
     prayers_out = DIST_DIR / "prayers"
     for prayer in prayers:
         page_dir = prayers_out / prayer["id"]
         page_dir.mkdir(parents=True)
         out = page_dir / "index.html"
-        out.write_text(build_prayer_page(prayer, base_tpl, prayer_tpl), encoding="utf-8")
+        out.write_text(
+            build_prayer_page(prayer, base_tpl, prayer_tpl, rosary_slugs),
+            encoding="utf-8",
+        )
         print(f"  wrote {out.relative_to(ROOT)}")
 
     # Render the homepage.
