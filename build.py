@@ -581,7 +581,7 @@ def build_rosary_page(mysteries: list[dict], base_tpl: str, rosary_tpl: str) -> 
     mysteries_html = (
         '<section class="mysteries" aria-labelledby="mysteries-title">\n'
         '  <h2 class="rosary-h2" id="mysteries-title">The Fifteen Mysteries</h2>\n'
-        "  <p class=\"mysteries-lead\">For each day the Church sets before us one of "
+        "  <p class=\"mysteries-lead\">For each day of the week, the Church sets before us one of "
         "the three sets of mysteries to contemplate. Choose a set to read its five "
         "mysteries, with their Scripture and spiritual fruits.</p>\n"
         '  <div class="mysteries-tabs" aria-label="The three sets of mysteries">\n'

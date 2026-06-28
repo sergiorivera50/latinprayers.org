@@ -352,7 +352,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   align-items: center;
   gap: 0.4rem;
   font-weight: 600;
-  color: var(--ink);
+  color: var(--gold);
 }
 .hero-link:hover, .hero-link:focus { color: var(--gold-deep); text-decoration: none; }
 .hero-link-arrow { color: var(--gold); transition: transform 0.18s var(--ease); }
@@ -364,7 +364,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   flex-wrap: wrap;
   align-items: center;
   gap: 0.55rem;
-  margin: 2rem 0 0;
+  margin: 3rem 0 0;
 }
 .hero-popular-label {
   text-transform: uppercase;
