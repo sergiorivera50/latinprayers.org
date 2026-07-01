@@ -833,40 +833,28 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
    while keeping full ink strength. */
 .prayer-english .prayer-text { color: #3b3120; font-size: 1.2rem; line-height: 1.75; }
 
-/* Rubricated drop-cap: the opening letter of each column enlarged in crimson, so
-   the first lines wrap around it (as in an illuminated missal). The float sizing
-   is a fallback; where `initial-letter` is supported it takes over and sinks the
-   cap exactly two lines, aligning it to the baseline grid so the wrapped lines
-   sit cleanly around it. */
-.prayer-text::first-letter {
+/* Rubricated drop-cap on the Latin side only: the opening letter enlarged in
+   crimson so the first lines wrap around it (as in an illuminated missal). The
+   float sizing is a fallback; where `initial-letter` is supported it takes over
+   and sinks the cap exactly two lines, aligning it to the baseline grid so the
+   wrapped lines sit cleanly around it. The English side keeps a plain opening. */
+.prayer-latin .prayer-text::first-letter {
   float: left;
   margin: 0.02em 0.1em 0 0;
   font-family: var(--display);
   font-weight: 600;
-  /* fixed size (not em) so both columns' caps match despite their different body
-     sizes; this is the float fallback path */
   font-size: 3.9rem;
   line-height: 0.72;
   color: var(--crimson-bright);
 }
 @supports (initial-letter: 2) or (-webkit-initial-letter: 2) {
-  .prayer-text::first-letter {
+  .prayer-latin .prayer-text::first-letter {
     float: none;
     font-size: 100%;
     line-height: normal;
     margin: 0 0.5em 0 0;
     -webkit-initial-letter: 2;
     initial-letter: 2;
-  }
-  /* Both caps keep a clean two-line sink (via the rule above). The Latin body is
-     smaller (1.02rem) than the English (1.2rem), so its cap would come out
-     smaller; enlarge just the glyph with a transform (which doesn't reserve an
-     extra line the way a larger `initial-letter` would) so both caps match in
-     size without adding space beneath the Latin letter. Origin at the baseline so
-     it grows up into the margin, not down into the text. */
-  .prayer-latin .prayer-text::first-letter {
-    transform: scale(1.176);
-    transform-origin: 0% 88%;
   }
 }
 
