@@ -868,6 +868,46 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 .prayer-source a { color: var(--ink-soft); }
 .prayer-source a:hover, .prayer-source a:focus { color: var(--gold-deep); }
 
+/* Meta row beneath the card (JS-injected): the "Copy Latin" action on the left,
+   and the translation-source line pulled onto its right when one exists. */
+.prayer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-top: 0.8rem;
+}
+.prayer-actions .prayer-source { margin: 0; }
+
+.copy-latin {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.32rem 0.8rem;
+  font-family: var(--serif);
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.15s var(--ease), border-color 0.15s var(--ease),
+    background 0.15s var(--ease);
+}
+.copy-latin svg { width: 0.95rem; height: 0.95rem; flex: none; }
+.copy-latin:hover, .copy-latin:focus-visible {
+  color: var(--crimson-bright);
+  border-color: var(--crimson-bright);
+  background: var(--surface);
+  outline: none;
+}
+.copy-latin.is-copied {
+  color: var(--crimson-bright);
+  border-color: var(--crimson-bright);
+}
+
 /* ---- About this prayer (context prose) ---- */
 .prayer-context {
   max-width: 40rem;

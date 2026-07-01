@@ -294,11 +294,106 @@
     });
   }
 
+  // Copy the Latin text of a prayer. Progressive enhancement: the button is
+  // created here, so a no-JS visitor never sees a dead control. The Latin lives
+  // as <br>-separated lines in .prayer-latin .prayer-text (the drop-cap is a
+  // ::first-letter pseudo, so it isn't in the DOM and doesn't interfere).
+  var CLIPBOARD_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path></svg>';
+  var CHECK_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>';
+
+  function latinTextFrom(el) {
+    // Split on the <br> line breaks, then let the browser decode entities and
+    // strip any incidental markup by reading textContent per line.
+    var decoder = document.createElement("div");
+    return el.innerHTML
+      .split(/<br\s*\/?>/i)
+      .map(function (part) {
+        decoder.innerHTML = part;
+        return (decoder.textContent || "").replace(/\s+/g, " ").trim();
+      })
+      .filter(function (line) {
+        return line.length;
+      })
+      .join("\n");
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    // Fallback for browsers without the async clipboard API.
+    return new Promise(function (resolve, reject) {
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.top = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        ok ? resolve() : reject();
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
+  function initCopyLatin() {
+    var latin = document.querySelector(".prayer-latin .prayer-text");
+    var body = document.querySelector(".prayer-body");
+    if (!latin || !body) return;
+    var text = latinTextFrom(latin);
+    if (!text) return;
+
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "copy-latin";
+    btn.setAttribute("aria-label", "Copy the Latin text");
+
+    function render(label, svg) {
+      btn.innerHTML = svg + '<span class="copy-latin-label">' + label + "</span>";
+    }
+    render("Copy Latin", CLIPBOARD_SVG);
+
+    var revert;
+    btn.addEventListener("click", function () {
+      copyText(text).then(
+        function () {
+          btn.classList.add("is-copied");
+          render("Copied", CHECK_SVG);
+          clearTimeout(revert);
+          revert = setTimeout(function () {
+            btn.classList.remove("is-copied");
+            render("Copy Latin", CLIPBOARD_SVG);
+          }, 1800);
+        },
+        function () {
+          render("Press ⌘/Ctrl + C", CLIPBOARD_SVG);
+        }
+      );
+    });
+
+    // A single meta row beneath the card: the copy action on the left, and the
+    // existing "Translation source" line (when present) pulled up onto its right.
+    var actions = document.createElement("div");
+    actions.className = "prayer-actions";
+    actions.appendChild(btn);
+    body.insertAdjacentElement("afterend", actions);
+
+    var source = document.querySelector(".prayer-source");
+    if (source) actions.appendChild(source);
+  }
+
   function init() {
     initSearch();
     initMysteries();
     initCarousels();
     initSmoothScroll();
+    initCopyLatin();
   }
 
   if (document.readyState === "loading") {
