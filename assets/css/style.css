@@ -742,21 +742,75 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 2.5rem 2.5rem 2.75rem;
-  box-shadow: var(--shadow-md);
+  /* keep a page-like proportion so short prayers (e.g. Signum Crucis, one line)
+     don't render as a squat, over-wide band */
+  min-height: 15rem;
   position: relative;
+  /* Open-book conceit (side-by-side only): the card's own lift, then two tapered
+     "leaves" peeking past each outer edge — the fore-edges of an open book. Each
+     leaf is a paper-coloured slab plus a hairline shadow a touch taller than it,
+     so it reads as a stacked page. Negative spread trims the height for taper. */
+  box-shadow:
+    var(--shadow-md),
+    6px 0 0 -1px var(--surface),
+    6px 0 1px 0 rgba(33, 26, 16, 0.10),
+    -6px 0 0 -1px var(--surface),
+    -6px 0 1px 0 rgba(33, 26, 16, 0.10),
+    12px 0 0 -3px var(--surface),
+    12px 0 1px -2px rgba(33, 26, 16, 0.09),
+    -12px 0 0 -3px var(--surface),
+    -12px 0 1px -2px rgba(33, 26, 16, 0.09);
 }
-/* a thin gold rule capping the top of the prayer card */
+/* a thin crimson rule capping the top of the prayer card */
 .prayer-body::before {
   content: "";
   position: absolute;
   left: 2.5rem; right: 2.5rem; top: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  background: linear-gradient(90deg, transparent, var(--crimson-bright), transparent);
+}
+/* Centre gutter: a soft shadow dipping down the middle where the two pages meet
+   the spine, completing the open-book impression alongside the column divider. */
+.prayer-body::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 50%;
+  width: 3.5rem;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background: linear-gradient(90deg,
+    rgba(33, 26, 16, 0) 0%,
+    rgba(33, 26, 16, 0.05) 42%,
+    rgba(33, 26, 16, 0.07) 50%,
+    rgba(33, 26, 16, 0.05) 58%,
+    rgba(33, 26, 16, 0) 100%);
 }
 .prayer-latin  { padding-right: 2.25rem; }
 .prayer-english {
   padding-left: 2.25rem;
   border-left: 1px solid var(--line);
+  position: relative;
+}
+/* A short crimson register ribbon (as in a missal), tucked into the top edge of
+   the card and hanging down the right page. Fishtail end via clip-path; a satin
+   highlight down its length and a drop-shadow lift it off the page. */
+.prayer-english::after {
+  content: "";
+  position: absolute;
+  top: -2.5rem;              /* start flush at the card's top edge */
+  right: 1.75rem;
+  width: 0.72rem;
+  height: 2.6rem;            /* short */
+  background:
+    linear-gradient(90deg,
+      rgba(255, 255, 255, 0.22) 0%,
+      rgba(255, 255, 255, 0) 38%,
+      rgba(0, 0, 0, 0.10) 100%),
+    color-mix(in srgb, var(--crimson-bright) 78%, var(--ink-soft));
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+  filter: drop-shadow(0 3px 3px rgba(33, 26, 16, 0.22));
+  pointer-events: none;
 }
 .prayer-text {
   margin: 0;
@@ -778,6 +832,43 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
    than the Latin thins the strokes visually, so it reads as light and airy
    while keeping full ink strength. */
 .prayer-english .prayer-text { color: #3b3120; font-size: 1.2rem; line-height: 1.75; }
+
+/* Rubricated drop-cap: the opening letter of each column enlarged in crimson, so
+   the first lines wrap around it (as in an illuminated missal). The float sizing
+   is a fallback; where `initial-letter` is supported it takes over and sinks the
+   cap exactly two lines, aligning it to the baseline grid so the wrapped lines
+   sit cleanly around it. */
+.prayer-text::first-letter {
+  float: left;
+  margin: 0.02em 0.1em 0 0;
+  font-family: var(--display);
+  font-weight: 600;
+  /* fixed size (not em) so both columns' caps match despite their different body
+     sizes; this is the float fallback path */
+  font-size: 3.9rem;
+  line-height: 0.72;
+  color: var(--crimson-bright);
+}
+@supports (initial-letter: 2) or (-webkit-initial-letter: 2) {
+  .prayer-text::first-letter {
+    float: none;
+    font-size: 100%;
+    line-height: normal;
+    margin: 0 0.5em 0 0;
+    -webkit-initial-letter: 2;
+    initial-letter: 2;
+  }
+  /* Both caps keep a clean two-line sink (via the rule above). The Latin body is
+     smaller (1.02rem) than the English (1.2rem), so its cap would come out
+     smaller; enlarge just the glyph with a transform (which doesn't reserve an
+     extra line the way a larger `initial-letter` would) so both caps match in
+     size without adding space beneath the Latin letter. Origin at the baseline so
+     it grows up into the margin, not down into the text. */
+  .prayer-latin .prayer-text::first-letter {
+    transform: scale(1.176);
+    transform-origin: 0% 88%;
+  }
+}
 
 .prayer-source {
   max-width: 50rem;
@@ -1407,8 +1498,13 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   .prayer-body {
     grid-template-columns: 1fr;
     padding: 1.75rem 1.5rem 2rem;
+    min-height: 0;
+    /* stacked: no open-book, just the plain card lift */
+    box-shadow: var(--shadow-md);
   }
   .prayer-body::before { left: 1.5rem; right: 1.5rem; }
+  .prayer-body::after { display: none; }
+  .prayer-english::after { display: none; }
   .prayer-latin { padding-right: 0; padding-bottom: 1.75rem; }
   .prayer-english {
     padding-left: 0;
@@ -1464,5 +1560,5 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   body { background: #fff; color: #000; }
   .site-header, .site-footer, .breadcrumb, .skip-link, .suggest, .prayer-search { display: none; }
   .prayer-body { border: none; box-shadow: none; padding: 0; }
-  .prayer-body::before { display: none; }
+  .prayer-body::before, .prayer-body::after, .prayer-english::after { display: none; }
 }
