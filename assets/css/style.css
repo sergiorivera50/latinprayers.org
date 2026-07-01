@@ -1390,6 +1390,16 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   .hero-figure img { aspect-ratio: 1 / 1; object-position: center top; }
 }
 
+/* Rosary hero: unlike the homepage hero (which shares a row with text and so
+   must collapse early at 48rem), this is a standalone image in a single column,
+   so it can keep the full-width Lepanto banner all the way down to mobile L.
+   Only below ~425px do we swap to a smaller, centred square crop anchored left
+   (Our Lady sits about a third in) to keep Mary in frame without a tall banner. */
+@media (max-width: 28rem) {
+  .ph-figure.rosary-hero { max-width: 15rem; margin: 0 auto 2rem; }
+  .ph-figure.rosary-hero img { aspect-ratio: 1 / 1; height: auto; object-position: 30% center; }
+}
+
 /* Stack the two prayer columns; restack the masthead. */
 @media (max-width: 38rem) {
   .site-main { padding: 2.5rem 0 1.5rem; }
