@@ -515,8 +515,9 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   font-size: 1.45rem;
   line-height: 1.1;
   color: var(--ink);
-  overflow-wrap: break-word;
-  min-width: 0;
+  /* Keep the Latin whole: wrap only at spaces, never mid-word, and don't let it
+     be squashed below its content by a long gloss. */
+  flex: 0 0 auto;
   transition: color 0.15s var(--ease);
 }
 .prayer-link:hover .name, .prayer-link:focus .name { color: var(--gold-deep); }
@@ -525,7 +526,16 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   font-style: italic;
   font-size: 0.98rem;
   text-align: right;
-  flex: none;
+  /* Let the translation shrink and wrap instead of overflowing the card. */
+  flex: 0 1 auto;
+  min-width: 0;
+}
+/* On phones the two columns squash each other; stack the Latin name over the
+   English gloss so each has the full width. */
+@media (max-width: 34rem) {
+  .prayer-link { flex-direction: column; align-items: flex-start; gap: 0.1rem; }
+  .prayer-link .name { flex: 0 0 auto; }
+  .prayer-link .gloss { text-align: left; }
 }
 
 /* ---- Homepage search (progressive enhancement) ---- */
@@ -1314,8 +1324,17 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
     padding-top: 0.9rem;
     padding-bottom: 0;
   }
-  .brand-lockup { padding-bottom: 0.8rem; }
-  .brand-mark { height: 2.85rem; }
+  /* Mobile brand: drop the motto and scale the Sacred Heart mark + wordmark up
+     to fill the row on one line, centred. Sizes are vw-based so they track the
+     screen width, clamped so the text can't overflow or grow too tall. */
+  .site-motto { display: none; }
+  .brand-lockup {
+    padding-bottom: 0.8rem;
+    justify-content: center;
+    gap: clamp(0.45rem, 2.5vw, 0.85rem);
+  }
+  .brand-name { font-size: clamp(1.5rem, 9vw, 2.4rem); white-space: nowrap; }
+  .brand-mark { height: clamp(2.1rem, 10.5vw, 3rem); }
   .site-nav {
     justify-content: center;
     gap: 0.3rem 1.2rem;
