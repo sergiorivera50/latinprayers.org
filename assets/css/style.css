@@ -247,7 +247,6 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 }
 .site-motto {
   margin: 0.12rem 0 0;
-  font-style: italic;
   color: var(--ink-soft);
   font-size: 0.84rem;
   letter-spacing: 0.005em;
