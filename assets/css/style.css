@@ -58,6 +58,19 @@
   src: url("/assets/fonts/cormorant-600-ext.woff2") format("woff2");
   unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
 }
+/* Cinzel: a Roman inscriptional-capitals face (an OFL-licensed Trajan relative).
+   Its lowercase glyphs are small capitals, so mixed-case Latin renders as
+   capitals + small caps. Used only for the Latin side of a prayer. */
+@font-face {
+  font-family: "Cinzel"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/assets/fonts/cinzel.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: "Cinzel"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/assets/fonts/cinzel-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
 
 /* --------------------------------------------------------------------------- */
 /* Design tokens                                                                */
@@ -713,9 +726,21 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   font-size: 1.22rem;
   line-height: 1.85;
 }
-.prayer-latin .prayer-text { color: var(--ink); }
-.prayer-english .prayer-text { color: #3b3120; }
-.amen { color: var(--crimson); font-weight: 600; }
+.prayer-latin .prayer-text {
+  color: var(--ink);
+  /* Roman inscriptional capitals: Cinzel renders lowercase as small caps, so
+     the Latin reads as CAPITALS + small caps. Scaled down and lightly tracked
+     so it sits level with the English reading column. */
+  font-family: "Cinzel", var(--display);
+  font-size: 1.02rem;
+  line-height: 1.75;
+  letter-spacing: 0.02em;
+}
+/* EB Garamond has no cut lighter than its 400 Regular, so the English can't be
+   thinned to match Cinzel's fine strokes by weight. Setting it a touch smaller
+   than the Latin thins the strokes visually, so it reads as light and airy
+   while keeping full ink strength. */
+.prayer-english .prayer-text { color: #3b3120; font-size: 1.12rem; line-height: 1.75; }
 
 .prayer-source {
   max-width: 50rem;
@@ -1112,7 +1137,12 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   box-shadow: var(--shadow-sm);
 }
 .rosary-collect p { margin: 0 0 1rem; line-height: 1.75; }
-.rosary-collect p[lang="la"] { font-size: 1.08rem; }
+.rosary-collect p[lang="la"] {
+  font-size: 0.95rem;
+  /* Same Roman inscriptional treatment as the Latin on a prayer page. */
+  font-family: "Cinzel", var(--display);
+  letter-spacing: 0.02em;
+}
 .rosary-collect p:last-child { margin-bottom: 0; color: var(--ink-soft); }
 
 /* Closing image: Our Lady on a transparent ground — a quiet benediction to end
