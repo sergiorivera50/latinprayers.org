@@ -140,6 +140,44 @@ body {
 a { color: var(--gold-deep); text-decoration: none; transition: color 0.15s var(--ease); }
 a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underline-offset: 2px; }
 
+/* In-text links: give links that sit inside running prose a persistent dotted
+   underline so they read as links, without touching the brand, nav, buttons, or
+   CTAs (which carry their own affordances). The underline is drawn as a repeating
+   radial gradient rather than `text-decoration: dotted` so the dot size and
+   spacing are ours to set. On hover/focus it firms up to a solid full line.
+   Scoped to content prose containers. */
+.prayer-description a,
+.prayer-context a,
+.manifesto-intro a,
+.narrative a,
+.article-body a,
+.rosary-intro a,
+.rosary-steps a,
+.rosary-close-steps a,
+.suggest-address a,
+.prayer-source a {
+  text-decoration: none;
+  background-image: radial-gradient(circle, color-mix(in srgb, currentColor 60%, transparent) 0.75px, transparent 1.25px);
+  background-repeat: repeat-x;
+  background-size: 5px 2px;
+  background-position: 0 100%;
+  padding-bottom: 2px;
+}
+.prayer-description a:hover, .prayer-description a:focus,
+.prayer-context a:hover, .prayer-context a:focus,
+.manifesto-intro a:hover, .manifesto-intro a:focus,
+.narrative a:hover, .narrative a:focus,
+.article-body a:hover, .article-body a:focus,
+.rosary-intro a:hover, .rosary-intro a:focus,
+.rosary-steps a:hover, .rosary-steps a:focus,
+.rosary-close-steps a:hover, .rosary-close-steps a:focus,
+.suggest-address a:hover, .suggest-address a:focus,
+.prayer-source a:hover, .prayer-source a:focus {
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 100% 1px;
+}
+
 :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 2px; }
 
 /* A reusable small-caps-style label (eyebrows, section kickers, nav). Uppercase
@@ -645,7 +683,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   font-size: 0.84rem;
   color: var(--ink-faint);
 }
-.suggest-address a { color: var(--ink-soft); text-decoration: underline; text-underline-offset: 2px; }
+.suggest-address a { color: var(--ink-soft); }
 .suggest-address a:hover, .suggest-address a:focus { color: var(--gold-deep); }
 
 /* --------------------------------------------------------------------------- */
@@ -748,7 +786,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   font-size: 0.82rem;
   color: var(--ink-faint);
 }
-.prayer-source a { color: var(--ink-soft); text-decoration: underline; text-underline-offset: 2px; }
+.prayer-source a { color: var(--ink-soft); }
 .prayer-source a:hover, .prayer-source a:focus { color: var(--gold-deep); }
 
 /* ---- About this prayer (context prose) ---- */
