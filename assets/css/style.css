@@ -777,7 +777,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
    thinned to match Cinzel's fine strokes by weight. Setting it a touch smaller
    than the Latin thins the strokes visually, so it reads as light and airy
    while keeping full ink strength. */
-.prayer-english .prayer-text { color: #3b3120; font-size: 1.12rem; line-height: 1.75; }
+.prayer-english .prayer-text { color: #3b3120; font-size: 1.2rem; line-height: 1.75; }
 
 .prayer-source {
   max-width: 50rem;
