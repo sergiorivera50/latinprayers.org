@@ -265,6 +265,55 @@
     });
   }
 
+  // The Form selector on the Mass page (Low / Sung / Solemn). The markup has the
+  // selector hidden and every step's form notes visible (fully readable with no
+  // JS). This reveals the selector and, by setting data-form on the order,
+  // filters those notes (CSS does the showing/hiding). A #form-low|sung|solemn
+  // hash sets the initial form; otherwise it opens on Low Mass.
+  function initMassForm() {
+    var ordo = document.querySelector(".ordo");
+    if (!ordo) return;
+    var select = ordo.querySelector(".form-select");
+    if (!select) return;
+    var options = Array.prototype.slice.call(
+      select.querySelectorAll(".form-option")
+    );
+    if (options.length < 2) return;
+
+    ordo.classList.add("js-mass-form");
+    select.hidden = false;
+
+    function setForm(form, focus) {
+      ordo.setAttribute("data-form", form);
+      options.forEach(function (b) {
+        var on = b.getAttribute("data-form") === form;
+        b.setAttribute("aria-pressed", on ? "true" : "false");
+        b.setAttribute("tabindex", on ? "0" : "-1");
+        if (on && focus) b.focus();
+      });
+    }
+
+    options.forEach(function (btn, i) {
+      btn.addEventListener("click", function () {
+        setForm(btn.getAttribute("data-form"), false);
+      });
+      btn.addEventListener("keydown", function (e) {
+        var dir = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+        if (!dir) return;
+        e.preventDefault();
+        setForm(
+          options[(i + dir + options.length) % options.length].getAttribute("data-form"),
+          true
+        );
+      });
+    });
+
+    var def = "low";
+    var m = (window.location.hash || "").match(/^#form-(low|sung|solemn)$/);
+    if (m) def = m[1];
+    setForm(def, false);
+  }
+
   // Smooth-scroll in-page anchor links (e.g. the hero "Browse the prayers" CTA).
   // Backs up the CSS `scroll-behavior: smooth`, and honours reduced-motion by
   // simply not intercepting (the browser then jumps instantly). The Mysteries
@@ -298,6 +347,7 @@
     initSearch();
     initMysteries();
     initCarousels();
+    initMassForm();
     initSmoothScroll();
   }
 

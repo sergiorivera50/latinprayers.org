@@ -1336,6 +1336,477 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 }
 
 /* --------------------------------------------------------------------------- */
+/* The Mass (/mass/) — shares the Rosary page's vocabulary: a centred header,    */
+/* a wide hero, intro prose, then the data-driven order of service.             */
+/* --------------------------------------------------------------------------- */
+.mass { max-width: 52rem; margin: 0 auto; }
+.mass-header { text-align: center; margin-bottom: 2rem; }
+.mass-eyebrow {
+  margin: 0 0 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--gold-deep);
+}
+.mass-title {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(2.3rem, 6vw, 3.8rem);
+  line-height: 1.04;
+  letter-spacing: 0.005em;
+  margin: 0;
+  overflow-wrap: break-word;
+}
+.mass-subtitle { margin: 0.5rem 0 0; color: var(--ink-soft); font-style: italic; font-size: 1.15rem; }
+
+.ph-figure.mass-hero { margin: 0 auto 3rem; }
+.mass-hero img { aspect-ratio: 16 / 9; }
+
+.mass-h2 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.85rem;
+  letter-spacing: 0.005em;
+  color: var(--ink);
+  text-align: center;
+  margin: 0 0 1.5rem;
+  scroll-margin-top: 5.5rem;
+}
+.mass-h2::after {
+  content: "";
+  display: block;
+  width: 4.5rem;
+  height: 1px;
+  margin: 0.9rem auto 0;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.mass-intro { max-width: 40rem; margin: 0 auto 3.5rem; }
+.mass-intro p { margin: 0 0 1.1rem; color: var(--ink-soft); font-size: 1.06rem; line-height: 1.8; }
+.mass-intro p:last-child { margin-bottom: 0; }
+.mass-intro strong { color: var(--ink); font-weight: 600; }
+
+/* The three forms: a row of three cards (stacks on phones). */
+.mass-forms { max-width: 52rem; margin: 0 auto 3.5rem; }
+.mass-forms-lead {
+  max-width: 40rem;
+  margin: 0 auto 1.75rem;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 1.04rem;
+  line-height: 1.75;
+}
+.mass-form-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+.mass-form-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.6rem;
+  box-shadow: var(--shadow-sm);
+}
+.mass-form-name { margin: 0; font-family: var(--display); font-weight: 600; font-size: 1.3rem; color: var(--ink); }
+.mass-form-en {
+  margin: 0.1rem 0 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--gold-deep);
+}
+.mass-form-desc { margin: 0; color: var(--ink-soft); font-size: 0.98rem; line-height: 1.65; }
+@media (min-width: 46rem) {
+  .mass-form-cards { grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+}
+
+/* The Asperges: the preliminary Sunday sprinkling. Two antiphon cards (Asperges
+   me / Vidi aquam) reusing the .rosary-collect Latin-and-English treatment. */
+.asperges { max-width: 52rem; margin: 0 auto 3.5rem; }
+.asperges-eyebrow { text-align: center; }
+.asperges-lead {
+  max-width: 40rem;
+  margin: 0 auto 2rem;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 1.04rem;
+  line-height: 1.75;
+}
+.asperges-forms { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+.asperges-card-eyebrow {
+  margin: 0 0 0.35rem;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--gold-deep);
+}
+.asperges-card-title {
+  margin: 0 0 0.9rem;
+  text-align: center;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.5rem;
+  color: var(--ink);
+}
+.asperges-ref { margin: 0.6rem 0 0; text-align: center; font-size: 0.8rem; font-style: italic; color: var(--ink-faint); }
+.asperges-foot {
+  max-width: 40rem;
+  margin: 1.75rem auto 0;
+  text-align: center;
+  color: var(--ink-faint);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  font-style: italic;
+}
+@media (min-width: 46rem) {
+  .asperges-forms { grid-template-columns: 1fr 1fr; gap: 1.75rem; align-items: start; }
+}
+
+/* The order of service: two divisions, each holding part cards of steps. */
+.ordo { max-width: 52rem; margin: 0 auto 3.5rem; counter-reset: ordo-step; }
+.ordo-lead {
+  max-width: 40rem;
+  margin: 0 auto 2.5rem;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 1.04rem;
+  line-height: 1.75;
+}
+.ordo-division { margin: 0 0 2.75rem; }
+.ordo-division:last-child { margin-bottom: 0; }
+.ordo-division-title {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.5rem;
+  text-align: center;
+  color: var(--gold-deep);
+  margin: 0 0 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+.ordo-part {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.6rem 1.75rem 1.75rem;
+  margin: 0 0 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+.ordo-part:last-child { margin-bottom: 0; }
+.ordo-part-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: var(--ink);
+  margin: 0 0 1.1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+.ordo-part-num {
+  flex: none;
+  color: var(--gold);
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  min-width: 2.1rem;
+}
+.ordo-steps { list-style: none; margin: 0; padding: 0; }
+.ordo-step {
+  display: flex;
+  gap: 1rem;
+  padding: 0.9rem 0;
+  border-top: 1px solid var(--line-soft);
+  counter-increment: ordo-step;   /* hidden steps don't count, so no gaps */
+}
+.ordo-step:first-child { border-top: none; padding-top: 0; }
+.ordo-step:last-child { padding-bottom: 0; }
+.ordo-step-num {
+  flex: none;
+  width: 1.9rem;
+  text-align: right;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--gold);
+  line-height: 1.5;
+}
+.ordo-step-num::before { content: counter(ordo-step); }
+.ordo-step-body { flex: 1 1 auto; min-width: 0; }
+.ordo-step-name {
+  margin: 0 0 0.3rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.6rem;
+}
+.ordo-step-la { font-family: var(--display); font-weight: 600; font-size: 1.18rem; color: var(--ink); }
+.ordo-step-en {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  color: var(--gold-deep);
+}
+/* When a step has no Latin name, its English name carries the line. */
+.ordo-step-name .ordo-step-en:only-child {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.18rem;
+  text-transform: none;
+  letter-spacing: 0.005em;
+  color: var(--ink);
+}
+/* Meta line under the name: the celebrant's principal position, and a "said
+   silently" flag on the secreto parts. */
+.ordo-step-meta {
+  margin: 0 0 0.4rem;
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+.ordo-step-pos {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  color: var(--ink-faint);
+}
+.ordo-step-silent {
+  font-style: italic;
+  letter-spacing: 0.01em;
+  color: var(--gold-deep);
+}
+.ordo-step-sep { margin: 0 0.5rem; color: var(--gold); opacity: 0.6; }
+/* "Proper of the day" chip: marks steps whose text changes with the calendar
+   (vs the fixed Ordinary). The same pill styles the inline key in the lead. */
+.ordo-step-proper,
+.ordo-proper-key {
+  display: inline-block;
+  border-radius: 999px;
+  background: var(--gold-tint);
+  color: var(--gold-deep);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ordo-step-proper {
+  margin-left: 0.6rem;
+  padding: 0.06rem 0.5rem;
+  font-size: 0.6rem;
+  vertical-align: 0.08em;
+}
+.ordo-proper-key { padding: 0.03rem 0.5rem; font-size: 0.78em; letter-spacing: 0.06em; }
+
+.ordo-step-summary { margin: 0; color: var(--ink-soft); font-size: 0.99rem; line-height: 1.65; }
+
+/* Customary posture tag: a small colour-keyed label in the right column of each
+   step (a dot keyed to stand/sit/kneel + the word). Postures are not codified,
+   so this is presented as guidance; see .ordo-posture-note. */
+.ordo-step-posture {
+  flex: none;
+  align-self: flex-start;
+  width: 3.6rem;
+  padding-top: 0.15rem;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  font-weight: 600;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+/* Each posture value (Low / High) carries its own colour-keyed dot. */
+.ordo-posture-val { display: inline-flex; align-items: center; gap: 0.4rem; }
+.ordo-posture-val::before {
+  content: "";
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--gold);
+}
+/* Colour key, shared by the step tags and the inline keys in the note. */
+.ordo-posture-val[data-posture="Kneel"]::before,
+.posture-key[data-posture="Kneel"]::before { background: var(--crimson); }
+.ordo-posture-val[data-posture="Sit"]::before,
+.posture-key[data-posture="Sit"]::before { background: var(--ink-faint); }
+.ordo-posture-val[data-posture="Stand"]::before,
+.posture-key[data-posture="Stand"]::before { background: var(--gold); }
+/* Posture switches with the form: Low shows the low value, Sung/Solemn the high
+   (they are identical for most steps). Low is the no-JS default. */
+.posture-high { display: none; }
+.js-mass-form[data-form="sung"] .posture-low,
+.js-mass-form[data-form="solemn"] .posture-low { display: none; }
+.js-mass-form[data-form="sung"] .posture-high,
+.js-mass-form[data-form="solemn"] .posture-high { display: inline-flex; }
+
+/* The customary-posture explainer beneath the order's lead. */
+.ordo-posture-note {
+  max-width: 40rem;
+  margin: -1.25rem auto 2.5rem;
+  text-align: center;
+  color: var(--ink-faint);
+  font-size: 0.88rem;
+  line-height: 1.65;
+  font-style: italic;
+}
+.posture-key {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.posture-key::before {
+  content: "";
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  margin-right: 0.3rem;
+  vertical-align: 0.05em;
+  background: var(--gold);
+}
+
+/* Form selector (Low / Sung / Solemn): a segmented control, hidden until JS
+   reveals it. With no JS every step's form notes stay visible below. */
+.form-select-wrap { text-align: center; margin: -1rem auto 2.5rem; }
+/* Pin the selector through the order so it's clear the choice changes what you
+   see. Scoped to the JS state (no-JS has no selector to pin). The sticky range is
+   bounded by .ordo, so it rides along through every step and releases at the end
+   of the order, before the closing note. */
+.js-mass-form .form-select-wrap {
+  position: sticky;
+  top: 5.5rem;            /* just below the sticky masthead */
+  z-index: 5;             /* above the scrolling cards, below the masthead (30) */
+  margin: 0 auto 1.75rem;
+  padding: 0.4rem 0;
+  pointer-events: none;   /* only the pill is interactive; clicks pass through */
+}
+/* Only the segmented control rides along (no full-width bar). It keeps its own
+   pill background and gains a soft shadow so it floats over the order. */
+.js-mass-form .form-select {
+  pointer-events: auto;
+  box-shadow: 0 4px 14px -6px rgba(33, 26, 16, 0.28);
+}
+@media (max-width: 38rem) {
+  /* the masthead is static on phones, so pin to the very top */
+  .js-mass-form .form-select-wrap { top: 0; }
+}
+.form-select {
+  display: inline-flex;
+  gap: 0.15rem;
+  padding: 0.25rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  box-shadow: var(--shadow-sm);
+}
+.form-select[hidden] { display: none; }
+.form-option {
+  border: none;
+  background: transparent;
+  font-family: var(--serif);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  padding: 0.45rem 1.15rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s var(--ease), color 0.15s var(--ease);
+}
+.form-option:hover:not([aria-pressed="true"]) { color: var(--gold-deep); }
+.form-option[aria-pressed="true"] { background: var(--gold); color: var(--surface); }
+
+/* Handwritten "choose the form" hint pointing at the selector. Shown only with
+   JS (the selector is hidden otherwise); static, so it stays at the start
+   position and scrolls away rather than riding along with the sticky pill. */
+.form-hint { display: none; }
+.js-mass-form .form-hint {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 0;
+  margin: 0 auto -0.5rem;
+  color: var(--gold-deep);
+}
+.form-hint-text {
+  font-family: "Bradley Hand", "Segoe Script", "Snell Roundhand", "Comic Sans MS", cursive;
+  font-size: 1.4rem;
+  line-height: 1.05;
+  transform: rotate(-5deg);
+  white-space: nowrap;
+}
+/* The arrow emanates from the middle of the last character: its stroke starts at
+   the SVG's top-left, tucked against the text's end at its vertical centre. */
+.form-hint-arrow { flex: none; width: 2.6rem; height: auto; margin: 0.2rem 0 0 -0.2rem; overflow: visible; }
+.form-hint-stroke {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.6;
+}
+
+/* Per-step form notes: a left-ruled aside beneath the summary. All show with no
+   JS; the selector (.js-mass-form + data-form on .ordo) filters them. */
+.ordo-step-forms { margin: 0.55rem 0 0; }
+.ordo-form-note {
+  margin: 0.3rem 0 0;
+  padding-left: 0.8rem;
+  border-left: 2px solid var(--line);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+.ordo-form-label {
+  margin-right: 0.5rem;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  color: var(--gold-deep);
+}
+.js-mass-form .ordo-form-note { display: none; }
+.js-mass-form[data-form="sung"] .ordo-form-note[data-form-note="sung"],
+.js-mass-form[data-form="solemn"] .ordo-form-note[data-form-note="sung"],
+.js-mass-form[data-form="solemn"] .ordo-form-note[data-form-note="solemn"] { display: block; }
+/* When filtered to one form, the form label is redundant; hide it. */
+.js-mass-form .ordo-form-label { display: none; }
+/* Hide whatever does not occur in the chosen form: an individual step (the
+   Incensation at Low), or a whole part/division (After Mass at sung/Solemn).
+   data-forms is on the step, part, and division as applicable. */
+.js-mass-form[data-form="low"] [data-forms="sung,solemn"],
+.js-mass-form[data-form="sung"] [data-forms="low"],
+.js-mass-form[data-form="solemn"] [data-forms="low"] {
+  display: none;
+}
+
+/* Closing note: a quiet, recessed panel. */
+.mass-note {
+  max-width: 40rem;
+  margin: 0 auto;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.75rem 2rem;
+}
+.mass-note .mass-h2 { font-size: 1.4rem; }
+.mass-note p { margin: 0 0 1rem; color: var(--ink-soft); font-size: 0.98rem; line-height: 1.75; }
+.mass-note p:last-child { margin-bottom: 0; }
+.mass-note em { color: var(--ink); font-style: italic; }
+
+/* --------------------------------------------------------------------------- */
 /* Print: clean, ink-friendly                                                   */
 /* --------------------------------------------------------------------------- */
 @media print {
