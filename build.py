@@ -548,7 +548,7 @@ def build_rosary_page(mysteries: list[dict], base_tpl: str, rosary_tpl: str) -> 
                 f'aria-label="{esc(ordinal)} {esc(name)} Mystery: {esc(m["en"])}">\n'
                 f'            <figure class="decade-figure">{figure}</figure>\n'
                 '            <div class="decade-body">\n'
-                f'              <p class="decade-eyebrow">{esc(ordinal)} {esc(name)} Mystery</p>\n'
+                f'              <p class="decade-eyebrow">{esc(ordinal)} Mystery</p>\n'
                 f'              <h4 class="mystery-name">{esc(m["en"])}</h4>\n'
                 f'              <p class="mystery-ref">{esc(m["scripture"])}'
                 f'<span class="mystery-sep" aria-hidden="true">/</span>'

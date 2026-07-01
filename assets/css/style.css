@@ -1017,6 +1017,16 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   color: #fff;
   box-shadow: var(--shadow-sm);
 }
+/* On very narrow phones (≈320px) the day labels wrap to two/three lines, making
+   each cell tall; the full 999px pill radius then renders as a circular blob.
+   Dial the radius back to a rounded rectangle and trim the type so it reads as a
+   proper segmented control. */
+@media (max-width: 22.5rem) {
+  .mysteries-tabs { border-radius: 1rem; gap: 0.2rem; padding: 0.25rem; }
+  .mysteries-tab { border-radius: 0.7rem; padding: 0.45rem 0.25rem; }
+  .mysteries-tab-name { font-size: 0.95rem; }
+  .mysteries-tab-days { font-size: 0.62rem; }
+}
 
 /* Panels: stacked & all visible without JS; one at a time with it. */
 .mysteries-panels { display: grid; gap: 2rem; scroll-margin-top: 5.5rem; }
@@ -1050,6 +1060,11 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   scroll-snap-align: start;
   display: grid;
   grid-template-columns: 1fr;
+  /* Cards are flex-stretched to equal height; keep the rows at their natural
+     size (image + body) and let any surplus fall to the bottom of the card as
+     plain surface, rather than stretching the figure row and exposing a band of
+     its tint between the image and the text. Overridden on desktop below. */
+  align-content: start;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -1058,15 +1073,25 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 }
 .decade-figure {
   margin: 0;
-  aspect-ratio: 4 / 5;          /* stacked (mobile): a portrait, matching the art */
   background: var(--gold-tint);
 }
-.decade-figure img,
+/* Stacked (mobile): render the image at its natural 4:5 ratio and let it scale
+   down proportionally with the card/screen width, so the whole picture always
+   shows and it simply gets smaller on narrower phones (no cover-crop, so the
+   focal point never shifts). The desktop side-by-side layout below overrides
+   this to a cover-fill of the fixed image column. */
+.decade-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border: none;
+  border-radius: 0;
+}
 .decade-figure .placeholder {
   display: block;
   width: 100%;
-  height: 100%;
-  aspect-ratio: auto;
+  aspect-ratio: 4 / 5;
   object-fit: cover;
   border: none;
   border-radius: 0;
@@ -1143,9 +1168,10 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
    image is absolutely positioned so it fills its column by cover without
    imposing its intrinsic height (which would make image cards taller). */
 @media (min-width: 44rem) {
-  .decade-card { grid-template-columns: 20rem 1fr; min-height: 21rem; }
+  .decade-card { grid-template-columns: 20rem 1fr; min-height: 21rem; align-content: stretch; }
   .decade-figure { aspect-ratio: auto; height: 100%; position: relative; }
-  .decade-figure img { position: absolute; inset: 0; }
+  .decade-figure img,
+  .decade-figure .placeholder { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; }
   .decade-body { padding: 2rem 2.25rem; align-self: center; }
 }
 
