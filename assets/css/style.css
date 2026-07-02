@@ -308,8 +308,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   justify-content: flex-end;
   gap: 0.2rem 1.8rem;
 }
-.site-nav a,
-.site-nav .nav-disabled {
+.site-nav a {
   text-transform: uppercase;
   letter-spacing: 0.15em;
   font-size: 0.74rem;
@@ -331,10 +330,6 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   text-decoration: none;
 }
 .site-nav a:hover::after, .site-nav a:focus::after { right: 0; }
-.site-nav .nav-disabled {
-  color: var(--ink-faint);
-  cursor: not-allowed;
-}
 
 /* --------------------------------------------------------------------------- */
 /* Main                                                                         */
@@ -1595,7 +1590,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
     border-top: 1px solid var(--line);
     padding: 0.7rem 0;
   }
-  .site-nav a, .site-nav .nav-disabled { font-size: 0.7rem; letter-spacing: 0.1em; }
+  .site-nav a { font-size: 0.7rem; letter-spacing: 0.1em; }
 }
 
 @media (max-width: 24rem) {
@@ -1605,7 +1600,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
     gap: 0.5rem 1rem;
     justify-items: center;
   }
-  .site-nav a, .site-nav .nav-disabled { font-size: 0.74rem; }
+  .site-nav a { font-size: 0.74rem; }
 }
 
 /* --------------------------------------------------------------------------- */
