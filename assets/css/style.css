@@ -103,9 +103,11 @@
   --line:       #e7ddc8;   /* hairline borders */
   --line-soft:  #efe7d6;
 
-  /* Primary button: the antique gold (its original style). */
-  --btn:        var(--gold-deep);
-  --btn-hover:  var(--gold);
+  /* Primary button: liturgical crimson (the Passion / Sacred Heart register).
+     The label is set in cream for strong contrast on its deep face. */
+  --btn:        #8a1f24;
+  --btn-hover:  #771b1f;
+  --btn-text:   #fffdf8;
 
   --serif:   "EB Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
   --display: "Cormorant Garamond", "EB Garamond", Palatino, Georgia, serif;
@@ -355,7 +357,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   letter-spacing: 0.2em;
   font-size: 0.72rem;
   font-weight: 600;
-  color: var(--gold-deep);
+  color: var(--crimson);
 }
 .hero-title {
   font-family: var(--display);
@@ -387,7 +389,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-size: 0.8rem;
-  color: var(--surface);
+  color: var(--btn-text);
   background: var(--btn);
   border: 1px solid var(--btn);
   border-radius: 999px;
@@ -397,7 +399,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 }
 .hero-cta:hover, .hero-cta:focus {
   text-decoration: none;
-  color: var(--surface);
+  color: var(--btn-text);
   background: var(--btn-hover);
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
@@ -407,10 +409,10 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   align-items: center;
   gap: 0.4rem;
   font-weight: 600;
-  color: var(--gold);
+  color: var(--btn);
 }
-.hero-link:hover, .hero-link:focus { color: var(--gold-deep); text-decoration: none; }
-.hero-link-arrow { color: var(--gold); transition: transform 0.18s var(--ease); }
+.hero-link:hover, .hero-link:focus { color: var(--btn-hover); text-decoration: none; }
+.hero-link-arrow { color: var(--btn); transition: transform 0.18s var(--ease); }
 .hero-link:hover .hero-link-arrow, .hero-link:focus .hero-link-arrow { transform: translateX(0.25rem); }
 
 /* Quick entry points to the most familiar prayers, as small chips. */
@@ -449,7 +451,30 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 
 /* Framed devotional image: a simple rounded frame lifted off the page with a
    soft shadow. object-fit lets any 4:5 image drop in cleanly. */
-.hero-figure { margin: 0; }
+.hero-figure { margin: 0; position: relative; }
+/* The dying cry from the Cross (Mark 15:34), hidden by default. Revealed as a
+   faint overlay only on desktop pointers that can hover (see media query below). */
+.hero-figure-cry {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  margin: 0;
+  border-radius: 16px;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: clamp(1.3rem, 2vw, 1.8rem);
+  line-height: 1.4;
+  text-align: center;
+  color: #fdf4e3;
+  background: rgba(20, 12, 8, 0.42);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s var(--ease);
+}
 .hero-figure img {
   display: block;
   width: 100%;
@@ -461,6 +486,13 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   border-radius: 16px;
   border: 1px solid var(--line);
   box-shadow: var(--shadow-lg);
+}
+/* Desktop only: fade the cry in when the figure is hovered (or focused within). */
+@media (hover: hover) and (pointer: fine) and (min-width: 48rem) {
+  .hero-figure:hover .hero-figure-cry,
+  .hero-figure:focus-within .hero-figure-cry {
+    opacity: 1;
+  }
 }
 
 /* The prayer index (search + category lists); the hero CTA scrolls here, so it
@@ -667,7 +699,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.8rem;
-  color: var(--surface);
+  color: var(--btn-text);
   background: var(--btn);
   border: 1px solid var(--btn);
   border-radius: 999px;
@@ -678,7 +710,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 }
 .suggest-link:hover, .suggest-link:focus {
   text-decoration: none;
-  color: var(--surface);
+  color: var(--btn-text);
   background: var(--btn-hover);
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
@@ -918,14 +950,14 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 }
 .copy-latin svg { width: 0.95rem; height: 0.95rem; flex: none; }
 .copy-latin:hover, .copy-latin:focus-visible {
-  color: var(--crimson-bright);
-  border-color: var(--crimson-bright);
+  color: var(--gold-deep);
+  border-color: var(--gold);
   background: var(--surface);
   outline: none;
 }
 .copy-latin.is-copied {
-  color: var(--crimson-bright);
-  border-color: var(--crimson-bright);
+  color: var(--gold-deep);
+  border-color: var(--gold);
 }
 
 /* ---- About this prayer (context prose) ---- */
@@ -993,7 +1025,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.8rem;
-  color: var(--surface);
+  color: var(--btn-text);
   background: var(--btn);
   border: 1px solid var(--btn);
   border-radius: 999px;
@@ -1004,7 +1036,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 }
 .rosary-cta-link:hover, .rosary-cta-link:focus {
   text-decoration: none;
-  color: var(--surface);
+  color: var(--btn-text);
   background: var(--btn-hover);
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
