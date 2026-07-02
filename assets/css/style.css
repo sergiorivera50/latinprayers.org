@@ -991,7 +991,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   padding: 1.9rem 1.75rem 2rem;
   text-align: center;
   background: var(--surface-2);
-  border: 1px solid var(--line);
+  border: 1px solid var(--crimson);
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
 }
@@ -1001,7 +1001,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   letter-spacing: 0.2em;
   font-size: 0.72rem;
   font-weight: 600;
-  color: var(--gold-deep);
+  color: var(--crimson);
 }
 .rosary-cta-title {
   font-family: var(--display);
