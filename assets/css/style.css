@@ -412,6 +412,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   color: var(--btn);
 }
 .hero-link:hover, .hero-link:focus { color: var(--btn-hover); text-decoration: none; }
+.hero-link-rose { width: 1em; height: 1em; flex: none; object-fit: contain; }
 .hero-link-arrow { color: var(--btn); transition: transform 0.18s var(--ease); }
 .hero-link:hover .hero-link-arrow, .hero-link:focus .hero-link-arrow { transform: translateX(0.25rem); }
 
