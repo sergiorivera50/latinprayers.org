@@ -39,6 +39,16 @@
   unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+2074,U+20AC,U+2122,U+2212,U+FEFF,U+FFFD;
 }
 @font-face {
+  font-family: "Cormorant Garamond"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/assets/fonts/cormorant-400.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: "Cormorant Garamond"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/assets/fonts/cormorant-400-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
   font-family: "Cormorant Garamond"; font-style: normal; font-weight: 500; font-display: swap;
   src: url("/assets/fonts/cormorant-500.woff2") format("woff2");
   unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
@@ -738,7 +748,27 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
-  background: var(--surface);
+  /* Paper grain: a faint fibrous texture plus a soft low-frequency mottle. Both
+     are inline SVG fractalNoise (desaturated, low opacity) held in a custom prop
+     so the back-page (::before) can reuse the exact same paper. Generated as data
+     URIs, so nothing is fetched at runtime and the "no external asset" rule holds. */
+  --paper:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='fiber'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23fiber)' opacity='0.22'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='mottle'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23mottle)' opacity='0.05'/%3E%3C/svg%3E");
+  background-color: var(--surface);
+  /* The crimson top rule and the centre gutter are both background layers now,
+     which frees ::before and ::after to be the two textured back-pages of the
+     open book. Layer order (top to bottom): crimson rule, gutter shadow, paper. */
+  background-image:
+    linear-gradient(90deg, transparent, var(--crimson-bright), transparent),
+    linear-gradient(90deg,
+      rgba(33, 26, 16, 0) 0%, rgba(33, 26, 16, 0.05) 42%,
+      rgba(33, 26, 16, 0.07) 50%, rgba(33, 26, 16, 0.05) 58%,
+      rgba(33, 26, 16, 0) 100%),
+    var(--paper);
+  background-repeat: no-repeat, no-repeat, repeat, repeat;
+  background-position: center top, center, 0 0, 0 0;
+  background-size: calc(100% - 5rem) 2px, 3.5rem 100%, 220px 220px, 320px 320px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 2.5rem 2.5rem 2.75rem;
@@ -746,45 +776,35 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
      don't render as a squat, over-wide band */
   min-height: 15rem;
   position: relative;
-  /* Open-book conceit (side-by-side only): the card's own lift, then two tapered
-     "leaves" peeking past each outer edge — the fore-edges of an open book. Each
-     leaf is a paper-coloured slab plus a hairline shadow a touch taller than it,
-     so it reads as a stacked page. Negative spread trims the height for taper. */
-  box-shadow:
-    var(--shadow-md),
-    6px 0 0 -1px var(--surface),
-    6px 0 1px 0 rgba(33, 26, 16, 0.10),
-    -6px 0 0 -1px var(--surface),
-    -6px 0 1px 0 rgba(33, 26, 16, 0.10),
-    12px 0 0 -3px var(--surface),
-    12px 0 1px -2px rgba(33, 26, 16, 0.09),
-    -12px 0 0 -3px var(--surface),
-    -12px 0 1px -2px rgba(33, 26, 16, 0.09);
+  box-shadow: var(--shadow-md);
 }
-/* a thin crimson rule capping the top of the prayer card */
-.prayer-body::before {
-  content: "";
-  position: absolute;
-  left: 2.5rem; right: 2.5rem; top: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--crimson-bright), transparent);
-}
-/* Centre gutter: a soft shadow dipping down the middle where the two pages meet
-   the spine, completing the open-book impression alongside the column divider. */
+/* Open-book conceit (side-by-side only): two textured "back pages" stacked just
+   behind the card, each a touch wider so their fore-edges peek past the sides
+   like the leaves of an open book. Both carry the same paper grain as the card;
+   being paper-coloured, they read through depth (a soft halo separating each
+   peeking edge from the page) rather than brightness. ::after is the deeper leaf
+   (z-index -2), ::before the nearer one (-1). */
+.prayer-body::before,
 .prayer-body::after {
   content: "";
   position: absolute;
-  top: 0; bottom: 0;
-  left: 50%;
-  width: 3.5rem;
-  transform: translateX(-50%);
-  pointer-events: none;
-  background: linear-gradient(90deg,
-    rgba(33, 26, 16, 0) 0%,
-    rgba(33, 26, 16, 0.05) 42%,
-    rgba(33, 26, 16, 0.07) 50%,
-    rgba(33, 26, 16, 0.05) 58%,
-    rgba(33, 26, 16, 0) 100%);
+  border-radius: var(--radius);
+  background-color: var(--surface);
+  background-image: var(--paper);
+  background-size: 220px 220px, 320px 320px;
+  border: 1px solid var(--line);
+}
+.prayer-body::before {
+  z-index: -1;
+  inset: 0 -8px;
+  box-shadow: 0 0 6px rgba(33, 26, 16, 0.10);
+}
+.prayer-body::after {
+  z-index: -2;
+  inset: 0 -15px;
+  box-shadow:
+    0 0 8px rgba(33, 26, 16, 0.13),
+    0 16px 30px -18px rgba(33, 26, 16, 0.5);
 }
 .prayer-latin  { padding-right: 2.25rem; }
 .prayer-english {
@@ -827,11 +847,16 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   line-height: 1.75;
   letter-spacing: 0.02em;
 }
-/* EB Garamond has no cut lighter than its 400 Regular, so the English can't be
-   thinned to match Cinzel's fine strokes by weight. Setting it a touch smaller
-   than the Latin thins the strokes visually, so it reads as light and airy
-   while keeping full ink strength. */
-.prayer-english .prayer-text { color: #3b3120; font-size: 1.2rem; line-height: 1.75; }
+/* EB Garamond has no cut lighter than its 400 Regular, so the English is set in
+   Cormorant Garamond (a finer, higher-contrast face) at Regular 400 for a thinner
+   stroke. Its smaller x-height is offset with a slightly larger size. */
+.prayer-english .prayer-text {
+  color: #3b3120;
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 1.3em;
+  line-height: 1.5;
+}
 
 /* Rubricated drop-cap on the Latin side only: the opening letter enlarged in
    crimson so the first lines wrap around it (as in an illuminated missal). The
@@ -1527,10 +1552,12 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
     grid-template-columns: 1fr;
     padding: 1.75rem 1.5rem 2rem;
     min-height: 0;
-    /* stacked: no open-book, just the plain card lift */
+    /* stacked: no open-book, just the plain card lift; tighten the top rule inset
+       to the narrower padding and drop the centre gutter layer */
+    background-size: calc(100% - 3rem) 2px, 0 0, 220px 220px, 320px 320px;
     box-shadow: var(--shadow-md);
   }
-  .prayer-body::before { left: 1.5rem; right: 1.5rem; }
+  .prayer-body::before { display: none; }
   .prayer-body::after { display: none; }
   .prayer-english::after { display: none; }
   .prayer-latin { padding-right: 0; padding-bottom: 1.75rem; }
@@ -1587,6 +1614,6 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 @media print {
   body { background: #fff; color: #000; }
   .site-header, .site-footer, .breadcrumb, .skip-link, .suggest, .prayer-search { display: none; }
-  .prayer-body { border: none; box-shadow: none; padding: 0; }
+  .prayer-body { border: none; box-shadow: none; padding: 0; background-image: none; }
   .prayer-body::before, .prayer-body::after, .prayer-english::after { display: none; }
 }
