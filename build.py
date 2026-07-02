@@ -402,18 +402,9 @@ def load_category_descriptions() -> dict[str, str]:
 # --------------------------------------------------------------------------- #
 # Rendering
 # --------------------------------------------------------------------------- #
-# Whole-word "Amen" with its trailing period, wrapped after escaping so it can
-# be coloured liturgical red in the stylesheet.
-AMEN_RE = re.compile(r"\bAmen\.?")
-
-
 def render_lines(lines: list[str]) -> str:
     """Render an array of text lines into <br>-separated, escaped HTML."""
-    rendered = []
-    for line in lines:
-        safe = AMEN_RE.sub(r'<span class="amen">\g<0></span>', esc(line))
-        rendered.append("        " + safe)
-    return "<br>\n".join(rendered)
+    return "<br>\n".join("        " + esc(line) for line in lines)
 
 
 # Prayer links inside the Rosary page (e.g. /prayers/pater-noster/). The prayers
@@ -632,7 +623,7 @@ def build_rosary_page(mysteries: list[dict], base_tpl: str, rosary_tpl: str) -> 
                 f'aria-label="{esc(ordinal)} {esc(name)} Mystery: {esc(m["en"])}">\n'
                 f'            <figure class="decade-figure">{figure}</figure>\n'
                 '            <div class="decade-body">\n'
-                f'              <p class="decade-eyebrow">{esc(ordinal)} {esc(name)} Mystery</p>\n'
+                f'              <p class="decade-eyebrow">{esc(ordinal)} Mystery</p>\n'
                 f'              <h4 class="mystery-name">{esc(m["en"])}</h4>\n'
                 f'              <p class="mystery-ref">{esc(m["scripture"])}'
                 f'<span class="mystery-sep" aria-hidden="true">/</span>'

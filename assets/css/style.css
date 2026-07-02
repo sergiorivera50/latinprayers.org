@@ -39,6 +39,16 @@
   unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+2074,U+20AC,U+2122,U+2212,U+FEFF,U+FFFD;
 }
 @font-face {
+  font-family: "Cormorant Garamond"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/assets/fonts/cormorant-400.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: "Cormorant Garamond"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/assets/fonts/cormorant-400-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
   font-family: "Cormorant Garamond"; font-style: normal; font-weight: 500; font-display: swap;
   src: url("/assets/fonts/cormorant-500.woff2") format("woff2");
   unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
@@ -56,6 +66,19 @@
 @font-face {
   font-family: "Cormorant Garamond"; font-style: normal; font-weight: 600; font-display: swap;
   src: url("/assets/fonts/cormorant-600-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+/* Cinzel: a Roman inscriptional-capitals face (an OFL-licensed Trajan relative).
+   Its lowercase glyphs are small capitals, so mixed-case Latin renders as
+   capitals + small caps. Used only for the Latin side of a prayer. */
+@font-face {
+  font-family: "Cinzel"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/assets/fonts/cinzel.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: "Cinzel"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/assets/fonts/cinzel-ext.woff2") format("woff2");
   unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
 }
 
@@ -126,6 +149,44 @@ body {
 
 a { color: var(--gold-deep); text-decoration: none; transition: color 0.15s var(--ease); }
 a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underline-offset: 2px; }
+
+/* In-text links: give links that sit inside running prose a persistent dotted
+   underline so they read as links, without touching the brand, nav, buttons, or
+   CTAs (which carry their own affordances). The underline is drawn as a repeating
+   radial gradient rather than `text-decoration: dotted` so the dot size and
+   spacing are ours to set. On hover/focus it firms up to a solid full line.
+   Scoped to content prose containers. */
+.prayer-description a,
+.prayer-context a,
+.manifesto-intro a,
+.narrative a,
+.article-body a,
+.rosary-intro a,
+.rosary-steps a,
+.rosary-close-steps a,
+.suggest-address a,
+.prayer-source a {
+  text-decoration: none;
+  background-image: radial-gradient(circle, color-mix(in srgb, currentColor 60%, transparent) 0.75px, transparent 1.25px);
+  background-repeat: repeat-x;
+  background-size: 5px 2px;
+  background-position: 0 100%;
+  padding-bottom: 2px;
+}
+.prayer-description a:hover, .prayer-description a:focus,
+.prayer-context a:hover, .prayer-context a:focus,
+.manifesto-intro a:hover, .manifesto-intro a:focus,
+.narrative a:hover, .narrative a:focus,
+.article-body a:hover, .article-body a:focus,
+.rosary-intro a:hover, .rosary-intro a:focus,
+.rosary-steps a:hover, .rosary-steps a:focus,
+.rosary-close-steps a:hover, .rosary-close-steps a:focus,
+.suggest-address a:hover, .suggest-address a:focus,
+.prayer-source a:hover, .prayer-source a:focus {
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 100% 1px;
+}
 
 :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 2px; }
 
@@ -234,7 +295,6 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 }
 .site-motto {
   margin: 0.12rem 0 0;
-  font-style: italic;
   color: var(--ink-soft);
   font-size: 0.84rem;
   letter-spacing: 0.005em;
@@ -515,8 +575,9 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   font-size: 1.45rem;
   line-height: 1.1;
   color: var(--ink);
-  overflow-wrap: break-word;
-  min-width: 0;
+  /* Keep the Latin whole: wrap only at spaces, never mid-word, and don't let it
+     be squashed below its content by a long gloss. */
+  flex: 0 0 auto;
   transition: color 0.15s var(--ease);
 }
 .prayer-link:hover .name, .prayer-link:focus .name { color: var(--gold-deep); }
@@ -525,7 +586,16 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   font-style: italic;
   font-size: 0.98rem;
   text-align: right;
-  flex: none;
+  /* Let the translation shrink and wrap instead of overflowing the card. */
+  flex: 0 1 auto;
+  min-width: 0;
+}
+/* On phones the two columns squash each other; stack the Latin name over the
+   English gloss so each has the full width. */
+@media (max-width: 34rem) {
+  .prayer-link { flex-direction: column; align-items: flex-start; gap: 0.1rem; }
+  .prayer-link .name { flex: 0 0 auto; }
+  .prayer-link .gloss { text-align: left; }
 }
 
 /* ---- Homepage search (progressive enhancement) ---- */
@@ -623,7 +693,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   font-size: 0.84rem;
   color: var(--ink-faint);
 }
-.suggest-address a { color: var(--ink-soft); text-decoration: underline; text-underline-offset: 2px; }
+.suggest-address a { color: var(--ink-soft); }
 .suggest-address a:hover, .suggest-address a:focus { color: var(--gold-deep); }
 
 /* --------------------------------------------------------------------------- */
@@ -678,34 +748,140 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
-  background: var(--surface);
+  /* Paper grain: a faint fibrous texture plus a soft low-frequency mottle. Both
+     are inline SVG fractalNoise (desaturated, low opacity) held in a custom prop
+     so the back-page (::before) can reuse the exact same paper. Generated as data
+     URIs, so nothing is fetched at runtime and the "no external asset" rule holds. */
+  --paper:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='fiber'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23fiber)' opacity='0.22'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='mottle'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23mottle)' opacity='0.05'/%3E%3C/svg%3E");
+  background-color: var(--surface);
+  /* The crimson top rule and the centre gutter are both background layers now,
+     which frees ::before and ::after to be the two textured back-pages of the
+     open book. Layer order (top to bottom): crimson rule, gutter shadow, paper. */
+  background-image:
+    linear-gradient(90deg, transparent, var(--crimson-bright), transparent),
+    linear-gradient(90deg,
+      rgba(33, 26, 16, 0) 0%, rgba(33, 26, 16, 0.05) 42%,
+      rgba(33, 26, 16, 0.07) 50%, rgba(33, 26, 16, 0.05) 58%,
+      rgba(33, 26, 16, 0) 100%),
+    var(--paper);
+  background-repeat: no-repeat, no-repeat, repeat, repeat;
+  background-position: center top, center, 0 0, 0 0;
+  background-size: calc(100% - 5rem) 2px, 3.5rem 100%, 220px 220px, 320px 320px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 2.5rem 2.5rem 2.75rem;
-  box-shadow: var(--shadow-md);
+  /* keep a page-like proportion so short prayers (e.g. Signum Crucis, one line)
+     don't render as a squat, over-wide band */
+  min-height: 15rem;
   position: relative;
+  box-shadow: var(--shadow-md);
 }
-/* a thin gold rule capping the top of the prayer card */
-.prayer-body::before {
+/* Open-book conceit (side-by-side only): two textured "back pages" stacked just
+   behind the card, each a touch wider so their fore-edges peek past the sides
+   like the leaves of an open book. Both carry the same paper grain as the card;
+   being paper-coloured, they read through depth (a soft halo separating each
+   peeking edge from the page) rather than brightness. ::after is the deeper leaf
+   (z-index -2), ::before the nearer one (-1). */
+.prayer-body::before,
+.prayer-body::after {
   content: "";
   position: absolute;
-  left: 2.5rem; right: 2.5rem; top: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  border-radius: var(--radius);
+  background-color: var(--surface);
+  background-image: var(--paper);
+  background-size: 220px 220px, 320px 320px;
+  border: 1px solid var(--line);
+}
+.prayer-body::before {
+  z-index: -1;
+  inset: 0 -8px;
+  box-shadow: 0 0 6px rgba(33, 26, 16, 0.10);
+}
+.prayer-body::after {
+  z-index: -2;
+  inset: 0 -15px;
+  box-shadow:
+    0 0 8px rgba(33, 26, 16, 0.13),
+    0 16px 30px -18px rgba(33, 26, 16, 0.5);
 }
 .prayer-latin  { padding-right: 2.25rem; }
 .prayer-english {
   padding-left: 2.25rem;
   border-left: 1px solid var(--line);
+  position: relative;
+}
+/* A short crimson register ribbon (as in a missal), tucked into the top edge of
+   the card and hanging down the right page. Fishtail end via clip-path; a satin
+   highlight down its length and a drop-shadow lift it off the page. */
+.prayer-english::after {
+  content: "";
+  position: absolute;
+  top: -2.5rem;              /* start flush at the card's top edge */
+  right: 1.75rem;
+  width: 0.72rem;
+  height: 2.6rem;            /* short */
+  background:
+    linear-gradient(90deg,
+      rgba(255, 255, 255, 0.22) 0%,
+      rgba(255, 255, 255, 0) 38%,
+      rgba(0, 0, 0, 0.10) 100%),
+    color-mix(in srgb, var(--crimson-bright) 78%, var(--ink-soft));
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+  filter: drop-shadow(0 3px 3px rgba(33, 26, 16, 0.22));
+  pointer-events: none;
 }
 .prayer-text {
   margin: 0;
   font-size: 1.22rem;
   line-height: 1.85;
 }
-.prayer-latin .prayer-text { color: var(--ink); }
-.prayer-english .prayer-text { color: #3b3120; }
-.amen { color: var(--crimson); font-weight: 600; }
+.prayer-latin .prayer-text {
+  color: var(--ink);
+  /* Roman inscriptional capitals: Cinzel renders lowercase as small caps, so
+     the Latin reads as CAPITALS + small caps. Scaled down and lightly tracked
+     so it sits level with the English reading column. */
+  font-family: "Cinzel", var(--display);
+  font-size: 1.02rem;
+  line-height: 1.75;
+  letter-spacing: 0.02em;
+}
+/* EB Garamond has no cut lighter than its 400 Regular, so the English is set in
+   Cormorant Garamond (a finer, higher-contrast face) at Regular 400 for a thinner
+   stroke. Its smaller x-height is offset with a slightly larger size. */
+.prayer-english .prayer-text {
+  color: #3b3120;
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 1.3em;
+  line-height: 1.5;
+}
+
+/* Rubricated drop-cap on the Latin side only: the opening letter enlarged in
+   crimson so the first lines wrap around it (as in an illuminated missal). The
+   float sizing is a fallback; where `initial-letter` is supported it takes over
+   and sinks the cap exactly two lines, aligning it to the baseline grid so the
+   wrapped lines sit cleanly around it. The English side keeps a plain opening. */
+.prayer-latin .prayer-text::first-letter {
+  float: left;
+  margin: 0.02em 0.1em 0 0;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 3.9rem;
+  line-height: 0.72;
+  color: var(--crimson-bright);
+}
+@supports (initial-letter: 2) or (-webkit-initial-letter: 2) {
+  .prayer-latin .prayer-text::first-letter {
+    float: none;
+    font-size: 100%;
+    line-height: normal;
+    margin: 0 0.5em 0 0;
+    -webkit-initial-letter: 2;
+    initial-letter: 2;
+  }
+}
 
 .prayer-source {
   max-width: 50rem;
@@ -714,8 +890,48 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   font-size: 0.82rem;
   color: var(--ink-faint);
 }
-.prayer-source a { color: var(--ink-soft); text-decoration: underline; text-underline-offset: 2px; }
+.prayer-source a { color: var(--ink-soft); }
 .prayer-source a:hover, .prayer-source a:focus { color: var(--gold-deep); }
+
+/* Meta row beneath the card (JS-injected): the "Copy Latin" action on the left,
+   and the translation-source line pulled onto its right when one exists. */
+.prayer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-top: 0.8rem;
+}
+.prayer-actions .prayer-source { margin: 0; }
+
+.copy-latin {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.32rem 0.8rem;
+  font-family: var(--serif);
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.15s var(--ease), border-color 0.15s var(--ease),
+    background 0.15s var(--ease);
+}
+.copy-latin svg { width: 0.95rem; height: 0.95rem; flex: none; }
+.copy-latin:hover, .copy-latin:focus-visible {
+  color: var(--crimson-bright);
+  border-color: var(--crimson-bright);
+  background: var(--surface);
+  outline: none;
+}
+.copy-latin.is-copied {
+  color: var(--crimson-bright);
+  border-color: var(--crimson-bright);
+}
 
 /* ---- About this prayer (context prose) ---- */
 .prayer-context {
@@ -945,6 +1161,16 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   color: #fff;
   box-shadow: var(--shadow-sm);
 }
+/* On very narrow phones (≈320px) the day labels wrap to two/three lines, making
+   each cell tall; the full 999px pill radius then renders as a circular blob.
+   Dial the radius back to a rounded rectangle and trim the type so it reads as a
+   proper segmented control. */
+@media (max-width: 22.5rem) {
+  .mysteries-tabs { border-radius: 1rem; gap: 0.2rem; padding: 0.25rem; }
+  .mysteries-tab { border-radius: 0.7rem; padding: 0.45rem 0.25rem; }
+  .mysteries-tab-name { font-size: 0.95rem; }
+  .mysteries-tab-days { font-size: 0.62rem; }
+}
 
 /* Panels: stacked & all visible without JS; one at a time with it. */
 .mysteries-panels { display: grid; gap: 2rem; scroll-margin-top: 5.5rem; }
@@ -978,6 +1204,11 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   scroll-snap-align: start;
   display: grid;
   grid-template-columns: 1fr;
+  /* Cards are flex-stretched to equal height; keep the rows at their natural
+     size (image + body) and let any surplus fall to the bottom of the card as
+     plain surface, rather than stretching the figure row and exposing a band of
+     its tint between the image and the text. Overridden on desktop below. */
+  align-content: start;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -986,15 +1217,25 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 }
 .decade-figure {
   margin: 0;
-  aspect-ratio: 4 / 5;          /* stacked (mobile): a portrait, matching the art */
   background: var(--gold-tint);
 }
-.decade-figure img,
+/* Stacked (mobile): render the image at its natural 4:5 ratio and let it scale
+   down proportionally with the card/screen width, so the whole picture always
+   shows and it simply gets smaller on narrower phones (no cover-crop, so the
+   focal point never shifts). The desktop side-by-side layout below overrides
+   this to a cover-fill of the fixed image column. */
+.decade-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border: none;
+  border-radius: 0;
+}
 .decade-figure .placeholder {
   display: block;
   width: 100%;
-  height: 100%;
-  aspect-ratio: auto;
+  aspect-ratio: 4 / 5;
   object-fit: cover;
   border: none;
   border-radius: 0;
@@ -1071,9 +1312,10 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
    image is absolutely positioned so it fills its column by cover without
    imposing its intrinsic height (which would make image cards taller). */
 @media (min-width: 44rem) {
-  .decade-card { grid-template-columns: 20rem 1fr; min-height: 21rem; }
+  .decade-card { grid-template-columns: 20rem 1fr; min-height: 21rem; align-content: stretch; }
   .decade-figure { aspect-ratio: auto; height: 100%; position: relative; }
-  .decade-figure img { position: absolute; inset: 0; }
+  .decade-figure img,
+  .decade-figure .placeholder { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; }
   .decade-body { padding: 2rem 2.25rem; align-self: center; }
 }
 
@@ -1102,7 +1344,12 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   box-shadow: var(--shadow-sm);
 }
 .rosary-collect p { margin: 0 0 1rem; line-height: 1.75; }
-.rosary-collect p[lang="la"] { font-size: 1.08rem; }
+.rosary-collect p[lang="la"] {
+  font-size: 0.95rem;
+  /* Same Roman inscriptional treatment as the Latin on a prayer page. */
+  font-family: "Cinzel", var(--display);
+  letter-spacing: 0.02em;
+}
 .rosary-collect p:last-child { margin-bottom: 0; color: var(--ink-soft); }
 
 /* Closing image: Our Lady on a transparent ground — a quiet benediction to end
@@ -1287,6 +1534,16 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   .hero-figure img { aspect-ratio: 1 / 1; object-position: center top; }
 }
 
+/* Rosary hero: unlike the homepage hero (which shares a row with text and so
+   must collapse early at 48rem), this is a standalone image in a single column,
+   so it can keep the full-width Lepanto banner all the way down to mobile L.
+   Only below ~425px do we swap to a smaller, centred square crop anchored left
+   (Our Lady sits about a third in) to keep Mary in frame without a tall banner. */
+@media (max-width: 28rem) {
+  .ph-figure.rosary-hero { max-width: 15rem; margin: 0 auto 2rem; }
+  .ph-figure.rosary-hero img { aspect-ratio: 1 / 1; height: auto; object-position: 30% center; }
+}
+
 /* Stack the two prayer columns; restack the masthead. */
 @media (max-width: 38rem) {
   .site-main { padding: 2.5rem 0 1.5rem; }
@@ -1294,8 +1551,15 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   .prayer-body {
     grid-template-columns: 1fr;
     padding: 1.75rem 1.5rem 2rem;
+    min-height: 0;
+    /* stacked: no open-book, just the plain card lift; tighten the top rule inset
+       to the narrower padding and drop the centre gutter layer */
+    background-size: calc(100% - 3rem) 2px, 0 0, 220px 220px, 320px 320px;
+    box-shadow: var(--shadow-md);
   }
-  .prayer-body::before { left: 1.5rem; right: 1.5rem; }
+  .prayer-body::before { display: none; }
+  .prayer-body::after { display: none; }
+  .prayer-english::after { display: none; }
   .prayer-latin { padding-right: 0; padding-bottom: 1.75rem; }
   .prayer-english {
     padding-left: 0;
@@ -1314,8 +1578,17 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
     padding-top: 0.9rem;
     padding-bottom: 0;
   }
-  .brand-lockup { padding-bottom: 0.8rem; }
-  .brand-mark { height: 2.85rem; }
+  /* Mobile brand: drop the motto and scale the Sacred Heart mark + wordmark up
+     to fill the row on one line, centred. Sizes are vw-based so they track the
+     screen width, clamped so the text can't overflow or grow too tall. */
+  .site-motto { display: none; }
+  .brand-lockup {
+    padding-bottom: 0.8rem;
+    justify-content: center;
+    gap: clamp(0.45rem, 2.5vw, 0.85rem);
+  }
+  .brand-name { font-size: clamp(1.5rem, 9vw, 2.4rem); white-space: nowrap; }
+  .brand-mark { height: clamp(2.1rem, 10.5vw, 3rem); }
   .site-nav {
     justify-content: center;
     gap: 0.3rem 1.2rem;
@@ -1812,6 +2085,6 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 @media print {
   body { background: #fff; color: #000; }
   .site-header, .site-footer, .breadcrumb, .skip-link, .suggest, .prayer-search { display: none; }
-  .prayer-body { border: none; box-shadow: none; padding: 0; }
-  .prayer-body::before { display: none; }
+  .prayer-body { border: none; box-shadow: none; padding: 0; background-image: none; }
+  .prayer-body::before, .prayer-body::after, .prayer-english::after { display: none; }
 }
