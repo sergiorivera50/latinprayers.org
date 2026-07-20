@@ -351,6 +351,9 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   margin: 0 auto 4rem;
   padding-top: 0.5rem;
 }
+/* The image column is taller than the copy, so centring the text leaves it
+   sitting low against the frame. Nudge it up toward the top of the image. */
+.hero-text { position: relative; top: -1.5rem; }
 .hero-kicker {
   margin: 0 0 0.85rem;
   text-transform: uppercase;
@@ -417,39 +420,6 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 .hero-link:hover .hero-link-arrow, .hero-link:focus .hero-link-arrow { transform: translateX(0.25rem); }
 
 /* Quick entry points to the most familiar prayers, as small chips. */
-.hero-popular {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.55rem;
-  margin: 3rem 0 0;
-}
-.hero-popular-label {
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: var(--ink-faint);
-  margin-right: 0.2rem;
-}
-.hero-popular a {
-  font-family: var(--display);
-  font-weight: 600;
-  font-size: 1rem;
-  color: var(--ink-soft);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 0.25rem 0.85rem;
-  transition: border-color 0.15s var(--ease), color 0.15s var(--ease), background 0.15s var(--ease);
-}
-.hero-popular a:hover, .hero-popular a:focus {
-  text-decoration: none;
-  color: var(--gold-deep);
-  border-color: var(--gold);
-  background: var(--surface-2);
-}
-
 /* Framed devotional image: a simple rounded frame lifted off the page with a
    soft shadow. object-fit lets any 4:5 image drop in cleanly. */
 .hero-figure { margin: 0; position: relative; }
@@ -1555,8 +1525,9 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
     text-align: center;
     max-width: 34rem;
   }
+  .hero-text { top: 0; }
   .hero-lead { margin-left: auto; margin-right: auto; }
-  .hero-actions, .hero-popular { justify-content: center; }
+  .hero-actions { justify-content: center; }
   .hero-figure { order: -1; max-width: 17rem; margin: 0 auto; }
   /* shorter on phones: a square crop anchored to the top trims the lower body */
   .hero-figure img { aspect-ratio: 1 / 1; object-position: center top; }
