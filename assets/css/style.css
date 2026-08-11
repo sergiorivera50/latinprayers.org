@@ -390,13 +390,13 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   display: inline-block;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-size: 0.8rem;
+  letter-spacing: 0.09em;
+  font-size: 0.72rem;
   color: var(--btn-text);
   background: var(--btn);
   border: 1px solid var(--btn);
   border-radius: 999px;
-  padding: 0.72rem 1.6rem;
+  padding: 0.56rem 1.25rem;
   box-shadow: var(--shadow-sm);
   transition: background 0.15s var(--ease), transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
 }
@@ -407,17 +407,43 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
+/* Secondary action: the outlined counterpart to .hero-cta, in the same crimson.
+   Same pill silhouette and type as the primary so the pair reads as a set. */
 .hero-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.42rem;
+  padding: 0.56rem 1.05rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-size: 0.72rem;
   color: var(--btn);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--btn) 32%, transparent);
+  border-radius: 999px;
+  transition: color 0.15s var(--ease), border-color 0.15s var(--ease),
+    background 0.15s var(--ease), box-shadow 0.15s var(--ease);
 }
-.hero-link:hover, .hero-link:focus { color: var(--btn-hover); text-decoration: none; }
-.hero-link-rose { width: 1em; height: 1em; flex: none; object-fit: contain; }
-.hero-link-arrow { color: var(--btn); transition: transform 0.18s var(--ease); }
-.hero-link:hover .hero-link-arrow, .hero-link:focus .hero-link-arrow { transform: translateX(0.25rem); }
+.hero-link:hover, .hero-link:focus-visible {
+  color: var(--btn-hover);
+  border-color: var(--btn);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+}
+/* The .backlink arrow, mirrored. Strokes in currentColor, so it shifts with
+   the label on hover. */
+.hero-link-arrow { width: 0.95em; height: 0.95em; flex: none; }
+.hero-link-rose {
+  width: 1.1em;
+  height: 1.1em;
+  flex: none;
+  object-fit: contain;
+  /* Sits a little further off the label than the trailing arrow does: the
+     uppercase tracking already opens up the right side. */
+  margin-right: 0.2rem;
+}
 
 /* Quick entry points to the most familiar prayers, as small chips. */
 /* Framed devotional image: a simple rounded frame lifted off the page with a
@@ -698,25 +724,41 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 /* Single prayer                                                                */
 /* --------------------------------------------------------------------------- */
 .breadcrumb { max-width: 50rem; margin: 0 auto 1.75rem; }
+/* A quiet pill rather than a bare text link: it reads as a control, gives the
+   thumb a real target on mobile, and matches the .copy-latin chip further down
+   the same page. */
 .backlink {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
+  padding: 0.36rem 0.95rem 0.36rem 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 0.74rem;
+  letter-spacing: 0.13em;
+  font-size: 0.7rem;
   font-weight: 600;
   color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  transition: color 0.15s var(--ease), border-color 0.15s var(--ease),
+    background 0.15s var(--ease), box-shadow 0.15s var(--ease);
 }
-.backlink:hover, .backlink:focus { color: var(--gold-deep); text-decoration: none; }
+.backlink:hover, .backlink:focus-visible {
+  color: var(--gold-deep);
+  border-color: var(--gold);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+}
 .backlink-arrow {
+  width: 0.8rem;
+  height: 0.8rem;
+  flex: none;
   color: var(--gold);
-  font-size: 1rem;
-  line-height: 1;
-  transition: transform 0.18s var(--ease);
+  transition: color 0.15s var(--ease);
 }
 .backlink:hover .backlink-arrow,
-.backlink:focus .backlink-arrow { transform: translateX(-0.25rem); }
+.backlink:focus-visible .backlink-arrow { color: var(--gold-deep); }
 
 .prayer { max-width: 50rem; margin: 0 auto; }
 .prayer-header { text-align: center; margin-bottom: 2.5rem; }
