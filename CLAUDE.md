@@ -107,8 +107,8 @@ dependency). Columns (header row, in order):
 | `category`    | grouping for the index.                                              |
 | `order`       | integer sort key within category (lower = first); blank → 1000.      |
 | `description` | 1–2 sentences of context; optional (may be blank).                   |
-| `la`          | Latin text — **one line per line**, line breaks *inside the cell*.   |
-| `en`          | faithful English translation, line-aligned with `la`.               |
+| `la`          | Latin text — **one line per line**, line breaks *inside the cell*. A **blank line** marks a **stanza break**. |
+| `en`          | faithful English translation, line-aligned with `la` (same lines and same stanza breaks). |
 | `context`     | longer prose on history/origin/use; optional. **Paragraphs** split on blank lines within the cell. Renders as the "About this prayer" section below the text. |
 | `source`      | optional label override for the link text. Blank → the link shows the route from `source_url` with the scheme stripped (e.g. `fisheaters.com/prayers.html`). |
 | `source_url`  | optional URL of the translation source. When present, a muted "Translation source" link is shown just below (outside) the text card. Both blank → no line. |
@@ -117,7 +117,16 @@ dependency). Columns (header row, in order):
 - `la` and `en` hold **multiple lines within a single cell** (Alt/Option+Enter in
   a spreadsheet). `build.py` splits each cell on newlines into the line array, so
   the two columns still align line-by-line. Keep them parallel (same logical lines)
-  where the translation allows. Blank lines within a cell are dropped.
+  where the translation allows.
+- A **blank line within a cell separates stanzas.** `build.py` groups the lines
+  into stanzas (splitting on blank lines) and renders each stanza as its own
+  `<p class="prayer-stanza">`, so a long prayer reads in its received stanzas
+  rather than as one wall of text. A cell with no blank line is a single stanza and
+  renders exactly as before. Put the **same stanza breaks in `la` and `en`** so the
+  two columns stay parallel. Break points should follow the prayer's traditional
+  structure (metrical stanzas for hymns, the credal articles for the Creeds, the
+  movements of a canticle, the salutation/petition seam of a short prayer); truly
+  atomic prayers (Signum Crucis, Gloria Patri, Requiem) are left whole.
 - Column names `la`/`en` are the ISO 639-1 codes; markup tags them `lang="la"` /
   `lang="en"`.
 - Display is **Latin + English side-by-side** (collapses to stacked on small screens).

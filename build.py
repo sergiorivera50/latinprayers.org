@@ -191,10 +191,21 @@ def write_sitemap(prayers: list[dict], dist: Path) -> None:
 # --------------------------------------------------------------------------- #
 # Data loading & validation
 # --------------------------------------------------------------------------- #
-def _split_lines(cell: str) -> list[str]:
-    """A multi-line CSV cell (one line per row, as edited in a spreadsheet)
-    becomes an array of trimmed, non-empty lines."""
-    return [line.strip() for line in cell.replace("\r\n", "\n").split("\n") if line.strip()]
+def _split_stanzas(cell: str) -> list[list[str]]:
+    """A multi-line CSV cell becomes a list of stanzas, each a list of lines.
+
+    A blank line within the cell separates one stanza from the next; single
+    newlines separate the lines within a stanza. A cell that has no blank line
+    yields a single stanza, so a prayer renders exactly as before until stanza
+    breaks are introduced into its ``la``/``en`` text."""
+    text = cell.replace("\r\n", "\n").strip()
+    if not text:
+        return []
+    return [
+        [ln.strip() for ln in stanza.split("\n") if ln.strip()]
+        for stanza in re.split(r"\n\s*\n", text)
+        if stanza.strip()
+    ]
 
 
 def _split_paragraphs(cell: str) -> list[str]:
@@ -255,8 +266,8 @@ def load_prayers() -> list[dict]:
             "context": cells.get("context", ""),
             "source": cells.get("source", ""),
             "source_url": cells.get("source_url", ""),
-            "latin": _split_lines(cells["la"]),
-            "english": _split_lines(cells["en"]),
+            "latin": _split_stanzas(cells["la"]),
+            "english": _split_stanzas(cells["en"]),
         })
 
     if not prayers:
@@ -327,9 +338,15 @@ def load_category_descriptions() -> dict[str, str]:
 # --------------------------------------------------------------------------- #
 # Rendering
 # --------------------------------------------------------------------------- #
-def render_lines(lines: list[str]) -> str:
-    """Render an array of text lines into <br>-separated, escaped HTML."""
-    return "<br>\n".join("        " + esc(line) for line in lines)
+def render_stanzas(stanzas: list[list[str]]) -> str:
+    """Render stanzas as separate ``<p class="prayer-stanza">`` blocks; the lines
+    within a stanza are joined by ``<br>``. A single stanza (a prayer with no
+    blank line in its source text) renders as one paragraph, as before."""
+    blocks = []
+    for stanza in stanzas:
+        lines = "<br>\n".join("        " + esc(line) for line in stanza)
+        blocks.append(f'      <p class="prayer-stanza">\n{lines}\n      </p>')
+    return "\n".join(blocks)
 
 
 # Prayer links inside the Rosary page (e.g. /prayers/pater-noster/). The prayers
@@ -403,8 +420,11 @@ def build_prayer_page(
         title=esc(prayer["title"]),
         subtitle=esc(prayer["subtitle"]),
         description=description,
-        latin_lines=render_lines(prayer["latin"]),
-        english_lines=render_lines(prayer["english"]),
+        latin_stanzas=render_stanzas(prayer["latin"]),
+        english_stanzas=render_stanzas(prayer["english"]),
+        # Row-track count for the side-by-side subgrid: one row per stanza, so the
+        # Latin and English stanzas line up across the gutter (see style.css).
+        stanza_rows=str(max(len(prayer["latin"]), len(prayer["english"]), 1)),
         context=context,
         source=source,
         rosary_cta=rosary_cta,

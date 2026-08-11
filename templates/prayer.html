@@ -9,16 +9,12 @@
     {{description}}
   </header>
 
-  <div class="prayer-body">
+  <div class="prayer-body" style="grid-template-rows: repeat({{stanza_rows}}, auto)">
     <section class="prayer-col prayer-latin" lang="la">
-      <p class="prayer-text">
-{{latin_lines}}
-      </p>
+{{latin_stanzas}}
     </section>
     <section class="prayer-col prayer-english" lang="en">
-      <p class="prayer-text">
-{{english_lines}}
-      </p>
+{{english_stanzas}}
     </section>
   </div>
 

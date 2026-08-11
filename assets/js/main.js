@@ -296,27 +296,37 @@
 
   // Copy the Latin text of a prayer. Progressive enhancement: the button is
   // created here, so a no-JS visitor never sees a dead control. The Latin lives
-  // as <br>-separated lines in .prayer-latin .prayer-text (the drop-cap is a
-  // ::first-letter pseudo, so it isn't in the DOM and doesn't interfere).
+  // as one or more .prayer-latin .prayer-stanza paragraphs of <br>-separated
+  // lines (the drop-cap is a ::first-letter pseudo, so it isn't in the DOM and
+  // doesn't interfere).
   var CLIPBOARD_SVG =
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path></svg>';
   var CHECK_SVG =
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>';
 
-  function latinTextFrom(el) {
-    // Split on the <br> line breaks, then let the browser decode entities and
-    // strip any incidental markup by reading textContent per line.
+  function latinTextFrom(stanzas) {
+    // Each stanza is a <p> of <br>-separated lines. Split on the line breaks,
+    // decode entities and strip incidental markup per line via textContent, then
+    // join lines with a newline and stanzas with a blank line, so the copied
+    // text preserves the same stanza breaks the reader sees.
     var decoder = document.createElement("div");
-    return el.innerHTML
-      .split(/<br\s*\/?>/i)
-      .map(function (part) {
-        decoder.innerHTML = part;
-        return (decoder.textContent || "").replace(/\s+/g, " ").trim();
+    return Array.prototype.map
+      .call(stanzas, function (stanza) {
+        return stanza.innerHTML
+          .split(/<br\s*\/?>/i)
+          .map(function (part) {
+            decoder.innerHTML = part;
+            return (decoder.textContent || "").replace(/\s+/g, " ").trim();
+          })
+          .filter(function (line) {
+            return line.length;
+          })
+          .join("\n");
       })
-      .filter(function (line) {
-        return line.length;
+      .filter(function (block) {
+        return block.length;
       })
-      .join("\n");
+      .join("\n\n");
   }
 
   function copyText(text) {
@@ -343,10 +353,10 @@
   }
 
   function initCopyLatin() {
-    var latin = document.querySelector(".prayer-latin .prayer-text");
+    var stanzas = document.querySelectorAll(".prayer-latin .prayer-stanza");
     var body = document.querySelector(".prayer-body");
-    if (!latin || !body) return;
-    var text = latinTextFrom(latin);
+    if (!stanzas.length || !body) return;
+    var text = latinTextFrom(stanzas);
     if (!text) return;
 
     var btn = document.createElement("button");

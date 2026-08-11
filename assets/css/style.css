@@ -745,7 +745,17 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 .prayer-body {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0;
+  column-gap: 0;
+  /* Stanza rows: the two columns subgrid onto a shared set of row tracks (one per
+     stanza), so stanza N of the Latin lines up with stanza N of the English even
+     though the two faces set at different heights. The row count is emitted inline
+     per prayer as grid-template-rows: repeat(N, auto); see .prayer-col below. This
+     row-gap is the space between stanzas, now identical in both columns. */
+  row-gap: 1.2rem;
+  /* Keep rows content-sized and top-aligned: on a short prayer the card's
+     min-height leaves slack, and without this the auto rows would stretch and
+     pull the stanzas apart. */
+  align-content: start;
   /* Paper grain: a faint fibrous texture plus a soft low-frequency mottle. Both
      are inline SVG fractalNoise (desaturated, low opacity) held in a custom prop
      so the back-page (::before) can reuse the exact same paper. Generated as data
@@ -804,8 +814,18 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
     0 0 8px rgba(33, 26, 16, 0.13),
     0 16px 30px -18px rgba(33, 26, 16, 0.5);
 }
-.prayer-latin  { padding-right: 2.25rem; }
+/* Each column is a subgrid that inherits the prayer-body row tracks, so its
+   stanzas fall on the same rows as the other column's, keeping the translation
+   aligned stanza-for-stanza. Where subgrid is unsupported this degrades to the
+   old independent-column flow (unaligned but correct). */
+.prayer-col {
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: 1 / -1;
+}
+.prayer-latin  { grid-column: 1; padding-right: 2.25rem; }
 .prayer-english {
+  grid-column: 2;
   padding-left: 2.25rem;
   border-left: 1px solid var(--line);
   position: relative;
@@ -830,12 +850,14 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   filter: drop-shadow(0 3px 3px rgba(33, 26, 16, 0.22));
   pointer-events: none;
 }
-.prayer-text {
+.prayer-stanza {
+  /* Inter-stanza spacing comes from the grid row-gap (so it matches across both
+     columns); the stanza itself carries no margin. */
   margin: 0;
   font-size: 1.22rem;
   line-height: 1.85;
 }
-.prayer-latin .prayer-text {
+.prayer-latin .prayer-stanza {
   color: var(--ink);
   /* Roman inscriptional capitals: Cinzel renders lowercase as small caps, so
      the Latin reads as CAPITALS + small caps. Scaled down and lightly tracked
@@ -848,12 +870,12 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 /* EB Garamond has no cut lighter than its 400 Regular, so the English is set in
    Cormorant Garamond (a finer, higher-contrast face) at Regular 400 for a thinner
    stroke. Its smaller x-height is offset with a slightly larger size. */
-.prayer-english .prayer-text {
+.prayer-english .prayer-stanza {
   color: #3b3120;
   font-family: var(--display);
   font-weight: 400;
-  font-size: 1.3em;
-  line-height: 1.5;
+  font-size: 1.17em;
+  line-height: 1.55;
 }
 
 /* Rubricated drop-cap on the Latin side only: the opening letter enlarged in
@@ -861,7 +883,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
    float sizing is a fallback; where `initial-letter` is supported it takes over
    and sinks the cap exactly two lines, aligning it to the baseline grid so the
    wrapped lines sit cleanly around it. The English side keeps a plain opening. */
-.prayer-latin .prayer-text::first-letter {
+.prayer-latin .prayer-stanza:first-child::first-letter {
   float: left;
   margin: 0.02em 0.1em 0 0;
   font-family: var(--display);
@@ -871,7 +893,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   color: var(--crimson-bright);
 }
 @supports (initial-letter: 2) or (-webkit-initial-letter: 2) {
-  .prayer-latin .prayer-text::first-letter {
+  .prayer-latin .prayer-stanza:first-child::first-letter {
     float: none;
     font-size: 100%;
     line-height: normal;
@@ -1559,6 +1581,12 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   .prayer-body::before { display: none; }
   .prayer-body::after { display: none; }
   .prayer-english::after { display: none; }
+  /* Stacked: drop the shared-row subgrid so each column flows its own stanzas as
+     one block; spacing returns to per-stanza margins. */
+  .prayer-body { row-gap: 0; }
+  .prayer-col { display: block; grid-column: 1; grid-row: auto; }
+  .prayer-stanza { margin-bottom: 1.15em; }
+  .prayer-stanza:last-child { margin-bottom: 0; }
   .prayer-latin { padding-right: 0; padding-bottom: 1.75rem; }
   .prayer-english {
     padding-left: 0;
