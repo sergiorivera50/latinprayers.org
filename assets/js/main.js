@@ -121,26 +121,36 @@
       });
     });
 
-    // Default selection: a matching URL hash wins; otherwise today's set
-    // (data-days carries the weekday numbers, 0=Sun…6=Sat); else the first tab.
-    var def = tabs[0];
+    // The set proper to today (data-days carries the weekday numbers, 0=Sun…6=Sat).
+    // The site is static and a built page is served for days, so the day can only
+    // be known here, at view time — never at build time.
+    var today = String(new Date().getDay());
+    var todayTab = tabs.filter(function (t) {
+      return (t.getAttribute("data-days") || "").split(",").indexOf(today) !== -1;
+    })[0];
+
+    // Mark that tab with a "Today" chip. It stands in for the tab's weekday line,
+    // which is the very thing it answers, and the segmented control has no room
+    // for both. The chip stays on its own tab whichever set the reader opens, so
+    // the day's obligation is legible while the other two remain one tap away.
+    if (todayTab) {
+      var chip = document.createElement("span");
+      chip.className = "mysteries-tab-today";
+      chip.textContent = "Today";
+      var days = todayTab.querySelector(".mysteries-tab-days");
+      if (days) todayTab.replaceChild(chip, days);
+      else todayTab.appendChild(chip);
+    }
+
+    // Default selection: a matching URL hash wins; otherwise today's set; else
+    // the first tab.
     var hash = window.location.hash.replace("#", "");
     var fromHash = hash
       ? tabs.filter(function (t) {
           return t.getAttribute("aria-controls") === hash;
         })[0]
       : null;
-    if (fromHash) {
-      def = fromHash;
-    } else {
-      var today = String(new Date().getDay());
-      tabs.forEach(function (t) {
-        if ((t.getAttribute("data-days") || "").split(",").indexOf(today) !== -1) {
-          def = t;
-        }
-      });
-    }
-    select(def, false);
+    select(fromHash || todayTab || tabs[0], false);
   }
 
   // Decade carousels: each set's five mysteries sit in a horizontal scroll-snap
