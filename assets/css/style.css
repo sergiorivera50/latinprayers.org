@@ -1292,10 +1292,15 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   border: 1px solid var(--line);
   border-radius: 999px;
 }
+/* Two rows: the set's name, then a slot holding both the weekday line and the
+   "Today" chip stacked on top of each other. Sharing one cell is what lets the
+   two cross-fade: the slot keeps the height of the taller of them, so nothing
+   shifts as they swap, and neither needs `display`, which cannot animate. */
 .mysteries-tab {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: grid;
+  grid-template-rows: auto auto;
+  justify-items: center;
+  align-content: center;
   gap: 0.05rem;
   padding: 0.5rem 0.4rem;
   border-radius: 999px;
@@ -1312,30 +1317,54 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   text-decoration: none;
 }
 .mysteries-tab-name { font-family: var(--display); font-weight: 600; font-size: 1.08rem; }
-.mysteries-tab-days { font-size: 0.7rem; letter-spacing: 0.02em; color: inherit; opacity: 0.8; }
+.mysteries-tab-days {
+  grid-area: 2 / 1;
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  color: inherit;
+  opacity: 0.8;
+  visibility: visible;
+  /* visibility flips instantly, but only once the fade has finished, so the
+     hidden one leaves the accessibility tree without cutting the fade short.
+     Without it both strings would always be read out as part of the tab. */
+  transition: opacity 0.22s var(--ease), visibility 0s;
+}
 .mysteries-tab[aria-selected="true"] {
   background: var(--gold);
   color: #fff;
   box-shadow: var(--shadow-sm);
 }
 /* "Today" chip, injected by main.js onto the set the day calls for (it cannot be
-   built in: the page is static and served for days). It takes the place of that
-   tab's weekday line and stays there whichever set the reader opens. */
+   built in: the page is static and served for days). It shares a slot with that
+   tab's weekday line and only one of the two is ever shown: the chip while the
+   set is open, the weekdays again as soon as the reader opens another set. */
 .mysteries-tab-today {
+  grid-area: 2 / 1;
+  align-self: center;
+  opacity: 0;
+  visibility: hidden;
   padding: 0.06rem 0.45rem;
   border-radius: 999px;
-  background: var(--crimson);
-  color: #fffdf8;
+  /* Only ever seen against the selected tab's gold, so it is cream-on-gold and
+     never the reverse: crimson on that gold is too close in value to read. */
+  background: #fffdf8;
+  color: var(--crimson);
   font-size: 0.56rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   line-height: 1.7;
+  transition: opacity 0.22s var(--ease), visibility 0s linear 0.22s;
 }
-/* Crimson on the selected tab's gold sits too close in value to read; invert. */
-.mysteries-tab[aria-selected="true"] .mysteries-tab-today {
-  background: #fffdf8;
-  color: var(--crimson);
+.mysteries-tab.is-today[aria-selected="true"] .mysteries-tab-today {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.22s var(--ease), visibility 0s;
+}
+.mysteries-tab.is-today[aria-selected="true"] .mysteries-tab-days {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.22s var(--ease), visibility 0s linear 0.22s;
 }
 /* On very narrow phones (≈320px) the day labels wrap to two/three lines, making
    each cell tall; the full 999px pill radius then renders as a circular blob.

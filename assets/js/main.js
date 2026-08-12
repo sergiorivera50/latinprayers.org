@@ -129,17 +129,17 @@
       return (t.getAttribute("data-days") || "").split(",").indexOf(today) !== -1;
     })[0];
 
-    // Mark that tab with a "Today" chip. It stands in for the tab's weekday line,
-    // which is the very thing it answers, and the segmented control has no room
-    // for both. The chip stays on its own tab whichever set the reader opens, so
-    // the day's obligation is legible while the other two remain one tap away.
+    // Give that tab a "Today" chip alongside its weekday line. Which of the two
+    // shows is left to CSS, keyed off the tab's own aria-selected: the chip
+    // while the set is open (where it answers "should I be praying this one?"),
+    // the weekdays once the reader moves to another set (where the schedule is
+    // the more useful thing to read). The class is the hook for that rule.
     if (todayTab) {
+      todayTab.classList.add("is-today");
       var chip = document.createElement("span");
       chip.className = "mysteries-tab-today";
       chip.textContent = "Today";
-      var days = todayTab.querySelector(".mysteries-tab-days");
-      if (days) todayTab.replaceChild(chip, days);
-      else todayTab.appendChild(chip);
+      todayTab.appendChild(chip);
     }
 
     // Default selection: a matching URL hash wins; otherwise today's set; else
