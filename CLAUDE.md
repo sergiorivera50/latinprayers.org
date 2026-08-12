@@ -127,6 +127,14 @@ dependency). Columns (header row, in order):
   structure (metrical stanzas for hymns, the credal articles for the Creeds, the
   movements of a canticle, the salutation/petition seam of a short prayer); truly
   atomic prayers (Signum Crucis, Gloria Patri, Requiem) are left whole.
+- **Versicles and responses are rubricated automatically.** A line that *begins*
+  with `V.` or `R.` (followed by a space) has its marker wrapped in
+  `<span class="vr">` and set in liturgical red, the same treatment the Rosary
+  page gives its versicles. Nothing to mark up by hand: write the line plainly in
+  the CSV and `build.py` finds it. A `V.` anywhere other than the start of a line
+  is left alone. When a stanza *opens* on a versicle, the Latin drop-cap stands
+  down for that prayer (see `.has-versicle` in `style.css`), since capitalising
+  the `V` of the marker would read as the prayer's first word.
 - Column names `la`/`en` are the ISO 639-1 codes; markup tags them `lang="la"` /
   `lang="en"`.
 - Display is **Latin + English side-by-side** (collapses to stacked on small screens).

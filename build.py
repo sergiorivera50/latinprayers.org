@@ -338,14 +338,35 @@ def load_category_descriptions() -> dict[str, str]:
 # --------------------------------------------------------------------------- #
 # Rendering
 # --------------------------------------------------------------------------- #
+# A versicle / response line: "V. Angelus Domini…" / "R. et concepit…". Only a
+# marker at the very start of a line counts, so an ordinary sentence is never
+# caught. The marker is rubricated in the markup (see `.vr` in style.css), the
+# same treatment the Rosary page gives its versicles.
+VERSICLE_RE = re.compile(r"^[VR]\.(?=\s|$)")
+
+
+def render_line(line: str) -> str:
+    """Escape one line of prayer text, rubricating a leading V./R. marker."""
+    marker = VERSICLE_RE.match(line)
+    if not marker:
+        return esc(line)
+    return f'<span class="vr">{marker.group(0)}</span>{esc(line[marker.end():])}'
+
+
 def render_stanzas(stanzas: list[list[str]]) -> str:
     """Render stanzas as separate ``<p class="prayer-stanza">`` blocks; the lines
     within a stanza are joined by ``<br>``. A single stanza (a prayer with no
     blank line in its source text) renders as one paragraph, as before."""
     blocks = []
     for stanza in stanzas:
-        lines = "<br>\n".join("        " + esc(line) for line in stanza)
-        blocks.append(f'      <p class="prayer-stanza">\n{lines}\n      </p>')
+        lines = "<br>\n".join("        " + render_line(line) for line in stanza)
+        # A stanza opening on a versicle marks itself so the Latin drop-cap can
+        # stand down: a two-line rubricated "V" would read as the opening word
+        # of the prayer rather than as the versicle sign.
+        css = "prayer-stanza"
+        if stanza and VERSICLE_RE.match(stanza[0]):
+            css += " has-versicle"
+        blocks.append(f'      <p class="{css}">\n{lines}\n      </p>')
     return "\n".join(blocks)
 
 

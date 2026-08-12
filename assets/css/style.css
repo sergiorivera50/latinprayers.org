@@ -944,6 +944,26 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
     initial-letter: 2;
   }
 }
+/* …except where the prayer opens on a versicle. The drop-cap would fall on the
+   "V" of the marker (and, since ::first-letter takes no trailing punctuation,
+   would strand its full stop at reading size), so the prayer would appear to
+   begin with a rubricated letter that isn't a word. Outranks both rules above
+   on specificity, in and out of the @supports block. */
+.prayer-latin .prayer-stanza.has-versicle:first-child::first-letter {
+  float: none;
+  margin: 0;
+  font-family: inherit;
+  font-weight: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  -webkit-initial-letter: normal;
+  initial-letter: normal;
+}
+
+/* Versicle / response markers, rubricated as in a missal. Shared by the prayer
+   pages (emitted by render_line in build.py) and the Rosary page. */
+.vr { color: var(--crimson); font-weight: 600; margin-right: 0.3rem; }
 
 .prayer-source {
   max-width: 50rem;
@@ -1397,7 +1417,6 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 .rosary-close-steps > li:last-child { margin-bottom: 0; }
 .rosary-close-steps > li::marker { color: var(--gold); }
 .rosary-step-label { margin: 0 0 0.7rem; color: var(--ink); }
-.rosary-vr { color: var(--crimson); font-weight: 600; margin-right: 0.3rem; }
 .rosary-collect {
   background: var(--surface);
   border: 1px solid var(--line);
