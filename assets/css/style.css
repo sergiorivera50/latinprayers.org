@@ -166,7 +166,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 .rosary-intro a,
 .rosary-steps a,
 .rosary-close-steps a,
-.suggest-address a,
+.suggest-lead a,
 .prayer-source a {
   text-decoration: none;
   background-image: radial-gradient(circle, color-mix(in srgb, currentColor 60%, transparent) 0.75px, transparent 1.25px);
@@ -183,7 +183,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 .rosary-intro a:hover, .rosary-intro a:focus,
 .rosary-steps a:hover, .rosary-steps a:focus,
 .rosary-close-steps a:hover, .rosary-close-steps a:focus,
-.suggest-address a:hover, .suggest-address a:focus,
+.suggest-lead a:hover, .suggest-lead a:focus,
 .prayer-source a:hover, .prayer-source a:focus {
   text-decoration: none;
   background-image: linear-gradient(currentColor, currentColor);
@@ -687,59 +687,49 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 }
 
 /* ---- Suggest a prayer ---- */
+/* Suggest a prayer: a closing note, not a second call to action. It reads as an
+   aside beside the prayer list (hence the same 46rem measure as .category), so
+   the crimson frame and the filled button are gone: heading and note side by
+   side, pitched down to a hairline on a recessed surface. The address is the
+   only action, carried inline in the prose. */
 .suggest {
-  max-width: 40rem;
+  display: grid;
+  grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
+  /* centred against the note as a whole, so the heading reads as a label for
+     the block rather than as the head of its first line */
+  align-items: center;
+  gap: 0.5rem 2.5rem;
+  max-width: 46rem;
   margin: 3.5rem auto 0;
-  padding: 2.25rem 1.75rem 2.4rem;
-  text-align: center;
-  background: color-mix(in srgb, var(--crimson) 4%, var(--surface-2));
-  border: 1px solid var(--crimson);
+  padding: 1.85rem 1.9rem;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
 }
 .suggest-title {
   font-family: var(--display);
   font-weight: 600;
-  font-size: 1.7rem;
+  font-size: 1.28rem;
   letter-spacing: 0.005em;
   color: var(--ink);
-  margin: 0 0 0.55rem;
+  margin: 0;
 }
 .suggest-lead {
-  margin: 0 auto 1.5rem;
-  max-width: 34rem;
+  margin: 0;
   color: var(--ink-soft);
-  font-size: 1.04rem;
+  font-size: 0.94rem;
+  line-height: 1.65;
 }
-.suggest-link {
-  display: inline-block;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-size: 0.8rem;
-  color: var(--btn-text);
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  border-radius: 999px;
-  padding: 0.7rem 1.7rem;
-  box-shadow: var(--shadow-sm);
-  transition: background 0.15s var(--ease), transform 0.15s var(--ease),
-              box-shadow 0.15s var(--ease);
+.suggest-lead a { color: var(--ink); }
+.suggest-lead a:hover, .suggest-lead a:focus { color: var(--gold-deep); }
+/* Too narrow for two columns: the heading stacks above its note. */
+@media (max-width: 40rem) {
+  .suggest {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+    padding: 1.6rem 1.4rem;
+  }
 }
-.suggest-link:hover, .suggest-link:focus {
-  text-decoration: none;
-  color: var(--btn-text);
-  background: var(--btn-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-.suggest-address {
-  margin: 1rem 0 0;
-  font-size: 0.84rem;
-  color: var(--ink-faint);
-}
-.suggest-address a { color: var(--ink-soft); }
-.suggest-address a:hover, .suggest-address a:focus { color: var(--gold-deep); }
 
 /* --------------------------------------------------------------------------- */
 /* Single prayer                                                                */
