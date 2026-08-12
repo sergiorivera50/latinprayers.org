@@ -1280,17 +1280,16 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   line-height: 1.75;
 }
 
-/* Segmented toggle */
+/* Set rail: three text links rather than a boxed widget, in the same quiet
+   register as the card's Prev/Next, so every control on the card reads as one
+   family. Docked into the card's top-right on desktop (see the rule further
+   down); a plain centred row above the cards otherwise. */
 .mysteries-tabs {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.3rem;
-  max-width: 34rem;
-  margin: 0 auto 1.75rem;
-  padding: 0.3rem;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: 999px;
+  grid-template-columns: repeat(3, auto);
+  justify-content: center;
+  gap: 1.6rem;
+  margin: 0 auto 1.6rem;
 }
 /* Two rows: the set's name, then a slot holding both the weekday line and the
    "Today" chip stacked on top of each other. Sharing one cell is what lets the
@@ -1301,25 +1300,46 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   grid-template-rows: auto auto;
   justify-items: center;
   align-content: center;
-  gap: 0.05rem;
-  padding: 0.5rem 0.4rem;
-  border-radius: 999px;
+  /* Enough room that the open set's underline and its Today badge read as two
+     marks rather than fusing into one gold block. */
+  gap: 0.32rem;
+  padding: 0.1rem 0;
+  /* Undocked the rail sits on the ivory page, so it is inked for that; the
+     ivory-on-black palette belongs only to the docked rule further down. */
   color: var(--ink-soft);
   text-decoration: none;
   text-align: center;
-  transition: background 0.18s var(--ease), color 0.18s var(--ease);
+  transition: color 0.18s var(--ease);
 }
 .mysteries-tab:hover,
 .mysteries-tab:focus,
 .mysteries-tab:focus-visible {
-  background: var(--gold-tint);
-  color: var(--gold-deep);
+  color: var(--ink);
   text-decoration: none;
 }
-.mysteries-tab-name { font-family: var(--display); font-weight: 600; font-size: 1.08rem; }
+.mysteries-tab-name {
+  position: relative;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+/* The open set is marked twice over, in colour and by a rule beneath its name:
+   colour alone is never the only thing carrying a state. */
+.mysteries-tab-name::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.1rem;
+  height: 1px;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 0.18s var(--ease);
+}
 .mysteries-tab-days {
   grid-area: 2 / 1;
-  font-size: 0.7rem;
+  font-size: 0.64rem;
   letter-spacing: 0.02em;
   color: inherit;
   opacity: 0.8;
@@ -1329,11 +1349,8 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
      Without it both strings would always be read out as part of the tab. */
   transition: opacity 0.22s var(--ease), visibility 0s;
 }
-.mysteries-tab[aria-selected="true"] {
-  background: var(--gold);
-  color: #fff;
-  box-shadow: var(--shadow-sm);
-}
+.mysteries-tab[aria-selected="true"] { color: var(--gold-deep); }
+.mysteries-tab[aria-selected="true"] .mysteries-tab-name::after { opacity: 0.75; }
 /* "Today" chip, injected by main.js onto the set the day calls for (it cannot be
    built in: the page is static and served for days). It shares a slot with that
    tab's weekday line and only one of the two is ever shown: the chip while the
@@ -1343,17 +1360,17 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   align-self: center;
   opacity: 0;
   visibility: hidden;
-  padding: 0.06rem 0.45rem;
-  border-radius: 999px;
-  /* Only ever seen against the selected tab's gold, so it is cream-on-gold and
-     never the reverse: crimson on that gold is too close in value to read. */
-  background: #fffdf8;
-  color: var(--crimson);
-  font-size: 0.56rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 0.22rem;
+  /* A filled badge under the open set's name: the name is already gold, so the
+     chip inverts to keep the two from reading as one block of colour. */
+  background: var(--m-gold);
+  color: #171715;
+  font-size: 0.5rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  line-height: 1.7;
+  line-height: 1.75;
   transition: opacity 0.22s var(--ease), visibility 0s linear 0.22s;
 }
 .mysteries-tab.is-today[aria-selected="true"] .mysteries-tab-today {
@@ -1366,20 +1383,42 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   visibility: hidden;
   transition: opacity 0.22s var(--ease), visibility 0s linear 0.22s;
 }
-/* On very narrow phones (≈320px) the day labels wrap to two/three lines, making
-   each cell tall; the full 999px pill radius then renders as a circular blob.
-   Dial the radius back to a rounded rectangle and trim the type so it reads as a
-   proper segmented control. */
+/* On very narrow phones (≈320px) the day labels wrap to two or three lines and
+   the cells grow tall; trim the type so the control stays proportionate. (The
+   radius no longer needs dialling back here: it is a rounded rectangle at every
+   width now, so a tall cell can no longer round itself into a blob.) */
 @media (max-width: 22.5rem) {
-  .mysteries-tabs { border-radius: 1rem; gap: 0.2rem; padding: 0.25rem; }
-  .mysteries-tab { border-radius: 0.7rem; padding: 0.45rem 0.25rem; }
-  .mysteries-tab-name { font-size: 0.95rem; }
-  .mysteries-tab-days { font-size: 0.62rem; }
-  .mysteries-tab-today { font-size: 0.52rem; padding: 0.04rem 0.36rem; letter-spacing: 0.07em; }
+  .mysteries-tab { padding: 0.36rem 0.25rem; }
+  .mysteries-tab-name { font-size: 0.88rem; }
+  .mysteries-tab-days { font-size: 0.58rem; }
+  .mysteries-tab-today { font-size: 0.48rem; padding: 0.04rem 0.34rem; letter-spacing: 0.07em; }
 }
 
-/* Panels: stacked & all visible without JS; one at a time with it. */
-.mysteries-panels { display: grid; gap: 2rem; scroll-margin-top: 5.5rem; }
+/* Panels: stacked & all visible without JS; one at a time with it. Positioned,
+   because the set rail docks against this box: its top edge is the card's top
+   edge but for the track's 0.25rem of padding. */
+.mysteries-panels { position: relative; display: grid; gap: 2rem; scroll-margin-top: 5.5rem; }
+/* Dock the rail into the card's top-right corner. Only where the card is laid
+   out side by side: stacked, that corner belongs to the painting. And only with
+   JS, since one absolutely-placed rail cannot serve three panels shown at once. */
+@media (min-width: 44rem) {
+  .js-mysteries .mysteries-tabs {
+    position: absolute;
+    top: 2.5rem;
+    right: 2.75rem;
+    z-index: 2;
+    margin: 0;
+    gap: 1.75rem;
+  }
+  /* Docked, the rail is on the card's black and takes the card's palette. */
+  .js-mysteries .mysteries-tab { color: rgba(246, 241, 231, 0.5); }
+  .js-mysteries .mysteries-tab:hover,
+  .js-mysteries .mysteries-tab:focus,
+  .js-mysteries .mysteries-tab:focus-visible { color: rgba(246, 241, 231, 0.85); }
+  .js-mysteries .mysteries-tab[aria-selected="true"] { color: var(--m-gold); }
+  /* Hold the corner clear so a long meditation cannot run up under the rail. */
+  .js-mysteries .js-carousel .decade-body { padding-top: 5.6rem; }
+}
 /* min-width:0 lets this grid item shrink instead of expanding to the carousel's
    full scroll width (so the track can actually overflow-scroll). */
 .mysteries-panel { margin: 0; min-width: 0; }
@@ -1454,62 +1493,87 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   letter-spacing: 0.01em;
   text-transform: none;
 }
-.decade-body { padding: 1.5rem 1.5rem 1.6rem; min-width: 0; }
+.decade-body { padding: 1.85rem 1.75rem 1.9rem; min-width: 0; }
 .decade-eyebrow {
-  margin: 0 0 0.35rem;
+  margin: 0 0 0.55rem;
   text-transform: uppercase;
   letter-spacing: 0.14em;
   font-size: 0.68rem;
   font-weight: 600;
   color: var(--gold-deep);
 }
-.mystery-name { margin: 0 0 0.35rem; font-family: var(--display); font-weight: 600; font-size: 1.4rem; line-height: 1.12; color: var(--ink); }
-.mystery-ref { margin: 0 0 0.75rem; font-size: 0.84rem; color: var(--ink-soft); }
+.mystery-name { margin: 0 0 0.5rem; font-family: var(--display); font-weight: 600; font-size: 1.4rem; line-height: 1.12; color: var(--ink); }
+.mystery-ref { margin: 0 0 1.15rem; font-size: 0.84rem; color: var(--ink-soft); }
 .mystery-sep { margin: 0 0.5rem; color: var(--gold); opacity: 0.7; }
 .mystery-fruit { color: var(--gold-deep); }
-.mystery-med { margin: 0; color: var(--ink); font-size: 1rem; line-height: 1.7; }
+.mystery-med { margin: 0; color: var(--ink); font-size: 1rem; line-height: 1.78; }
 
-/* Controls (injected by main.js): prev/next buttons flanking a row of dots. */
+/* Controls (injected by main.js): dots and a Prev/Next pair, set into the card's
+   own bottom-right corner rather than floating beneath it. They are siblings of
+   the track, not of the cards, so they neither scroll nor fade with the content
+   and stay a fixed mark the reader can return to. Positioned against the
+   carousel, whose bottom 1.75rem is the track's padding, below the card. */
 .decade-controls {
+  position: absolute;
+  right: 2.75rem;
+  bottom: 3.25rem;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 1.1rem;
-  margin-top: 0;   /* the track's bottom padding already provides the gap */
+  gap: 1.25rem;
 }
 .decade-nav {
   flex: none;
-  width: 2.5rem;
-  height: 2.5rem;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  background: var(--surface);
-  color: var(--gold-deep);
-  font-size: 1.2rem;
+  gap: 0.4rem;
+  padding: 0.25rem 0;
+  border: 0;
+  background: none;
+  font-family: var(--serif);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.62rem;
   line-height: 1;
+  color: rgba(246, 241, 231, 0.55);
   cursor: pointer;
-  transition: background 0.18s var(--ease), border-color 0.18s var(--ease), opacity 0.18s var(--ease);
+  transition: color 0.18s var(--ease), opacity 0.18s var(--ease), visibility 0s;
 }
+.decade-nav-arrow { width: 0.78rem; height: 0.78rem; flex: none; }
 .decade-nav:not([disabled]):hover,
-.decade-nav:not([disabled]):focus-visible { background: var(--gold-tint); border-color: var(--gold); }
-.decade-nav[disabled] { opacity: 0.3; cursor: default; }
-.decade-dots { display: flex; align-items: center; gap: 0.5rem; }
+.decade-nav:not([disabled]):focus-visible { color: var(--m-gold); }
+.decade-nav[disabled] { opacity: 0.28; cursor: default; }
+/* Prev goes altogether when there is nowhere back to go, rather than sitting
+   there greyed. Its space is held rather than collapsed (visibility, not
+   display), so the dots and Next do not jump sideways as it comes and goes.
+   Next keeps the dimmed state instead: the row is anchored to the card's right
+   edge, so hiding it would leave that edge visibly short. */
+.decade-prev[disabled] {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.18s var(--ease), visibility 0s linear 0.18s;
+}
+.decade-dots { display: flex; align-items: center; gap: 0.4rem; }
 .decade-dot {
-  width: 0.55rem;
-  height: 0.55rem;
+  width: 0.4rem;
+  height: 0.4rem;
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: var(--line);
+  background: rgba(246, 241, 231, 0.28);
   cursor: pointer;
   transition: background 0.18s var(--ease), transform 0.18s var(--ease);
 }
-.decade-dot:hover { background: var(--gold-deep); }
-.decade-dot[aria-current="true"] { background: var(--gold); transform: scale(1.3); }
+.decade-dot:hover { background: rgba(215, 178, 100, 0.8); }
+.decade-dot[aria-current="true"] { background: var(--m-gold); transform: scale(1.25); }
+
+/* Reserve the corner so a long meditation never runs under the controls. */
+.js-carousel .decade-body { padding-bottom: 4.5rem; }
+/* The cross-fade itself: only the card's contents, never its shell. */
+.js-carousel .decade-figure,
+.js-carousel .decade-body { transition: opacity 0.2s var(--ease); }
+.js-carousel.is-swapping .decade-figure,
+.js-carousel.is-swapping .decade-body { opacity: 0; }
 
 /* Desktop: image left, text right within each card. A min-height keeps every
    card (and every set) the same size and a little taller; flex-stretch still
@@ -1518,11 +1582,11 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
    image is absolutely positioned so it fills its column by cover without
    imposing its intrinsic height (which would make image cards taller). */
 @media (min-width: 44rem) {
-  .decade-card { grid-template-columns: 20rem 1fr; min-height: 21rem; align-content: stretch; }
+  .decade-card { grid-template-columns: 20rem 1fr; min-height: 23.5rem; align-content: stretch; }
   .decade-figure { aspect-ratio: auto; height: 100%; position: relative; }
   .decade-figure img,
   .decade-figure .placeholder { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; }
-  .decade-body { padding: 2rem 2.25rem; align-self: center; }
+  .decade-body { padding: 2.4rem 2.75rem; align-self: center; }
 }
 
 /* These mysteries carry their key figure at the very top (the risen/ascending
@@ -1532,6 +1596,74 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 #decade-glorious-2 .decade-figure img,
 #decade-glorious-3 .decade-figure img,
 #decade-glorious-5 .decade-figure img { object-position: center top; }
+
+/* ---- The decade card in black --------------------------------------------
+   The cards alone take the .rosary-cta register (black ground, gold accent);
+   the segmented control and the carousel controls stay in the page's ivory, so
+   the darkness belongs to the paintings rather than to the whole section. The
+   paintings gain from it: on black they read as works hung rather than as
+   pictures printed on a page. Scoped under .mysteries and kept in one block so
+   the light styles above are never edited around. */
+.mysteries {
+  --m-dark: #1e1e1c;
+  --m-gold: #d7b264;
+  --m-ivory: #f6f1e7;
+}
+.mysteries .decade-card {
+  background: var(--m-dark);
+  border-color: rgba(255, 255, 255, 0.09);
+  /* Squarer than the site's default card: at this size a soft radius reads as
+     a widget, a tight one as a plate the painting is mounted on. */
+  border-radius: 0.4rem;
+  /* contains the image's frost below, so it samples the card and not the page */
+  isolation: isolate;
+  /* Deeper in tone than the light card's shadow but no larger: the track scrolls
+     on x, which clips y as well, so anything reaching past its 1.75rem bottom
+     padding is cut off in a hard line above the controls. */
+  box-shadow:
+    0 14px 30px -16px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.11);
+}
+/* The band behind an image, and the ground of a card still awaiting one. */
+.mysteries .decade-figure,
+.mysteries .decade-figure .placeholder { background: rgba(255, 255, 255, 0.04); }
+.mysteries .decade-figure .placeholder { color: var(--m-gold); }
+.mysteries .decade-eyebrow { color: var(--m-gold); }
+.mysteries .mystery-name { color: var(--m-ivory); }
+.mysteries .mystery-ref { color: rgba(246, 241, 231, 0.58); }
+.mysteries .mystery-sep { color: var(--m-gold); opacity: 0.5; }
+.mysteries .mystery-fruit { color: var(--m-gold); }
+.mysteries .mystery-med { color: rgba(246, 241, 231, 0.78); }
+
+/* The painting dissolves into the card at the inner edge, as the photograph
+   does in the devotion card: a blurred, darkening band in place of a hard seam.
+   Stacked layout first, so the fade runs down into the text; the desktop rule
+   below turns it on its side. */
+.mysteries .decade-figure { position: relative; }
+.mysteries .decade-figure::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 34%;
+  background: linear-gradient(to bottom, transparent, var(--m-dark) 94%);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  /* the frost itself fades in, so the blur begins gradually rather than at a
+     visible line partway across the picture */
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 62%);
+  mask-image: linear-gradient(to bottom, transparent, #000 62%);
+  pointer-events: none;
+}
+@media (min-width: 44rem) {
+  .mysteries .decade-figure::after {
+    inset: 0 0 0 auto;
+    width: 26%;
+    height: auto;
+    background: linear-gradient(to right, transparent, var(--m-dark) 94%);
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 62%);
+    mask-image: linear-gradient(to right, transparent, #000 62%);
+  }
+}
 
 /* Concluding prayers */
 .rosary-close { max-width: 40rem; margin: 0 auto; }

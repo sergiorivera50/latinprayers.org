@@ -616,10 +616,14 @@ def build_rosary_page(mysteries: list[dict], base_tpl: str, rosary_tpl: str) -> 
         "  <p class=\"mysteries-lead\">For each day of the week, the Church sets before us one of "
         "the three sets of mysteries to contemplate. Choose a set to read its five "
         "mysteries, with their Scripture and spiritual fruits.</p>\n"
-        '  <div class="mysteries-tabs" aria-label="The three sets of mysteries">\n'
-        + "\n".join(tabs)
-        + "\n  </div>\n"
+        # The set rail sits inside the panels container, not before it: with JS
+        # it is docked into the card's own top-right corner, and this is the
+        # element it is positioned against. It still precedes the panels it
+        # labels, and with no JS it simply renders above them as a plain row.
         '  <div class="mysteries-panels" id="mysteries">\n'
+        '    <div class="mysteries-tabs" aria-label="The three sets of mysteries">\n'
+        + "\n".join(tabs)
+        + "\n    </div>\n"
         + "\n".join(panels)
         + "\n  </div>\n"
         "</section>"

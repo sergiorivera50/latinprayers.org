@@ -93,7 +93,27 @@
       return document.getElementById(tab.getAttribute("aria-controls"));
     }
 
-    function select(tab, focus) {
+    var reduceMotion =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // Fade a newly opened set's card in, borrowing the carousel's own swap class
+    // so the two transitions are the same length and easing. Two frames are
+    // needed: an element revealed and restyled within one frame simply appears
+    // at its end value, with nothing to transition from.
+    function reveal(panel) {
+      if (reduceMotion || !panel) return;
+      var carousel = panel.querySelector(".decade-carousel");
+      if (!carousel) return;
+      carousel.classList.add("is-swapping");
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          carousel.classList.remove("is-swapping");
+        });
+      });
+    }
+
+    function select(tab, focus, animate) {
       tabs.forEach(function (t) {
         var on = t === tab;
         t.setAttribute("aria-selected", on ? "true" : "false");
@@ -101,6 +121,7 @@
         var panel = panelFor(t);
         if (panel) panel.hidden = !on;
       });
+      if (animate) reveal(panelFor(tab));
       if (focus) tab.focus();
     }
 
@@ -111,13 +132,14 @@
 
       tab.addEventListener("click", function (e) {
         e.preventDefault();
-        select(tab, false);
+        // Re-opening the set already showing would blink its card for nothing.
+        select(tab, false, tab.getAttribute("aria-selected") !== "true");
       });
       tab.addEventListener("keydown", function (e) {
         var dir = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
         if (!dir) return;
         e.preventDefault();
-        select(tabs[(i + dir + tabs.length) % tabs.length], true);
+        select(tabs[(i + dir + tabs.length) % tabs.length], true, true);
       });
     });
 
@@ -177,17 +199,28 @@
       var controls = document.createElement("div");
       controls.className = "decade-controls";
 
+      // The site's drawn arrow, as on the back link and the hero.
+      var ARROW_LEFT = '<path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/>';
+      var ARROW_RIGHT = '<path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>';
+      function arrow(paths) {
+        return (
+          '<svg class="decade-nav-arrow" viewBox="0 0 24 24" fill="none" ' +
+          'stroke="currentColor" stroke-width="2.2" stroke-linecap="round" ' +
+          'stroke-linejoin="round" aria-hidden="true">' + paths + "</svg>"
+        );
+      }
+
       var prev = document.createElement("button");
       prev.type = "button";
       prev.className = "decade-nav decade-prev";
       prev.setAttribute("aria-label", "Previous mystery");
-      prev.innerHTML = "‹";
+      prev.innerHTML = arrow(ARROW_LEFT) + "<span>Prev</span>";
 
       var next = document.createElement("button");
       next.type = "button";
       next.className = "decade-nav decade-next";
       next.setAttribute("aria-label", "Next mystery");
-      next.innerHTML = "›";
+      next.innerHTML = "<span>Next</span>" + arrow(ARROW_RIGHT);
 
       var dotsWrap = document.createElement("div");
       dotsWrap.className = "decade-dots";
@@ -233,17 +266,43 @@
 
       // Buttons drive a canonical index so rapid clicks chain even mid-scroll;
       // a manual swipe re-syncs that index once the scroll settles. While a
-      // button-driven scroll is animating, `programmatic` keeps the target dot
-      // lit instead of flashing back to the position the scroll is passing.
+      // button-driven jump is in hand, `programmatic` keeps the target dot lit
+      // instead of flashing back to the position the scroll is passing.
       var programmatic = false;
+      function jump() {
+        programmatic = true;
+        // The track carries `scroll-behavior: smooth` in CSS, and a scrollTo of
+        // `behavior: "auto"` defers to exactly that, which would animate the
+        // slide we are trying to replace (invisibly, then visibly as it runs on
+        // past the fade). Suspending the property for the assignment is the one
+        // way to be certain the move is instantaneous.
+        var behavior = track.style.scrollBehavior;
+        track.style.scrollBehavior = "auto";
+        track.scrollLeft = cards[index].offsetLeft;
+        track.style.scrollBehavior = behavior;
+      }
+
+      // Navigating by button or dot cross-fades rather than slides: the card's
+      // contents fade out, the track jumps to the next card while nothing is
+      // visible, and the new contents fade in. The card's own black shell never
+      // fades (every card's shell is identical, so the jump is unseen), and the
+      // controls sit outside the track, so they stay put and stay legible
+      // throughout. Dragging the track by hand still scrolls it as before.
+      var FADE_MS = 200;
+      var swap;
       function go(i) {
         index = Math.max(0, Math.min(cards.length - 1, i));
-        programmatic = true;
-        track.scrollTo({
-          left: cards[index].offsetLeft,
-          behavior: reduce ? "auto" : "smooth"
-        });
         paint(index);
+        if (reduce) {
+          jump();
+          return;
+        }
+        carousel.classList.add("is-swapping");
+        clearTimeout(swap);
+        swap = setTimeout(function () {
+          jump();
+          carousel.classList.remove("is-swapping");
+        }, FADE_MS);
       }
 
       prev.addEventListener("click", function () {
