@@ -332,6 +332,27 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   text-decoration: none;
 }
 .site-nav a:hover::after, .site-nav a:focus::after { right: 0; }
+/* "New" badge on a nav item. Lifted out of flow so it rides over the label's
+   top-right corner instead of trailing it: it clears the capitals (the raise
+   lands it in the line box's leading, not on the glyphs) and adds no width to
+   the row. The link is already position:relative, above. Remove the markup
+   (base.html) once the page it points at is no longer new. */
+.nav-new {
+  position: absolute;
+  top: -0.72rem;
+  right: -1.1rem;
+  padding: 0.1rem 0.36rem;
+  border-radius: 999px;
+  background: var(--crimson);
+  color: #fffdf8;
+  /* The one sans face on the site: a UI badge, not liturgical text. Kept to the
+     system stack so it costs no download and breaks no font doctrine. */
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 0.48rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  line-height: 1;
+}
 
 /* --------------------------------------------------------------------------- */
 /* Main                                                                         */
@@ -1704,6 +1725,8 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
     padding: 0.7rem 0;
   }
   .site-nav a { font-size: 0.7rem; letter-spacing: 0.1em; }
+  /* The nav sits under a hairline rule here; hold the badge clear of it. */
+  .nav-new { top: -0.5rem; }
 }
 
 @media (max-width: 24rem) {
