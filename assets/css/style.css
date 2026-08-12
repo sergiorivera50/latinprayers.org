@@ -103,6 +103,15 @@
   --line:       #e7ddc8;   /* hairline borders */
   --line-soft:  #efe7d6;
 
+  /* The dark surface set, shared by every black card on the site (the devotion
+     CTA, the decade cards, the collects). --gold is pitched for the ivory page
+     and goes muddy on black, so the dark ground has its own gold, lifted toward
+     candlelight. */
+  --dark:       #1e1e1c;   /* the card face */
+  --dark-deep:  #171715;   /* a layer below it (rails, chips) */
+  --dark-gold:  #d7b264;   /* accent on the dark ground */
+  --dark-line:  rgba(255, 255, 255, 0.09);
+
   /* Primary button: liturgical crimson (the Passion / Sacred Heart register).
      The label is set in cream for strong contrast on its deep face. */
   --btn:        #8a1f24;
@@ -1058,10 +1067,6 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
    above both, hence `> *`. Gold is the accent here, not crimson: on black the
    liturgical red goes muddy, while gold is exactly what candlelight does.  */
 .rosary-cta {
-  /* Scoped, not added to the palette: a gold lifted toward candlelight, which
-     only this dark card needs. --gold itself is pitched for an ivory page and
-     goes muddy on black. */
-  --cta-gold: #d7b264;
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -1110,7 +1115,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   letter-spacing: 0.2em;
   font-size: 0.7rem;
   font-weight: 600;
-  color: var(--cta-gold);
+  color: var(--dark-gold);
 }
 .rosary-cta-title {
   font-family: var(--display);
@@ -1140,9 +1145,9 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   font-size: 0.72rem;
   /* Near-black label on gold: the reverse of the ivory pages' crimson pill, and
      the only pairing that holds contrast against this ground. */
-  color: #171715;
-  background: var(--cta-gold);
-  border: 1px solid var(--cta-gold);
+  color: var(--dark-deep);
+  background: var(--dark-gold);
+  border: 1px solid var(--dark-gold);
   border-radius: 999px;
   padding: 0.56rem 1.25rem;
   box-shadow: 0 8px 20px -12px rgba(215, 178, 100, 0.65);
@@ -1151,7 +1156,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 }
 .rosary-cta-link:hover, .rosary-cta-link:focus {
   text-decoration: none;
-  color: #171715;
+  color: var(--dark-deep);
   background: #e6c47b;
   border-color: #e6c47b;
   transform: translateY(-1px);
@@ -1364,8 +1369,8 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   border-radius: 0.22rem;
   /* A filled badge under the open set's name: the name is already gold, so the
      chip inverts to keep the two from reading as one block of colour. */
-  background: var(--m-gold);
-  color: #171715;
+  background: var(--dark-gold);
+  color: var(--dark-deep);
   font-size: 0.5rem;
   font-weight: 600;
   letter-spacing: 0.1em;
@@ -1415,7 +1420,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   .js-mysteries .mysteries-tab:hover,
   .js-mysteries .mysteries-tab:focus,
   .js-mysteries .mysteries-tab:focus-visible { color: rgba(246, 241, 231, 0.85); }
-  .js-mysteries .mysteries-tab[aria-selected="true"] { color: var(--m-gold); }
+  .js-mysteries .mysteries-tab[aria-selected="true"] { color: var(--dark-gold); }
   /* Hold the corner clear so a long meditation cannot run up under the rail. */
   .js-mysteries .js-carousel .decade-body { padding-top: 5.6rem; }
 }
@@ -1541,7 +1546,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 }
 .decade-nav-arrow { width: 0.78rem; height: 0.78rem; flex: none; }
 .decade-nav:not([disabled]):hover,
-.decade-nav:not([disabled]):focus-visible { color: var(--m-gold); }
+.decade-nav:not([disabled]):focus-visible { color: var(--dark-gold); }
 .decade-nav[disabled] { opacity: 0.28; cursor: default; }
 /* Prev goes altogether when there is nowhere back to go, rather than sitting
    there greyed. Its space is held rather than collapsed (visibility, not
@@ -1565,7 +1570,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   transition: background 0.18s var(--ease), transform 0.18s var(--ease);
 }
 .decade-dot:hover { background: rgba(215, 178, 100, 0.8); }
-.decade-dot[aria-current="true"] { background: var(--m-gold); transform: scale(1.25); }
+.decade-dot[aria-current="true"] { background: var(--dark-gold); transform: scale(1.25); }
 
 /* Reserve the corner so a long meditation never runs under the controls. */
 .js-carousel .decade-body { padding-bottom: 4.5rem; }
@@ -1604,14 +1609,9 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
    paintings gain from it: on black they read as works hung rather than as
    pictures printed on a page. Scoped under .mysteries and kept in one block so
    the light styles above are never edited around. */
-.mysteries {
-  --m-dark: #1e1e1c;
-  --m-gold: #d7b264;
-  --m-ivory: #f6f1e7;
-}
 .mysteries .decade-card {
-  background: var(--m-dark);
-  border-color: rgba(255, 255, 255, 0.09);
+  background: var(--dark);
+  border-color: var(--dark-line);
   /* Squarer than the site's default card: at this size a soft radius reads as
      a widget, a tight one as a plate the painting is mounted on. */
   border-radius: 0.4rem;
@@ -1627,12 +1627,12 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 /* The band behind an image, and the ground of a card still awaiting one. */
 .mysteries .decade-figure,
 .mysteries .decade-figure .placeholder { background: rgba(255, 255, 255, 0.04); }
-.mysteries .decade-figure .placeholder { color: var(--m-gold); }
-.mysteries .decade-eyebrow { color: var(--m-gold); }
-.mysteries .mystery-name { color: var(--m-ivory); }
+.mysteries .decade-figure .placeholder { color: var(--dark-gold); }
+.mysteries .decade-eyebrow { color: var(--dark-gold); }
+.mysteries .mystery-name { color: var(--ivory); }
 .mysteries .mystery-ref { color: rgba(246, 241, 231, 0.58); }
-.mysteries .mystery-sep { color: var(--m-gold); opacity: 0.5; }
-.mysteries .mystery-fruit { color: var(--m-gold); }
+.mysteries .mystery-sep { color: var(--dark-gold); opacity: 0.5; }
+.mysteries .mystery-fruit { color: var(--dark-gold); }
 .mysteries .mystery-med { color: rgba(246, 241, 231, 0.78); }
 
 /* The painting dissolves into the card at the inner edge, as the photograph
@@ -1645,7 +1645,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   position: absolute;
   inset: auto 0 0 0;
   height: 34%;
-  background: linear-gradient(to bottom, transparent, var(--m-dark) 94%);
+  background: linear-gradient(to bottom, transparent, var(--dark) 94%);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   /* the frost itself fades in, so the blur begins gradually rather than at a
@@ -1659,7 +1659,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
     inset: 0 0 0 auto;
     width: 26%;
     height: auto;
-    background: linear-gradient(to right, transparent, var(--m-dark) 94%);
+    background: linear-gradient(to right, transparent, var(--dark) 94%);
     -webkit-mask-image: linear-gradient(to right, transparent, #000 62%);
     mask-image: linear-gradient(to right, transparent, #000 62%);
   }
@@ -1673,21 +1673,29 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 .rosary-close-steps > li:last-child { margin-bottom: 0; }
 .rosary-close-steps > li::marker { color: var(--gold); }
 .rosary-step-label { margin: 0 0 0.7rem; color: var(--ink); }
+/* The collects take the black ground of the decade cards, so the prayers the
+   page ends on read as objects of the same set as the mysteries above them. */
 .rosary-collect {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 1.5rem 1.75rem;
-  box-shadow: var(--shadow-sm);
+  background: var(--dark);
+  border: 1px solid var(--dark-line);
+  border-radius: 0.4rem;
+  padding: 1.75rem 2rem;
+  box-shadow:
+    0 14px 30px -16px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.11);
 }
-.rosary-collect p { margin: 0 0 1rem; line-height: 1.75; }
+.rosary-collect p { margin: 0 0 1.15rem; line-height: 1.78; color: var(--ivory); }
 .rosary-collect p[lang="la"] {
   font-size: 0.95rem;
   /* Same Roman inscriptional treatment as the Latin on a prayer page. */
   font-family: "Cinzel", var(--display);
   letter-spacing: 0.02em;
 }
-.rosary-collect p:last-child { margin-bottom: 0; color: var(--ink-soft); }
+/* The English rendering, held back from the Latin it follows. */
+.rosary-collect p:last-child { margin-bottom: 0; color: rgba(246, 241, 231, 0.68); }
+/* Liturgical red is the mark for a versicle on paper, but it disappears into
+   this ground; on black the rubric is gold. */
+.rosary-collect .vr { color: var(--dark-gold); }
 
 /* Closing image: Our Lady on a transparent ground — a quiet benediction to end
    the page. No frame; she floats on the background, with the last words of the
