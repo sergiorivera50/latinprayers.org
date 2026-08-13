@@ -391,8 +391,11 @@ def render_rosary_cta(prayer: dict) -> str:
         f'  <p class="rosary-cta-lead">{esc(prayer["subtitle"])} is one of the '
         "prayers of the Holy Rosary. See how it is woven through the mysteries, "
         "and learn to pray the whole devotion.</p>\n"
-        '  <a class="rosary-cta-link" href="/rosary/">Pray the Rosary '
-        '<span class="rosary-cta-arrow" aria-hidden="true">&rarr;</span></a>\n'
+        '  <a class="rosary-cta-link" href="/rosary/">Pray the Rosary'
+        '<svg class="rosary-cta-arrow" viewBox="0 0 24 24" fill="none" '
+        'stroke="currentColor" stroke-width="2.2" stroke-linecap="round" '
+        'stroke-linejoin="round" aria-hidden="true">'
+        '<path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></a>\n'
         "</aside>"
     )
 

@@ -1188,9 +1188,8 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   transform: translateY(-1px);
   box-shadow: 0 12px 26px -12px rgba(215, 178, 100, 0.75);
 }
-.rosary-cta-arrow { transition: transform 0.18s var(--ease); }
-.rosary-cta-link:hover .rosary-cta-arrow,
-.rosary-cta-link:focus .rosary-cta-arrow { transform: translateX(0.25rem); }
+/* The same drawn arrow as the hero's, sized in em so it tracks the label. */
+.rosary-cta-arrow { width: 0.95em; height: 0.95em; flex: none; }
 /* Too narrow for a band beside the text, so the photograph turns the corner and
    becomes a header band above it, fading down into the card. */
 @media (max-width: 34rem) {
