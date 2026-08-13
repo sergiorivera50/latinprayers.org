@@ -1052,6 +1052,124 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   border-color: var(--gold);
 }
 
+/* ---- Share dock (JS-injected; see main.js) ----
+   Sharing is an exit gesture: a control offered at the top of the page asks
+   before the reader has anything to pass on, and on a long prayer it is left
+   far behind by the time they do. So the dock withholds itself until the end
+   of the prayer has risen into view, then settles in the corner and stays in
+   reach for the rest of the page. Being injected, a no-JS visitor is never
+   shown a control that cannot work. */
+.share-dock {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 20;              /* beneath the masthead (30) and skip link (50) */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.55rem;
+  /* visibility (not display) so the dock can fade, and so it takes no clicks
+     while it is withheld */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(0.6rem);
+  transition: opacity 0.28s var(--ease), transform 0.28s var(--ease),
+    visibility 0.28s var(--ease);
+}
+.share-dock.is-visible { opacity: 1; visibility: visible; transform: none; }
+.share-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.75rem;
+  padding: 0 1.05rem;
+  font-family: var(--serif);
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  transition: color 0.15s var(--ease), border-color 0.15s var(--ease),
+    box-shadow 0.15s var(--ease);
+}
+.share-toggle svg { width: 1.05rem; height: 1.05rem; flex: none; }
+.share-toggle:hover, .share-toggle:focus-visible {
+  color: var(--gold-deep);
+  border-color: var(--gold);
+  box-shadow: var(--shadow-lg);
+  outline: none;
+}
+.share-toggle[aria-expanded="true"] {
+  color: var(--gold-deep);
+  border-color: var(--gold);
+}
+/* The destinations. A clipboard button and two ordinary links (mailto:, wa.me):
+   no third-party script, no embed, nothing fetched at runtime. */
+/* The author `display` below outranks the UA stylesheet's `[hidden] {display:none}`,
+   so the hidden attribute has to be honoured explicitly or the menu shows itself
+   before anyone has asked for it. */
+.share-menu[hidden] { display: none; }
+.share-menu {
+  display: flex;
+  flex-direction: column;
+  min-width: 10.75rem;
+  padding: 0.3rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  animation: share-menu-in 0.18s var(--ease) both;
+}
+@keyframes share-menu-in {
+  from { opacity: 0; transform: translateY(0.35rem); }
+}
+.share-menu-title {
+  margin: 0;
+  padding: 0.4rem 0.6rem 0.35rem;
+  font-family: var(--serif);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.share-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.42rem 0.6rem;
+  font-family: var(--serif);
+  font-size: 0.88rem;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.12s var(--ease), background 0.12s var(--ease);
+}
+.share-item:hover, .share-item:focus-visible {
+  color: var(--gold-deep);
+  background: var(--surface-2);
+  text-decoration: none;
+  outline: none;
+}
+.share-item svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex: none;
+  color: var(--ink-faint);
+}
+.share-item:hover svg, .share-item:focus-visible svg { color: var(--gold); }
+.share-item.is-done, .share-item.is-done svg { color: var(--gold-deep); }
+@media (prefers-reduced-motion: reduce) {
+  .share-dock { transition: none; }
+  .share-menu { animation: none; }
+}
+
 /* ---- About this prayer (context prose) ---- */
 .prayer-context {
   max-width: 40rem;
@@ -1939,6 +2057,8 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   }
   .prayer-actions .prayer-source { text-align: center; }
   .copy-actions { justify-content: center; }
+  /* Tucked closer to the corner where the screen is narrow. */
+  .share-dock { right: 1rem; bottom: 1rem; }
 
   /* Stack the bar: brand on top, nav as a full-width row beneath. The taller
      stacked bar no longer sticks. */

@@ -488,12 +488,209 @@
     if (source) actions.appendChild(source);
   }
 
+  // ---- Share dock ---------------------------------------------------------
+  // Passing a prayer on is something a reader does once they have come through
+  // it, so the control is withheld until then rather than sitting at the top of
+  // the page asking early. Once earned it is kept for the rest of the visit; see
+  // the reveal at the foot of this function.
+  //
+  // The destinations are deliberately plain: one clipboard button and two
+  // ordinary links. wa.me and mailto: are navigations the reader chooses, not
+  // embeds, so nothing third-party is fetched while the page is being read.
+  var SHARE_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5H6A2.5 2.5 0 0 0 3.5 6v12A2.5 2.5 0 0 0 6 20.5h12a2.5 2.5 0 0 0 2.5-2.5v-4"></path><path d="M14 3.5h6.5V10"></path><path d="M20.5 3.5 9.5 14.5"></path></svg>';
+  var LINK_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>';
+  var MAIL_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"></rect><path d="m21.5 7.5-8.4 5.35a2 2 0 0 1-2.2 0L2.5 7.5"></path></svg>';
+  // The brand mark, filled as brand marks are, held here as a path like every
+  // other icon on the site rather than pulled from anyone's icon CDN.
+  var WHATSAPP_SVG =
+    '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.9-4.45 9.9-9.91C21.95 6.45 17.5 2 12.04 2Zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 0 1-1.26-4.38c0-4.54 3.7-8.23 8.25-8.23a8.2 8.2 0 0 1 8.24 8.24c0 4.54-3.7 8.23-8.24 8.23Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.78.97-.15.16-.29.18-.53.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.5.11-.11.25-.29.37-.44.13-.15.17-.25.25-.41.09-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.16 0-.43.06-.66.31-.22.25-.86.85-.86 2.06 0 1.22.89 2.39 1.01 2.56.12.16 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.6.19 1.14.16 1.57.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.14-1.18-.06-.11-.22-.17-.47-.29Z"></path></svg>';
+
+  function initShareDock() {
+    var card = document.querySelector(".prayer-body");
+    if (!card) return;
+
+    // The canonical link rather than location.href: what gets passed on should
+    // be the prayer's published address, whatever host it was read on.
+    var canonical = document.querySelector('link[rel="canonical"]');
+    var url = (canonical && canonical.href) || location.href;
+    var latin = document.querySelector(".prayer-title");
+    var english = document.querySelector(".prayer-subtitle");
+    var name = latin ? latin.textContent.trim() : document.title;
+    if (english && english.textContent.trim()) {
+      name += " (" + english.textContent.trim() + ")";
+    }
+    var message = name + "\n" + url;
+
+    var dock = document.createElement("div");
+    dock.className = "share-dock";
+
+    var menu = document.createElement("div");
+    menu.className = "share-menu";
+    menu.id = "share-menu";
+    menu.hidden = true;
+    var heading = document.createElement("p");
+    heading.className = "share-menu-title";
+    heading.textContent = "Share this prayer";
+    menu.appendChild(heading);
+
+    // Copy link. Reuses the clipboard helper the copy buttons already use, and
+    // keeps the menu open afterwards so the confirmation is actually seen.
+    var copyBtn = document.createElement("button");
+    copyBtn.type = "button";
+    copyBtn.className = "share-item";
+    function renderCopy(label) {
+      copyBtn.innerHTML = LINK_SVG + "<span>" + label + "</span>";
+    }
+    renderCopy("Copy link");
+    var revert;
+    copyBtn.addEventListener("click", function () {
+      copyText(url).then(
+        function () {
+          copyBtn.classList.add("is-done");
+          renderCopy("Link copied");
+          clearTimeout(revert);
+          revert = setTimeout(function () {
+            copyBtn.classList.remove("is-done");
+            renderCopy("Copy link");
+          }, 1800);
+        },
+        function () {
+          renderCopy("Press ⌘/Ctrl + C");
+        }
+      );
+    });
+    menu.appendChild(copyBtn);
+
+    function destination(href, label, svg, newTab) {
+      var a = document.createElement("a");
+      a.className = "share-item";
+      a.href = href;
+      if (newTab) {
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+      }
+      a.innerHTML = svg + "<span>" + label + "</span>";
+      a.addEventListener("click", function () {
+        close(false);
+      });
+      return a;
+    }
+    menu.appendChild(
+      destination(
+        "mailto:?subject=" +
+          encodeURIComponent(name) +
+          "&body=" +
+          encodeURIComponent(message),
+        "Via Email",
+        MAIL_SVG,
+        false
+      )
+    );
+    menu.appendChild(
+      destination(
+        "https://wa.me/?text=" + encodeURIComponent(message),
+        "Via WhatsApp",
+        WHATSAPP_SVG,
+        true
+      )
+    );
+
+    var toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "share-toggle";
+    // The written label is the button's only accessible name (no aria-label), so
+    // what a screen reader announces is exactly what is on the button.
+    toggle.innerHTML = "<span>Share</span>" + SHARE_SVG;
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.setAttribute("aria-controls", "share-menu");
+
+    function onKey(e) {
+      if (e.key === "Escape") close(true);
+    }
+    function onOutside(e) {
+      if (!dock.contains(e.target)) close(false);
+    }
+    function open() {
+      menu.hidden = false;
+      toggle.setAttribute("aria-expanded", "true");
+      document.addEventListener("keydown", onKey);
+      document.addEventListener("click", onOutside, true);
+      var first = menu.querySelector(".share-item");
+      if (first) first.focus();
+    }
+    function close(returnFocus) {
+      if (menu.hidden) return;
+      menu.hidden = true;
+      toggle.setAttribute("aria-expanded", "false");
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("click", onOutside, true);
+      if (returnFocus) toggle.focus();
+    }
+    toggle.addEventListener("click", function () {
+      if (menu.hidden) open();
+      else close(true);
+    });
+
+    dock.appendChild(menu);
+    dock.appendChild(toggle);
+    document.body.appendChild(dock);
+
+    // "The prayer is finished on screen" means its copy buttons have begun to
+    // appear at the foot of the viewport, which puts the whole text above the
+    // reader. The button group is measured rather than the row around it: on a
+    // phone that row is stacked with the translation credit above the buttons,
+    // so the row's own top edge would arrive early. Where the buttons could not
+    // be built at all, the foot of the card stands in for them.
+    var tail = document.querySelector(".copy-actions");
+
+    // Whichever comes first: half the page scrolled, or the end of the prayer
+    // reaching the screen. A short prayer is done with well before the halfway
+    // mark, so the dock arrives the moment the foot of the card (and with it the
+    // copy buttons) comes into view; a long one runs past the screen, so the
+    // halfway mark gets there first. Either way the dock turns up once the
+    // reader has something to pass on. Read on a rAF rather than straight out of
+    // the scroll event, so a fast scroll measures the layout once per frame
+    // instead of once per event.
+    var queued = false;
+    function update() {
+      queued = false;
+      var scrollable =
+        document.documentElement.scrollHeight - window.innerHeight;
+      // A page short enough not to scroll has nothing to come through, so the
+      // dock is offered straight away rather than never.
+      var halfway = scrollable <= 0 || window.pageYOffset / scrollable >= 0.5;
+      var prayerRead = tail
+        ? tail.getBoundingClientRect().top <= window.innerHeight
+        : card.getBoundingClientRect().bottom <= window.innerHeight;
+      if (!halfway && !prayerRead) return;
+      // Offered once, then left alone. A control that withdrew itself whenever
+      // the reader scrolled back up to re-read a line would be flickering in and
+      // out from under them, so this is the last measurement taken and the
+      // listeners come off with it.
+      dock.classList.add("is-visible");
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    }
+    function onScroll() {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(update);
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    update();
+  }
+
   function init() {
     initSearch();
     initMysteries();
     initCarousels();
     initSmoothScroll();
     initCopyButtons();
+    initShareDock();
   }
 
   if (document.readyState === "loading") {
