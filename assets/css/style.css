@@ -814,10 +814,16 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
      per prayer as grid-template-rows: repeat(N, auto); see .prayer-col below. This
      row-gap is the space between stanzas, now identical in both columns. */
   row-gap: 1.2rem;
-  /* Keep rows content-sized and top-aligned: on a short prayer the card's
-     min-height leaves slack, and without this the auto rows would stretch and
-     pull the stanzas apart. */
-  align-content: start;
+  /* Where a short prayer leaves the card's min-height slack, set the stanzas in
+     the middle of the page rather than against its top. Centring the row tracks
+     (rather than the text within them) is what keeps the two columns honest:
+     both subgrid onto these same tracks, so the block moves as one and stanza N
+     of the Latin still sits opposite stanza N of the English. Any value but the
+     `normal`/`stretch` default also holds the rows at their content size; left
+     to stretch, the auto rows would grow into the slack and pull the stanzas
+     apart. On a prayer long enough to fill the card there is no slack, so this
+     does nothing. */
+  align-content: center;
   /* Paper grain: a faint fibrous texture plus a soft low-frequency mottle. Both
      are inline SVG fractalNoise (desaturated, low opacity) held in a custom prop
      so the back-page (::before) can reuse the exact same paper. Generated as data
@@ -890,16 +896,21 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   grid-column: 2;
   padding-left: 2.25rem;
   border-left: 1px solid var(--line);
-  position: relative;
 }
 /* A short crimson register ribbon (as in a missal), tucked into the top edge of
    the card and hanging down the right page. Fishtail end via clip-path; a satin
-   highlight down its length and a drop-shadow lift it off the page. */
+   highlight down its length and a drop-shadow lift it off the page.
+
+   It hangs off the card, not off the text: .prayer-english is deliberately left
+   unpositioned so this resolves against .prayer-body instead. Anchored to the
+   column it would ride up and down with the stanzas as they centre themselves
+   in the page, which a ribbon tucked into a binding never does. Hence the
+   offsets below are measured from the card's own edges. */
 .prayer-english::after {
   content: "";
   position: absolute;
-  top: -2.5rem;              /* start flush at the card's top edge */
-  right: 1.75rem;
+  top: 0;                    /* flush at the card's top edge */
+  right: 4.25rem;            /* the card's 2.5rem padding plus the old 1.75rem */
   width: 0.72rem;
   height: 2.6rem;            /* short */
   background:
