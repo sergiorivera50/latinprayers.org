@@ -413,7 +413,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.8rem 1.5rem;
+  gap: 0.8rem 0.9rem;
   margin-top: 1.7rem;
 }
 .hero-cta {
@@ -465,15 +465,6 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 /* The .backlink arrow, mirrored. Strokes in currentColor, so it shifts with
    the label on hover. */
 .hero-link-arrow { width: 0.95em; height: 0.95em; flex: none; }
-.hero-link-rose {
-  width: 1.1em;
-  height: 1.1em;
-  flex: none;
-  object-fit: contain;
-  /* Sits a little further off the label than the trailing arrow does: the
-     uppercase tracking already opens up the right side. */
-  margin-right: 0.2rem;
-}
 
 /* Quick entry points to the most familiar prayers, as small chips. */
 /* Framed devotional image: a simple rounded frame lifted off the page with a
