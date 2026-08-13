@@ -514,27 +514,88 @@ def build_index_page(
     )
 
 
-def rosary_jsonld() -> str:
-    """Page-specific Article JSON-LD for the Rosary page."""
-    data = {
+# The numbered how-to steps, read back out of the rendered markup. Parsing what
+# we just wrote keeps the page itself the single source of truth for the steps,
+# so the HowTo data cannot drift from what a reader actually sees.
+ROSARY_STEPS_RE = re.compile(r'<ol class="rosary-steps">(.*?)</ol>', re.S)
+LIST_ITEM_RE = re.compile(r"<li>(.*?)</li>", re.S)
+TAG_RE = re.compile(r"<[^>]+>")
+
+
+def rosary_steps(rosary_tpl: str) -> list[str]:
+    """Plain-text of each step in the Rosary template's ordered list."""
+    block = ROSARY_STEPS_RE.search(rosary_tpl)
+    if not block:
+        return []
+    steps = []
+    for item in LIST_ITEM_RE.findall(block.group(1)):
+        text = html.unescape(TAG_RE.sub("", item))
+        text = " ".join(text.split())
+        if text:
+            steps.append(text)
+    return steps
+
+
+def rosary_jsonld(steps: list[str]) -> str:
+    """Page-specific JSON-LD for the Rosary page: what the page is (Article),
+    what it teaches (HowTo, built from the steps on the page), and where it sits
+    (BreadcrumbList).
+
+    A note for whoever revisits this: the HowTo will not produce a rich result.
+    Google retired HowTo rich results in 2023. It is here because it states the
+    page's purpose unambiguously to search engines and to the LLM crawlers the
+    SEO plan cares about, not because it earns a carousel."""
+    today = datetime.date.today().isoformat()
+    page_url = BASE_URL + "/rosary/"
+    description = (
+        "How to pray the traditional Holy Rosary in Latin: the order of "
+        "prayers, and the fifteen Joyful, Sorrowful, and Glorious Mysteries "
+        "with their Scripture and fruits."
+    )
+    article = {
         "@context": "https://schema.org",
         "@type": "Article",
-        "headline": "How to Pray the Holy Rosary",
+        "headline": "How to Pray the Rosary in Latin",
         "name": "The Holy Rosary",
-        "description": (
-            "The traditional Holy Rosary: how to pray it, and the Joyful, "
-            "Sorrowful, and Glorious Mysteries in Latin and English."
-        ),
+        "description": description,
         "inLanguage": "en",
-        "about": "The Holy Rosary",
-        "url": BASE_URL + "/rosary/",
+        "about": {"@type": "Thing", "name": "Rosary"},
+        "url": page_url,
+        "mainEntityOfPage": {"@type": "WebPage", "@id": page_url},
+        "image": BASE_URL + "/assets/img/lepanto.webp",
+        "dateModified": today,
         "isPartOf": {"@type": "WebSite", "name": "latinprayers.org", "url": BASE_URL + "/"},
         "publisher": {"@type": "Organization", "name": "latinprayers.org"},
     }
-    return (
+    howto = {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": "How to Pray the Rosary in Latin",
+        "description": description,
+        "inLanguage": "en",
+        "url": page_url,
+        "supply": [{"@type": "HowToSupply", "name": "A set of Rosary beads"}],
+        "step": [
+            {"@type": "HowToStep", "position": i, "text": text, "url": f"{page_url}#step-{i}"}
+            for i, text in enumerate(steps, start=1)
+        ],
+    }
+    breadcrumb = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "Prayers", "item": BASE_URL + "/"},
+            {"@type": "ListItem", "position": 2, "name": "The Rosary", "item": page_url},
+        ],
+    }
+    blocks = [article, breadcrumb]
+    if steps:
+        blocks.insert(1, howto)
+    return "\n  ".join(
         '<script type="application/ld+json">'
-        + json.dumps(data, ensure_ascii=False)
+        + json.dumps(block, ensure_ascii=False)
         + "</script>"
+        for block in blocks
     )
 
 
@@ -631,16 +692,19 @@ def build_rosary_page(mysteries: list[dict], base_tpl: str, rosary_tpl: str) -> 
 
     content = render(rosary_tpl, mysteries=mysteries_html)
     page_desc = (
-        "How to pray the traditional Holy Rosary, with the Joyful, Sorrowful, "
-        "and Glorious Mysteries in Latin and English, their Scripture and fruits."
+        "How to pray the traditional Holy Rosary in Latin: the order of prayers "
+        "step by step, and the Joyful, Sorrowful, and Glorious Mysteries with "
+        "their Scripture and fruits."
     )
+    # The <title> carries the phrase a reader actually searches for; the page's
+    # own display heading stays "The Holy Rosary" (see rosary.html).
     return render(
         base_tpl,
-        page_title="The Holy Rosary",
+        page_title="How to Pray the Rosary in Latin",
         page_description=page_desc,
         content=content,
         year=BUILD_YEAR,
-        head_extra=head_extra("/rosary/") + "\n  " + rosary_jsonld(),
+        head_extra=head_extra("/rosary/") + "\n  " + rosary_jsonld(rosary_steps(rosary_tpl)),
     )
 
 
