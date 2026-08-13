@@ -373,7 +373,7 @@
   var CHECK_SVG =
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>';
 
-  function latinTextFrom(stanzas) {
+  function stanzaTextFrom(stanzas) {
     // Each stanza is a <p> of <br>-separated lines. Split on the line breaks,
     // decode entities and strip incidental markup per line via textContent, then
     // join lines with a newline and stanzas with a blank line, so the copied
@@ -421,22 +421,25 @@
     });
   }
 
-  function initCopyLatin() {
-    var stanzas = document.querySelectorAll(".prayer-latin .prayer-stanza");
-    var body = document.querySelector(".prayer-body");
-    if (!stanzas.length || !body) return;
-    var text = latinTextFrom(stanzas);
-    if (!text) return;
+  // One copy button for one column of the prayer. Returns null when that column
+  // has nothing to copy, so a prayer missing a column simply gets one button.
+  // The label is the button's only accessible name: no aria-label, so what a
+  // screen reader announces is exactly what is written on it, including as it
+  // changes to "Copied".
+  function copyButton(selector, label) {
+    var stanzas = document.querySelectorAll(selector);
+    if (!stanzas.length) return null;
+    var text = stanzaTextFrom(stanzas);
+    if (!text) return null;
 
     var btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "copy-latin";
-    btn.setAttribute("aria-label", "Copy the Latin text");
+    btn.className = "copy-btn";
 
-    function render(label, svg) {
-      btn.innerHTML = svg + '<span class="copy-latin-label">' + label + "</span>";
+    function render(text_, svg) {
+      btn.innerHTML = svg + '<span class="copy-btn-label">' + text_ + "</span>";
     }
-    render("Copy Latin", CLIPBOARD_SVG);
+    render(label, CLIPBOARD_SVG);
 
     var revert;
     btn.addEventListener("click", function () {
@@ -447,7 +450,7 @@
           clearTimeout(revert);
           revert = setTimeout(function () {
             btn.classList.remove("is-copied");
-            render("Copy Latin", CLIPBOARD_SVG);
+            render(label, CLIPBOARD_SVG);
           }, 1800);
         },
         function () {
@@ -455,12 +458,30 @@
         }
       );
     });
+    return btn;
+  }
 
-    // A single meta row beneath the card: the copy action on the left, and the
-    // existing "Translation source" line (when present) pulled up onto its right.
+  function initCopyButtons() {
+    var body = document.querySelector(".prayer-body");
+    if (!body) return;
+    var buttons = [
+      copyButton(".prayer-latin .prayer-stanza", "Copy Latin"),
+      copyButton(".prayer-english .prayer-stanza", "Copy English")
+    ].filter(Boolean);
+    if (!buttons.length) return;
+
+    // A single meta row beneath the card: the copy actions on the left, and the
+    // existing "Translation source" line (when present) pulled up onto its
+    // right. The buttons share a wrapper so that they stay side by side as one
+    // unit when the row stacks on a phone, rather than becoming two rows.
     var actions = document.createElement("div");
     actions.className = "prayer-actions";
-    actions.appendChild(btn);
+    var group = document.createElement("div");
+    group.className = "copy-actions";
+    buttons.forEach(function (btn) {
+      group.appendChild(btn);
+    });
+    actions.appendChild(group);
     body.insertAdjacentElement("afterend", actions);
 
     var source = document.querySelector(".prayer-source");
@@ -472,7 +493,7 @@
     initMysteries();
     initCarousels();
     initSmoothScroll();
-    initCopyLatin();
+    initCopyButtons();
   }
 
   if (document.readyState === "loading") {

@@ -745,7 +745,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 /* --------------------------------------------------------------------------- */
 .breadcrumb { max-width: 50rem; margin: 0 auto 1.75rem; }
 /* A quiet pill rather than a bare text link: it reads as a control, gives the
-   thumb a real target on mobile, and matches the .copy-latin chip further down
+   thumb a real target on mobile, and matches the .copy-btn chips further down
    the same page. */
 .backlink {
   display: inline-flex;
@@ -1012,13 +1012,28 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
+  /* wrap-reverse, so that if the row is too narrow to hold both, the source
+     credit rises above the Copy button instead of dropping below it: the credit
+     belongs with the text it refers to, and the button reads as the action that
+     closes the block. Reversing the wrap rather than the order leaves the single
+     row (button left, credit right) untouched, and covers the case of a source
+     label long enough to wrap at a width no breakpoint anticipates. Below the
+     stacking breakpoint the row is stacked outright; see the media query. */
+  flex-wrap: wrap-reverse;
   gap: 0.5rem 1rem;
   margin-top: 0.8rem;
 }
 .prayer-actions .prayer-source { margin: 0; }
 
-.copy-latin {
+/* The pair of copy buttons, kept side by side as one unit so that when the meta
+   row stacks on a phone they stay on a single line rather than becoming two. */
+.copy-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.copy-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -1034,14 +1049,14 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   transition: color 0.15s var(--ease), border-color 0.15s var(--ease),
     background 0.15s var(--ease);
 }
-.copy-latin svg { width: 0.95rem; height: 0.95rem; flex: none; }
-.copy-latin:hover, .copy-latin:focus-visible {
+.copy-btn svg { width: 0.95rem; height: 0.95rem; flex: none; }
+.copy-btn:hover, .copy-btn:focus-visible {
   color: var(--gold-deep);
   border-color: var(--gold);
   background: var(--surface);
   outline: none;
 }
-.copy-latin.is-copied {
+.copy-btn.is-copied {
   color: var(--gold-deep);
   border-color: var(--gold);
 }
@@ -1922,6 +1937,18 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
     border-top: 1px solid var(--line);
     padding-top: 1.75rem;
   }
+  /* Where the page itself is stacked, stack the meta row too rather than leaving
+     it to wrap at whatever width each prayer's source label happens to need:
+     the credit centred over the card, the Copy button centred beneath it.
+     column-reverse gives that order without disturbing the markup, in which the
+     button comes first. */
+  .prayer-actions {
+    flex-direction: column-reverse;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .prayer-actions .prayer-source { text-align: center; }
+  .copy-actions { justify-content: center; }
 
   /* Stack the bar: brand on top, nav as a full-width row beneath. The taller
      stacked bar no longer sticks. */
