@@ -1409,8 +1409,8 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 @media (min-width: 44rem) {
   .js-mysteries .mysteries-tabs {
     position: absolute;
-    top: 2.5rem;
-    right: 2.75rem;
+    top: 1.4rem;
+    right: 1.4rem;
     z-index: 2;
     margin: 0;
     gap: 1.75rem;
@@ -1422,7 +1422,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   .js-mysteries .mysteries-tab:focus-visible { color: rgba(246, 241, 231, 0.85); }
   .js-mysteries .mysteries-tab[aria-selected="true"] { color: var(--dark-gold); }
   /* Hold the corner clear so a long meditation cannot run up under the rail. */
-  .js-mysteries .js-carousel .decade-body { padding-top: 5.6rem; }
+  .js-mysteries .js-carousel .decade-body { padding-top: 4.6rem; }
 }
 /* min-width:0 lets this grid item shrink instead of expanding to the carousel's
    full scroll width (so the track can actually overflow-scroll). */
@@ -1520,7 +1520,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
    carousel, whose bottom 1.75rem is the track's padding, below the card. */
 .decade-controls {
   position: absolute;
-  right: 2.75rem;
+  right: 1.4rem;
   bottom: 3.25rem;
   display: flex;
   align-items: center;
@@ -1673,29 +1673,21 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 .rosary-close-steps > li:last-child { margin-bottom: 0; }
 .rosary-close-steps > li::marker { color: var(--gold); }
 .rosary-step-label { margin: 0 0 0.7rem; color: var(--ink); }
-/* The collects take the black ground of the decade cards, so the prayers the
-   page ends on read as objects of the same set as the mysteries above them. */
 .rosary-collect {
-  background: var(--dark);
-  border: 1px solid var(--dark-line);
-  border-radius: 0.4rem;
-  padding: 1.75rem 2rem;
-  box-shadow:
-    0 14px 30px -16px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.11);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.75rem;
+  box-shadow: var(--shadow-sm);
 }
-.rosary-collect p { margin: 0 0 1.15rem; line-height: 1.78; color: var(--ivory); }
+.rosary-collect p { margin: 0 0 1rem; line-height: 1.75; }
 .rosary-collect p[lang="la"] {
   font-size: 0.95rem;
   /* Same Roman inscriptional treatment as the Latin on a prayer page. */
   font-family: "Cinzel", var(--display);
   letter-spacing: 0.02em;
 }
-/* The English rendering, held back from the Latin it follows. */
-.rosary-collect p:last-child { margin-bottom: 0; color: rgba(246, 241, 231, 0.68); }
-/* Liturgical red is the mark for a versicle on paper, but it disappears into
-   this ground; on black the rubric is gold. */
-.rosary-collect .vr { color: var(--dark-gold); }
+.rosary-collect p:last-child { margin-bottom: 0; color: var(--ink-soft); }
 
 /* Closing image: Our Lady on a transparent ground — a quiet benediction to end
    the page. No frame; she floats on the background, with the last words of the
