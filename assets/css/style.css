@@ -94,7 +94,9 @@
   --ink-faint:  #998a72;   /* captions, fine print */
   --ivory:      #f6f1e7;   /* page background */
   --surface:    #fffdf8;   /* cards / panels */
-  --surface-2:  #fbf6ea;   /* alternate / recessed surface */
+  --surface-2:  #fbf6ea;   /* alternate surface — a hair LIGHTER than the page.
+                              It separates panels from the white cards, not from
+                              the page; it is not a recess. */
   --gold:       #9c7b2e;   /* accent: rules, links, fine details */
   --gold-deep:  #7a5e1f;   /* link hover, deeper accent */
   --gold-tint:  rgba(156, 123, 46, 0.12);
@@ -257,14 +259,11 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 /* Masthead                                                                     */
 /* --------------------------------------------------------------------------- */
 .site-header {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  /* A translucent ivory bar with a soft blur, so content glides under it. The
-     background stays mostly opaque where backdrop-filter is unsupported. */
-  background: rgba(246, 241, 231, 0.82);
-  -webkit-backdrop-filter: blur(12px) saturate(1.4);
-  backdrop-filter: blur(12px) saturate(1.4);
+  /* Not sticky: it scrolls away with the page. The translucency and blur it once
+     carried existed only so content could glide beneath it — with nothing passing
+     behind, an opaque bar is the honest version and one less thing to reason
+     about. Nor does it need a z-index now that it never overlaps anything. */
+  background: var(--ivory);
   border-bottom: 1px solid var(--line);
 }
 .site-header .wrap {
@@ -513,9 +512,121 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   }
 }
 
+/* ---- The hero in the dark: the homepage's one band of night, on the same dark
+   ground as the rosary's decade cards and devotion CTA. It is what separates the
+   marketing hero from the browse area below, which stays on ivory paper.
+   Written as an override block so the light hero rules above are never edited
+   around, exactly as .mysteries .decade-card treats the light card. ---------- */
+.hero {
+  /* Pull up through .site-main's 3.5rem top padding so the band starts flush
+     beneath the masthead instead of floating on a strip of ivory. */
+  margin-top: -3.5rem;
+  padding: 5rem 0 4.5rem;
+  background: var(--dark);
+  /* Painted edge to edge by a spread shadow rather than a negative-margin
+     breakout: box-shadow never enters layout (nor scrollable overflow), so the
+     grid keeps its 62rem measure and its auto centring, and nothing needs
+     clipping further up the tree. clip-path lets the spread escape sideways
+     while trimming it flush top and bottom. */
+  box-shadow: 0 0 0 100vmax var(--dark);
+  /* Trimmed flush top and bottom. The band must NOT reach up over the masthead
+     any more: with the header unpositioned it paints before .site-main in
+     document order, so a spread extending over it would cover the nav instead of
+     passing behind it. The masthead carries the dark itself instead. */
+  clip-path: inset(0 -100vmax);
+}
+.hero-kicker { color: var(--dark-gold); }
+.hero-title  { color: var(--ivory); }
+/* Warm off-white held back from the title, so the hierarchy survives without
+   dropping to a grey that would go murky on black (as .rosary-cta-lead). */
+.hero-lead   { color: rgba(246, 241, 231, 0.74); }
+
+/* The crimson pill inverts to near-black on gold: the only pairing that holds
+   contrast against this ground, and the same object .rosary-cta-link already is. */
+.hero-cta {
+  color: var(--dark-deep);
+  background: var(--dark-gold);
+  border-color: var(--dark-gold);
+  box-shadow: 0 8px 20px -12px rgba(215, 178, 100, 0.65);
+}
+.hero-cta:hover, .hero-cta:focus {
+  color: var(--dark-deep);
+  background: #e6c47b;
+  border-color: #e6c47b;
+  box-shadow: 0 12px 26px -12px rgba(215, 178, 100, 0.75);
+}
+/* The outlined counterpart, now drawn in the ivory the title uses. */
+.hero-link {
+  color: var(--ivory);
+  /* 0.40 is the floor that keeps the outline at 3:1 against --dark
+     (WCAG 1.4.11, non-text contrast); 0.32 measured 2.73:1. */
+  border-color: rgba(246, 241, 231, 0.40);
+}
+.hero-link:hover, .hero-link:focus-visible {
+  color: var(--dark-gold);
+  border-color: var(--dark-gold);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+}
+/* A fillet: the ruled double border of a missal binding, drawn round the plate.
+   Inner gilt line on the image itself, a band of ground, then a second, fainter
+   rule outside it. Both rules and the gap between them are box-shadow spread
+   rings rather than extra elements, so nothing is added to the markup and
+   nothing enters layout: the ring painted in --dark IS the gap, reading as the
+   band showing between the two lines.
+   Square, not rounded. The base rule's 16px reads as a UI card, and a ruled
+   border on a folio plate has corners; a zero radius also keeps the spread rings
+   square (a radius would grow by the spread and bow the outer rule wider than
+   the inner). The outer rule is held to 0.28 so it reads as the quieter of the
+   two, the way a binding's outer fillet is always the finer line.
+   The base rule's warm hairline and page shadow are both pitched for ivory and
+   vanish on black, so both are restated here. */
+.hero-figure img {
+  border-color: rgba(215, 178, 100, 0.50);
+  border-radius: 0;
+  box-shadow:
+    0 0 0 10px var(--dark),
+    0 0 0 11px rgba(215, 178, 100, 0.28),
+    0 22px 44px -22px rgba(0, 0, 0, 0.85);
+}
+/* The hover overlay sits inside the inner rule, so it squares off to match. */
+.hero-figure-cry { border-radius: 0; }
+
+/* ---- The masthead over the hero: it simply belongs to the band. -------------
+   Solid --dark, not glass. Nothing passes behind an unpositioned header, so
+   translucency has nothing to sample and would only composite against the ivory
+   body (#454441, a mid-grey). Opaque matches the band exactly, and with the
+   hero's -3.5rem pull-up and no bottom border the two read as one dark region
+   from the top of the page down to the browse area. There is no second skin and
+   no cross-fade: once the bar scrolls away with the page, it never has to be
+   anything but this.
+   Scoped by :has(.hero), which only the homepage carries — the prayer, rosary
+   and manifesto pages keep the ivory bar. ---------------------------------- */
+body:has(.hero) .site-header {
+  background: var(--dark);
+  /* A hairline here would draw a seam across an otherwise continuous dark. */
+  border-bottom-color: transparent;
+}
+body:has(.hero) .brand-name { color: var(--ivory); }
+body:has(.hero) .brand-lockup:hover .brand-name,
+body:has(.hero) .brand-lockup:focus .brand-name { color: var(--dark-gold); }
+/* 6.5:1 on this ground, and a clear step below the brand name above it. */
+body:has(.hero) .site-motto { color: rgba(246, 241, 231, 0.62); }
+body:has(.hero) .site-nav a { color: rgba(246, 241, 231, 0.74); }
+body:has(.hero) .site-nav a:hover,
+body:has(.hero) .site-nav a:focus { color: var(--dark-gold); }
+body:has(.hero) .site-nav a::after { background-color: var(--dark-gold); }
+/* Crimson measures 1.83:1 against this ground (--crimson-bright only 2.21:1),
+   well under the 3:1 a badge needs. It takes the CTA's inversion: black on gold. */
+body:has(.hero) .nav-new {
+  background-color: var(--dark-gold);
+  color: var(--dark-deep);
+}
+
 /* The prayer index (search + category lists); the hero CTA scrolls here, so it
-   clears the sticky masthead. */
-.prayer-index { scroll-margin-top: 5.5rem; padding-top: 1rem; }
+   lands with a little air above it. Stays on ivory paper: the dark hero band is
+   what separates it from the marketing register. */
+.prayer-index { scroll-margin-top: 1.5rem; padding-top: 1rem; }
 /* Section header that separates the marketing hero from the functional browse
    area (search + category lists) and labels the hero CTA's destination. */
 .index-title {
@@ -1063,7 +1174,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   position: fixed;
   right: 1.5rem;
   bottom: 1.5rem;
-  z-index: 20;              /* beneath the masthead (30) and skip link (50) */
+  z-index: 20;              /* beneath the skip link (50) */
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -1353,7 +1464,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   color: var(--ink);
   text-align: center;
   margin: 0 0 1.5rem;
-  scroll-margin-top: 5.5rem;   /* clears the sticky masthead for in-page links */
+  scroll-margin-top: 1.5rem;   /* a little air above an in-page link's target */
 }
 .rosary-h2::after {
   content: "";
@@ -1536,7 +1647,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 /* Panels: stacked & all visible without JS; one at a time with it. Positioned,
    because the set rail docks against this box: its top edge is the card's top
    edge but for the track's 0.25rem of padding. */
-.mysteries-panels { position: relative; display: grid; gap: 2rem; scroll-margin-top: 5.5rem; }
+.mysteries-panels { position: relative; display: grid; gap: 2rem; scroll-margin-top: 1.5rem; }
 /* Dock the rail into the card's top-right corner. Only where the card is laid
    out side by side: stacked, that corner belongs to the painting. And only with
    JS, since one absolutely-placed rail cannot serve three panels shown at once. */
@@ -1745,7 +1856,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
    the light styles above are never edited around. */
 .mysteries .decade-card {
   background: var(--dark);
-  border-color: var(--dark-line);
+  border: none;
   /* Squarer than the site's default card: at this size a soft radius reads as
      a widget, a tight one as a plate the painting is mounted on. */
   border-radius: 0.4rem;
@@ -1997,6 +2108,8 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
     gap: 2rem;
     text-align: center;
     max-width: 34rem;
+    /* less air on a phone; the pull-up under the masthead still applies */
+    padding: 3.25rem 0 3rem;
   }
   .hero-text { top: 0; }
   .hero-lead { margin-left: auto; margin-right: auto; }
@@ -2060,9 +2173,8 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   /* Tucked closer to the corner where the screen is narrow. */
   .share-dock { right: 1rem; bottom: 1rem; }
 
-  /* Stack the bar: brand on top, nav as a full-width row beneath. The taller
-     stacked bar no longer sticks. */
-  .site-header { position: static; -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--ivory); }
+  /* Stack the bar: brand on top, nav as a full-width row beneath. (The rule that
+     used to unstick and de-blur it here is gone; the base rule does neither.) */
   .site-header .wrap {
     flex-direction: column;
     align-items: stretch;
