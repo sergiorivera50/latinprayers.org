@@ -464,6 +464,7 @@ def build_prayer_page(
     page_desc = prayer["description"] or f'{prayer["title"]}, {prayer["subtitle"]} in Latin and English.'
     return render(
         base_tpl,
+        root_attr="",
         page_title=esc(f'{prayer["title"]}, {prayer["subtitle"]}'),
         page_description=esc(page_desc),
         content=content,
@@ -472,18 +473,35 @@ def build_prayer_page(
     )
 
 
-def build_home_page(base_tpl: str, index_tpl: str) -> str:
-    """The root page: the hero band and the entry-point cards. It holds no prayer
-    data of its own — the collection lives at /prayers/ (build_prayers_page)."""
+def build_home_page(prayers: list[dict], base_tpl: str, index_tpl: str) -> str:
+    """The root page: the hero band and the chapter sections, one per
+    destination. It holds no prayer data of its own — the collection lives at
+    /prayers/ (build_prayers_page) — but the collection's chapter states its
+    size, and that count is taken from the data so it can never drift."""
+    content = render(
+        index_tpl,
+        prayer_count=str(len(prayers)),
+        category_count=str(len({p["category"] for p in prayers})),
+        # The landing page carries the copyright inside its last band rather than
+        # in the site footer (which it hides), so it needs the year of its own.
+        year=BUILD_YEAR,
+    )
     return render(
         base_tpl,
+        # Marks the root element itself, so the rules that make this route what it
+        # is (no scrollbar, dark canvas, the masthead riding on the band) are
+        # matched before the browser paints. Keyed off `.hero` they could not be:
+        # :has() cannot match an element that has not been parsed, so the page
+        # painted once as an ordinary scrolling page, scrollbar and all, and then
+        # corrected itself — the flash of a scrollbar appearing and vanishing.
+        root_attr=' class="home"',
         page_title="Traditional Catholic Prayers in Latin",
         page_description=(
             "Traditional Catholic prayers in Latin with faithful English "
             "translations, and the fifteen mysteries of the Holy Rosary. "
             "In the defense of Tradition and the Tridentine Mass."
         ),
-        content=index_tpl,
+        content=content,
         year=BUILD_YEAR,
         head_extra=head_extra("/"),
     )
@@ -529,6 +547,7 @@ def build_prayers_page(
     content = render(index_tpl, categories="\n\n".join(blocks))
     return render(
         base_tpl,
+        root_attr="",
         page_title="Latin Prayers with English Translations",
         page_description=(
             "Latin prayers with faithful English translations: the Pater Noster, "
@@ -727,6 +746,7 @@ def build_rosary_page(mysteries: list[dict], base_tpl: str, rosary_tpl: str) -> 
     # own display heading stays "The Holy Rosary" (see rosary.html).
     return render(
         base_tpl,
+        root_attr="",
         page_title="How to Pray the Rosary in Latin",
         page_description=page_desc,
         content=content,
@@ -790,7 +810,7 @@ def build() -> int:
 
     # Render the homepage.
     index_out = DIST_DIR / "index.html"
-    index_out.write_text(build_home_page(base_tpl, index_tpl), encoding="utf-8")
+    index_out.write_text(build_home_page(prayers, base_tpl, index_tpl), encoding="utf-8")
     print(f"  wrote {index_out.relative_to(ROOT)}")
 
     # Render standalone pages (content held directly in their templates).
@@ -802,6 +822,7 @@ def build() -> int:
         out.write_text(
             render(
                 base_tpl,
+                root_attr="",
                 page_title=esc(title),
                 page_description=esc(description),
                 content=page_tpl,
@@ -830,6 +851,7 @@ def build() -> int:
     (DIST_DIR / "404.html").write_text(
         render(
             base_tpl,
+            root_attr="",
             page_title="Page Not Found",
             page_description="The page you sought is not here.",
             content=not_found_tpl,

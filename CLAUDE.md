@@ -69,7 +69,7 @@ on every push by GitHub Actions and published from the `dist/` artifact.
 │   └── categories.csv    # optional one-line blurb per homepage category
 ├── templates/
 │   ├── base.html         # outer HTML shell (header, footer, <head>)
-│   ├── index.html        # the root landing page (hero + entry-point cards)
+│   ├── index.html        # the root landing page (hero + chapter sections)
 │   ├── prayers.html      # the prayer index (search + category lists) at /prayers/
 │   └── prayer.html       # single-prayer content block
 ├── assets/
@@ -228,25 +228,76 @@ Actions"** (not "Deploy from a branch"). DNS is configured at Cloudflare (apex
 split, so it does not need re-deciding:
 
 - **`/`** (`templates/index.html`) is a landing page: a full-screen hero band of
-  the Crucifixion carrying only its title, then `.features`, a grid of
-  entry-point cards (one per section of the site). It holds **no prayer data**.
-  More featured content is intended to join the cards there.
-- **`/prayers/`** (`templates/prayers.html`) is the collection: the `<h1>`, the
-  optional search field, and the category lists. `build.py` writes it to
-  `dist/prayers/index.html`, which sits alongside the individual
-  `dist/prayers/<id>/index.html` directories without colliding.
-- The primary nav's "Prayers" link therefore points at `/prayers/`, and the
-  brand lockup is what returns you to `/`.
-
-Two consequences worth knowing. The masthead is styled by `body:has(.hero)`,
-which **only the root page matches** — it alone gets the transparent overlay nav
-sitting on the band; every other page keeps the ivory bar. And `build_home_page`
-and `build_prayers_page` are separate functions in `build.py` with separate
-titles, descriptions and canonicals.
-
-## Conventions
-
-- IDs / filenames: kebab-case, ASCII (e.g. `gloria-patri`).
+  the Crucifixion carrying only its title, then `.chapters` — **one full-width
+  section per destination**, not a row of cards. Each `.chapter` breaks out of
+  `.wrap` to the viewport edges and is built the way the hero is: its picture is
+  its **ground**, a real `<img class="chapter-bg">` under a scrim, never a framed
+  object beside the text (`.chapter--band` + `.chapter--dark`). The scrim is
+  horizontal, carrying the text on one side and leaving the picture lit on the
+  other; `.chapter--reverse` mirrors it so consecutive bands alternate which
+  side the words hold. On phones the text runs full width, so the scrim becomes
+  an even veil. Each band carries a `.chapter-list` glimpse of what it links to
+  (a few prayers; the three sets of mysteries) above its call to action.
+  **Every band is at least one viewport tall (`100svh`), and the landing page
+  **turns a screen at a time.** One gesture commits the whole move to the next
+  section and eases it into place, in either direction (`initSectionScroll` in
+  `main.js`, a 650ms cubic ease-in-out), so the page reads as a sequence of
+  screens rather than a strip to be crept down. Two guards keep it from trapping
+  the reader: a section taller than the screen is left alone until its far edge
+  is in view, and past the last section the takeover releases so the footer is
+  reached by an ordinary scroll. A scroll that came to rest off a section's top
+  spends the next gesture squaring that section up rather than skipping it.
+  There is **no CSS scroll-snap** on this page: the script is the only thing
+  moving the scroll, and two magnets pulling at one position fight each other.
+  One earlier design was tried and removed, and is recorded here so it is not
+  re-attempted: easing the whole scroll with a magnet to finish, instead of
+  committing the move, felt slow at every tuning. (Cross-fading the bands in a
+  pinned stack was also built and removed: a great deal of machinery for an
+  effect that fought ordinary reading.) Two traps found on the way are worth keeping in mind if
+  anything here is ever driven from script again. `scroll-behavior: smooth` is
+  set on the root and `window.scrollTo(x, y)` OBEYS it, so a script writing the
+  scroll every frame has the browser easing toward the script's easing and never
+  arriving — the tween sets it to `auto` for its duration and restores it. And a
+  magnet's settle delay has to outlast the gap between a mouse wheel's separate
+  notches, or it fires between them and hauls the reader back once per notch.
+  The momentum lock is capped by a hard ceiling (`SECTION_CEILING_MS`): without
+  it, uninterrupted scrolling pushes the wait back forever and the page stops
+  responding until the reader pauses.
+  **It only ever runs on a pointer-driven desktop window.** `takeover()` in
+  `initSectionScroll` asks four questions LIVE, on every event rather than once at
+  load, since a window gets resized, a phone rotated and a keyboard detached under
+  pages that are already open: `pointer: coarse` (a touch flick already carries a
+  whole screen, and taking the gesture over robs it of its momentum and its
+  rubber-band, so a committed move is a mouse-and-trackpad idea), `max-width: 48rem`
+  (the phone layout, which `pointer: coarse` alone would miss on a narrow laptop
+  window), `max-height: 34rem`, and `prefers-reduced-motion`. Note `rem` in a media
+  query means 16px, not the root's 18px, so 48rem is 768px in both the CSS
+  breakpoint and this guard, and the two agree by construction.
+- **Route-level rules hang off a class on `<html>`, not `:has()`.** `build.py`
+  fills `{{root_attr}}` in `base.html`, and the landing page alone gets
+  `class="home"`; everything that makes that route what it is (no scrollbar, dark
+  canvas, the masthead riding on the band, no footer) is keyed off it. It used to
+  be keyed off `body:has(.hero)`, and that is a trap: **`:has()` cannot match an
+  element that has not been parsed yet**, so those rules only began applying once
+  the middle of the document arrived. The page painted first as an ordinary
+  scrolling page and then corrected itself, which showed as a flash of scrollbar
+  appearing and vanishing on entry. A class on the root element is there before
+  the first paint. (`body:has(.page-band)` on the prayer pages has the same
+  latency; it has not bitten because those pages change no widths, but the same
+  fix applies if it ever does.)
+- **Every route keeps its scrollbar, and it must stay that way.** Hiding it on the
+  landing page alone made that route ~15px wider than the rest, and three separate
+  faults all traced back to that one asymmetry: the masthead shifting half a
+  scrollbar between routes, a strip of bare canvas down the right where the bands
+  could not reach (a merely *invisible* bar still holds space no content can paint
+  into), and a flash on entry as the bar came and went. `scrollbar-gutter: stable`
+  cannot rescue any of it: a bar of no width has no gutter to hold open (measured).
+  The only reliable cure is that all routes agree. Do not reintroduce the split:
+  the machinery it needs (a JS-measured `--sbw`, a compensating pad on the
+  masthead) is more than the look is worth. Only the bar's **colour** varies, on
+  `.home`, which is layout-neutral. `scrollbar-gutter: stable` stays on the root
+  for the remaining case: a page too short to scroll has no bar at all. Verify
+  with `.site-header .wrap`'s left edge, which must read the same on every route.
 - **Clean URLs.** Each prayer is emitted as `dist/prayers/<id>/index.html` and served
   at `/prayers/<id>/` (no `.html` suffix). The homepage is `/`. All in-page links and
   asset references use **absolute paths from root** (`/`, `/prayers/<id>/`,

@@ -371,7 +371,9 @@
   // Smooth-scroll in-page anchor links (e.g. the hero "Browse the prayers" CTA).
   // Backs up the CSS `scroll-behavior: smooth`, and honours reduced-motion by
   // simply not intercepting (the browser then jumps instantly). The Mysteries
-  // tabs are excluded — they switch panels rather than scroll.
+  // tabs are excluded — they switch panels rather than scroll. So is the hero's
+  // chevron, which initSectionScroll owns, so that it arrives at the same pace
+  // and settles onto the section the same way as every other move on that page.
   function initSmoothScroll() {
     if (
       window.matchMedia &&
@@ -380,7 +382,9 @@
       return;
     }
     var links = Array.prototype.slice.call(
-      document.querySelectorAll('a[href^="#"]:not(.skip-link):not(.mysteries-tab)')
+      document.querySelectorAll(
+        'a[href^="#"]:not(.skip-link):not(.mysteries-tab):not(.hero-scroll)'
+      )
     );
     links.forEach(function (link) {
       link.addEventListener("click", function (e) {
@@ -395,6 +399,192 @@
         if (history.replaceState) history.replaceState(null, "", "#" + id);
       });
     });
+  }
+
+  // The landing page turns a screen at a time. One gesture commits the whole
+  // move to the next section and eases it into place, in either direction, so
+  // the page reads as a sequence of screens rather than a strip to be crept
+  // down. Past the last section the takeover releases, so the footer is reached
+  // by an ordinary scroll.
+  //
+  // Two things keep it from trapping the reader. A section taller than the
+  // screen is left alone until its far edge is in view, so nothing inside one
+  // can become unreachable. And a scroll that has come to rest off a section's
+  // top — a scrollbar drag, a keyboard PageDown — spends the next gesture
+  // squaring up that section rather than skipping past it.
+  //
+  // One earlier pass is worth not repeating: easing the whole scroll instead of
+  // committing it, with a magnet to finish, felt slow at any tuning.
+  //
+  // It is an enhancement in the strict sense: with JS off, off a fine pointer,
+  // or under reduced motion, the page is an ordinary scroll throughout.
+  var SECTION_SNAP_MS = 650;     // the committed move: deliberate, but not slow
+  var SECTION_QUIET_MS = 140;    // silence that must follow before another
+  var SECTION_CEILING_MS = 500;  // hard cap on that wait, whatever the input does
+
+  function initSectionScroll() {
+    var sections = Array.prototype.slice.call(
+      document.querySelectorAll(".hero, .chapter")
+    );
+    if (sections.length < 2) return;                     // landing page only
+    if (!window.matchMedia) return;
+
+    var root = document.documentElement;
+    var chevron = document.querySelector(".hero-scroll");
+    var frame = null;
+
+    // Every condition is asked LIVE rather than once at startup, because every
+    // one of them can change under a page that is already open: a window is
+    // resized, a phone is rotated, a tablet has its keyboard taken off it, the
+    // reader turns motion down in system settings. A check made at load would
+    // answer for the device as it was the moment the page opened.
+    var coarse = window.matchMedia("(pointer: coarse)");
+    var narrow = window.matchMedia("(max-width: 48rem)");
+    var tooShort = window.matchMedia("(max-height: 34rem)");
+    var still = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    // Where the script drives the scroll, and where it keeps its hands off.
+    //   coarse   — a touch screen. A flick already carries a whole screen there,
+    //              and taking the gesture over robs it of its momentum and its
+    //              rubber-band; a committed move is a mouse and trackpad idea.
+    //   narrow   — the phone layout, where the bands stack and the page is read
+    //              rather than turned. `pointer: coarse` covers real handsets on
+    //              its own, but not a narrow window on a laptop, which is the
+    //              same layout and wants the same plain scroll.
+    //   tooShort — no room for a screen-tall section to be worth committing to.
+    //   still    — reduced motion: nothing should move that was not asked to.
+    function takeover() {
+      return (
+        !coarse.matches && !narrow.matches && !tooShort.matches && !still.matches
+      );
+    }
+    // Three instants rather than a boolean. The lock has to survive the momentum
+    // a trackpad keeps firing after the fingers have gone, or the tail would be
+    // read as a fresh gesture the moment the move lands. But it must ALSO be
+    // guaranteed to lift: an earlier version extended the wait on every event it
+    // swallowed, so scrolling without pause could hold it shut indefinitely and
+    // the page stopped responding until the reader stopped and started again.
+    // `ceiling` is the fix — the wait can be pushed back, but never past it.
+    var animatesUntil = 0;
+    var quietUntil = 0;
+    var ceiling = 0;
+
+    function clock() {
+      return window.performance && performance.now ? performance.now() : Date.now();
+    }
+
+    function isLocked() {
+      var t = clock();
+      if (t < animatesUntil) return true;
+      return t < quietUntil && t < ceiling;
+    }
+
+    // The section the viewport is resting on: the last one whose top has passed
+    // the middle of the screen. Measured live rather than remembered, so a
+    // scrollbar drag, a keyboard scroll or an anchor jump all leave the right
+    // answer behind.
+    function currentIndex() {
+      var mid = window.scrollY + window.innerHeight / 2;
+      var index = 0;
+      for (var i = 0; i < sections.length; i++) {
+        if (sections[i].offsetTop < mid) index = i;
+      }
+      return index;
+    }
+
+    // Cubic ease-in-out: the move gathers itself, travels, and sets down, which
+    // is what makes a whole screen of travel read as one deliberate step.
+    function ease(t) {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    function animateTo(target) {
+      if (frame) cancelAnimationFrame(frame);
+      var from = window.scrollY;
+      var distance = target - from;
+      var began = clock();
+
+      // `scroll-behavior: smooth` is set on the root, and window.scrollTo OBEYS
+      // it — which would set the browser easing toward this tween's easing, one
+      // fresh animation per frame, and the page would crawl. It stands down for
+      // the duration and is put back exactly as it was found.
+      var behavior = root.style.scrollBehavior;
+      root.style.scrollBehavior = "auto";
+
+      animatesUntil = began + SECTION_SNAP_MS;
+      quietUntil = animatesUntil + SECTION_QUIET_MS;
+      ceiling = animatesUntil + SECTION_CEILING_MS;
+
+      function step() {
+        var progress = Math.min(1, (clock() - began) / SECTION_SNAP_MS);
+        window.scrollTo(0, Math.round(from + distance * ease(progress)));
+        if (progress < 1) {
+          frame = requestAnimationFrame(step);
+          return;
+        }
+        frame = null;
+        root.style.scrollBehavior = behavior;
+      }
+      frame = requestAnimationFrame(step);
+    }
+
+    if (chevron) {
+      // initSmoothScroll leaves this one alone (see its selector) so that it
+      // makes the same committed move as the wheel does.
+      chevron.addEventListener("click", function (e) {
+        if (!takeover()) return;                         // plain anchor jump
+        e.preventDefault();
+        animateTo(sections[1].offsetTop);
+      });
+    }
+
+    window.addEventListener(
+      "wheel",
+      function (e) {
+        if (!takeover()) return;
+        if (e.ctrlKey) return;                           // pinch-zoom, not a scroll
+        if (isLocked()) {
+          // Still riding out the move: swallow the momentum so its tail cannot
+          // push straight on past the band being landed on. Pushing `quietUntil`
+          // back keeps the tail out, and `ceiling` keeps that from lasting.
+          e.preventDefault();
+          quietUntil = clock() + SECTION_QUIET_MS;
+          return;
+        }
+        if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;   // sideways
+
+        var down = e.deltaY > 0;
+        var index = currentIndex();
+        var section = sections[index];
+
+        // A section with more content than screen has to be readable the
+        // ordinary way, so the wheel is left alone until its far edge is in view.
+        if (section.offsetHeight > window.innerHeight + 2) {
+          var box = section.getBoundingClientRect();
+          if (down && box.bottom > window.innerHeight + 2) return;
+          if (!down && box.top < -2) return;
+        }
+
+        // Resting off a section's top rather than on it — dropped there by a
+        // scrollbar drag, say. The gesture then spends itself squaring up the
+        // section it is already on, and only the one after moves on.
+        var drift = window.scrollY - section.offsetTop;
+        if ((down && drift < -2) || (!down && drift > 2)) {
+          e.preventDefault();
+          animateTo(section.offsetTop);
+          return;
+        }
+
+        var next = down ? index + 1 : index - 1;
+        // Past the last section lies the footer: let the page scroll to it as it
+        // normally would rather than trapping the reader on the final screen.
+        if (next < 0 || next >= sections.length) return;
+
+        e.preventDefault();
+        animateTo(sections[next].offsetTop);
+      },
+      { passive: false }
+    );
   }
 
   // Copy the Latin text of a prayer. Progressive enhancement: the button is
@@ -723,6 +913,7 @@
     initMysteries();
     initCarousels();
     initSmoothScroll();
+    initSectionScroll();
     initCopyButtons();
     initShareDock();
   }

@@ -152,7 +152,46 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { font-size: 18px; -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+/* overflow-x: clip, and it is load-bearing. Every full-bleed band on the site
+   (.hero, .page-band, .chapters) escapes its .wrap with `calc(50% - 50vw)`, and
+   `vw` counts the scrollbar: on a browser with a classic 15px scrollbar each
+   band ends up half a scrollbar wider than the viewport at BOTH edges, and the
+   page scrolls ~8px sideways. There is no scrollbar-free viewport unit to
+   subtract, so the overhang is clipped instead. `clip` rather than `hidden`
+   because it does not turn the viewport into a scroll container, which would
+   put scroll-behavior and the in-page anchors at risk. */
+html {
+  font-size: 18px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  overflow-x: clip;
+  /* Hold the scrollbar's space open even where there is nothing to scroll, so a
+     short page (the 404, a one-stanza prayer) does not sit 15px wider than a
+     long one and shift everything centred on it. */
+  scrollbar-gutter: stable;
+}
+
+/* Every route keeps its scrollbar, and that is the simplification. Hiding it on
+   the landing page alone made that route 15px wider than the rest, and three
+   separate faults all traced back to that one asymmetry: the masthead shifting
+   half a scrollbar between routes, a strip of bare canvas down the right where
+   the bands could not reach, and a flash on entry as the bar came and went. None
+   of them can occur when every route agrees on the bar. Do not reintroduce the
+   split; the machinery it needs (a JS-measured --sbw, a compensating pad on the
+   masthead) is more than the look is worth.
+   Only its COLOUR changes here, which is layout-neutral: a default light-grey bar
+   down the side of three screens of night is the very strip this route was trying
+   to avoid, and the ivory pages keep the browser's own. */
+.home { scrollbar-color: #3f3b36 var(--dark); }
+/* The canvas is dark on this route: the overscroll bounce at either end should be
+   night rather than a flash of ivory on a page of three night screens. */
+.home { background-color: var(--dark); }
+/* Too short to hold a screen: the sections give up their full-height rule and
+   revert to their content height, rather than making the reader scroll through a
+   band that is mostly padding. */
+@media (max-height: 34rem) {
+  .hero, .chapter { min-height: 0; }
+}
 
 body {
   margin: 0;
@@ -565,7 +604,7 @@ body:has(.page-band) .site-header {
      the larger of the pair, which is what biases the title below the optical
      centre — it clears the masthead and lands the line on the darkest part of
      the scrim rather than across the lit torso. */
-  margin: 0 calc(50% - 50vw) 4rem;
+  margin: 0 calc(50% - 50vw);
   padding: clamp(14rem, 38vh, 26rem) max(1.5rem, calc(50vw - 34rem)) clamp(4rem, 9vh, 7rem);
   overflow: hidden;
   background: var(--dark);      /* stands in while the painting loads */
@@ -686,50 +725,41 @@ body:has(.page-band) .site-header {
 }
 
 
-/* ---- Homepage entry points. The root page carries no prayer data now — the
-   collection lives at /prayers/ — so these two cards are what it offers in its
-   place. Kept light on the ivory page: after a full-screen band of night, a
-   second dark block would give the eye nowhere to rest. ------------------- */
-.features { scroll-margin-top: 2rem; }
-.features {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.75rem;
-  max-width: 58rem;
-  margin: 0 auto 3.5rem;
+/* ---- Homepage chapters. The root page carries no prayer data of its own — the
+   collection lives at /prayers/ — so what follows the band is one full-width
+   section per destination rather than a row of cards side by side. Each chapter
+   takes the whole width of the viewport, alternates its ground and the side its
+   picture sits on, and carries a little of the destination's own content (four
+   of the prayers, the three sets of mysteries) so that it shows what is there
+   rather than only describing it.
+   The night ground returns for the Rosary, one section down from the band: the
+   ivory chapter between them is the rest the eye needs, and black is already
+   this site's register for that devotion (the decade cards, the prayer-page
+   CTA). Gold is the accent on it, never crimson, which goes muddy on black. */
+.chapters {
+  /* Break out of .wrap to the viewport edges, exactly as the band above does,
+     so a chapter's ground runs the full width while its content stays on a
+     measure. Each chapter then re-centres its own inner grid. */
+  margin: 0 calc(50% - 50vw);
 }
-.feature {
+/* A band is a screen: at least as tall as the viewport, with its content centred
+   in that height. svh rather than vh — on a phone vh measures the viewport with
+   the browser chrome retracted, which would make every band overflow by the
+   height of the toolbar. */
+.chapter {
   display: flex;
-  flex-direction: column;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  overflow: hidden;              /* clips the image into the card's corners */
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease);
+  align-items: center;
+  min-height: 100vh;             /* fallback for engines without the v* units */
+  min-height: 100svh;
+  padding: clamp(4.5rem, 11vh, 7rem) 0;
 }
-/* focus-within, not just hover: the lift should follow the keyboard too. */
-.feature:hover, .feature:focus-within {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-.feature-img {
-  display: block;
+.chapter-inner {
   width: 100%;
-  height: auto;                  /* let aspect-ratio drive height despite the
-                                    width/height attributes, which are there for
-                                    layout stability while the image loads */
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  border-bottom: 1px solid var(--line);
+  max-width: 66rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
 }
-.feature-body {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  padding: 1.5rem 1.6rem 1.6rem;
-}
-.feature-eyebrow {
+.chapter-eyebrow {
   margin: 0 0 0.5rem;
   text-transform: uppercase;
   letter-spacing: 0.2em;
@@ -737,58 +767,305 @@ body:has(.page-band) .site-header {
   font-weight: 600;
   color: var(--gold-deep);
 }
-.feature-title {
+.chapter-title {
   font-family: var(--display);
   font-weight: 600;
-  font-size: 1.6rem;
+  font-size: clamp(1.9rem, 3.4vw, 2.4rem);
+  line-height: 1.12;
   letter-spacing: 0.005em;
   color: var(--ink);
-  margin: 0 0 0.55rem;
+  margin: 0 0 0.7rem;
 }
-.feature-lead {
-  margin: 0 0 1.4rem;
+.chapter-lead {
+  margin: 0 0 1.5rem;
+  max-width: 32rem;
   color: var(--ink-soft);
-  font-size: 1rem;
-  line-height: 1.7;
+  font-size: 1.02rem;
+  line-height: 1.75;
 }
-/* margin-top:auto pins the link to the card's foot, so the two sit on one line
-   however unevenly the leads above them run. */
-.feature-link {
-  margin-top: auto;
-  align-self: flex-start;
-  display: inline-flex;
+/* Hairline-ruled rows rather than cards: these are a glimpse of the collection,
+   and giving them the lift of the real .prayer-link cards would put a row of
+   small cards back on the page, which is the thing this replaced. */
+.chapter-list {
+  list-style: none;
+  margin: 0 0 1.4rem;
+  padding: 0;
+  max-width: 32rem;
+  border-top: 1px solid var(--line);
+}
+.chapter-list li { border-bottom: 1px solid var(--line); }
+.chapter-list a {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0.15rem;
+  color: var(--ink);
+  transition: color 0.15s var(--ease);
+}
+.chapter-list a:hover, .chapter-list a:focus-visible {
+  color: var(--gold-deep);
+  text-decoration: none;
+}
+.chapter-list .name {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.2rem;
+  line-height: 1.15;
+  flex: 0 0 auto;                /* keep the Latin whole */
+}
+.chapter-list .gloss {
+  color: var(--ink-faint);
+  font-style: italic;
+  font-size: 0.86rem;
+  text-align: right;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.chapter-list a:hover .gloss, .chapter-list a:focus-visible .gloss { color: inherit; }
+/* One quiet line under the list — a count, a fact — that gives the section
+   something the card never had room for. */
+/* The fine print and the call to action share a line, the text holding the left
+   and the pill sitting off the right end of it. The row owns the measure that
+   the muted line used to carry on its own, and the pill never shrinks: it is
+   sized by its label, and a squeezed one would read as a different control. */
+.chapter-foot {
+  display: flex;
   align-items: center;
-  gap: 0.42rem;
-  padding: 0.56rem 1.05rem;
+  justify-content: space-between;
+  gap: 1.5rem;
+  max-width: 32rem;
+}
+.chapter-meta {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;                  /* let the text wrap rather than push the pill */
+  color: var(--ink-faint);
+  font-size: 0.86rem;
+  line-height: 1.65;
+}
+/* The filled crimson pill: the site's primary call to action, at the size every
+   other one on the site uses. */
+.chapter-link {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.62rem 1.3rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.09em;
   font-size: 0.72rem;
-  color: var(--btn);
-  border: 1px solid color-mix(in srgb, var(--btn) 32%, transparent);
+  color: var(--btn-text);
+  background: var(--btn);
+  border: 1px solid var(--btn);
   border-radius: 999px;
-  transition: color 0.15s var(--ease), border-color 0.15s var(--ease),
-    background 0.15s var(--ease), box-shadow 0.15s var(--ease);
+  box-shadow: 0 10px 22px -14px rgba(138, 31, 36, 0.7);
+  transition: background 0.15s var(--ease), border-color 0.15s var(--ease),
+              transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
 }
-.feature-link:hover, .feature-link:focus-visible {
-  color: var(--btn-hover);
-  border-color: var(--btn);
-  background: var(--surface-2);
-  box-shadow: var(--shadow-sm);
+.chapter-link:hover, .chapter-link:focus-visible {
+  color: var(--btn-text);
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px -14px rgba(138, 31, 36, 0.8);
   text-decoration: none;
 }
-.feature-arrow { width: 0.95em; height: 0.95em; flex: none; }
+.chapter-arrow { width: 0.95em; height: 0.95em; flex: none; }
+
+/* The copyright, set into the foot of the last band instead of standing in a
+   strip of its own below it. On a page of full-screen sections that strip was a
+   fourth screen holding one line of fine print, and reaching it meant scrolling
+   past the end of the design; the site footer is hidden here for the same
+   reason. Absolutely placed, so it takes no part in the band's centring, and
+   pitched low enough in the ivory to sit under the picture rather than on it. */
+.chapter-colophon {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: clamp(1rem, 2.5vh, 1.75rem);
+  margin: 0;
+  text-align: center;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: rgba(246, 241, 231, 0.42);
+}
+.home .site-footer { display: none; }
+
+
+/* ---- The night chapter. Everything muted is restated against the dark ground:
+   --ink-soft and --ink-faint are pitched for ivory and go murky on black, and
+   the crimson pill gives way to the gold one the dark register already uses. */
+.chapter--dark {
+  background: var(--dark);
+  border-block: 1px solid var(--dark-line);
+}
+.chapter--dark .chapter-eyebrow { color: var(--dark-gold); }
+.chapter--dark .chapter-title { color: var(--ivory); }
+.chapter--dark .chapter-lead { color: rgba(246, 241, 231, 0.74); }
+.chapter--dark .chapter-meta { color: rgba(246, 241, 231, 0.5); }
+/* A link written into the prose takes the dark ground's own gold. The site-wide
+   `a` colour is --gold-deep, which is pitched for ink on ivory and goes muddy
+   the moment it lands on a night band: against a photograph it reads as a
+   slightly-off word rather than a link. --dark-gold is the same accent lifted
+   toward candlelight, the one every other control on a dark ground already
+   uses, and the hover is the brighter one the gold pills hover to. */
+.chapter--dark .chapter-lead a,
+.chapter--dark .chapter-meta a { color: var(--dark-gold); }
+.chapter--dark .chapter-lead a:hover,
+.chapter--dark .chapter-lead a:focus,
+.chapter--dark .chapter-meta a:hover,
+.chapter--dark .chapter-meta a:focus { color: #e6c47b; }
+.chapter--dark .chapter-list,
+.chapter--dark .chapter-list li { border-color: var(--dark-line); }
+.chapter--dark .chapter-list a { color: var(--ivory); }
+.chapter--dark .chapter-list a:hover,
+.chapter--dark .chapter-list a:focus-visible { color: var(--dark-gold); }
+.chapter--dark .chapter-list .gloss { color: rgba(246, 241, 231, 0.52); }
+/* Near-black label on gold: the only pairing that holds contrast on this ground
+   (the same one .rosary-cta-link makes on the prayer pages). */
+.chapter--dark .chapter-link {
+  color: var(--dark-deep);
+  background: var(--dark-gold);
+  border-color: var(--dark-gold);
+  box-shadow: 0 10px 22px -14px rgba(215, 178, 100, 0.65);
+}
+.chapter--dark .chapter-link:hover, .chapter--dark .chapter-link:focus-visible {
+  color: var(--dark-deep);
+  background: #e6c47b;
+  border-color: #e6c47b;
+  box-shadow: 0 14px 28px -14px rgba(215, 178, 100, 0.75);
+}
+
+/* ---- A chapter whose picture is its ground rather than an object beside it,
+   built the way the band above it is: a real <img> under a scrim, not a CSS
+   background. The scrim is horizontal here, not vertical — the text holds the
+   left of the band and the altar is left lit on the right, where nothing sits
+   over it. Everything else the night chapter defines (the gold eyebrow, the
+   ivory list, the gold pill) it inherits from .chapter--dark. */
+.chapter--band {
+  position: relative;
+  isolation: isolate;            /* keeps the negative-z layers inside the band */
+  overflow: hidden;
+  padding: clamp(5rem, 12vh, 7.5rem) 0;
+}
+.chapter-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* The band is far wider than the photograph is proportionally tall, so cover
+     crops vertically only; 42% holds the candles and the altar in frame. */
+  object-position: center 42%;
+}
+/* Two gradients on one layer: the horizontal one carries the text, the vertical
+   one is a thin veil that closes the top and bottom edges so the band cuts
+   cleanly against the ivory above and below it rather than fraying into it. */
+.chapter--band::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(100deg,
+      rgba(14, 11, 9, 0.93) 0%,
+      rgba(14, 11, 9, 0.90) 32%,
+      rgba(14, 11, 9, 0.62) 54%,
+      rgba(14, 11, 9, 0.38) 76%,
+      rgba(14, 11, 9, 0.44) 100%),
+    linear-gradient(to bottom,
+      rgba(14, 11, 9, 0.45) 0%,
+      rgba(14, 11, 9, 0.10) 22%,
+      rgba(14, 11, 9, 0.10) 78%,
+      rgba(14, 11, 9, 0.45) 100%);
+}
+/* A picture taken in daylight, under the same scrim built for a candlelit
+   interior, would leave the text sitting on a pale sky: the veil that reads as
+   deep shadow over an altar reads as haze over a blue morning, and the ivory
+   type loses its ground. So the daylight band carries its own, heavier all
+   through and much heavier where the words are, and its object-position gives
+   up sky rather than pilgrims when the band is wider than the photograph.
+   The two halves are pulled apart on purpose: the text side stays near-opaque
+   because ivory type has to have a ground, while the lit side is let almost all
+   the way up so the banners keep their own colour. This band is the one moment
+   of daylight between two screens of night, and veiling it evenly would waste
+   exactly what it is here for.
+   The frame is almost exactly 16:9, so on a typical laptop it barely crops at
+   all and the whole column of banners stays in view. */
+.chapter--daylight .chapter-bg { object-position: 62% 58%; }
+/* Mirrored, and the framing mirrors with it: on a reverse band the picture is
+   lit on the LEFT, so a window narrower than the photograph has to give up the
+   right of the frame, not the left, or the crop throws away the very thing the
+   band is showing. */
+.chapter--daylight.chapter--reverse .chapter-bg { object-position: 34% 50%; }
+.chapter--daylight.chapter--reverse::after {
+  background:
+    linear-gradient(260deg,
+      rgba(12, 10, 8, 0.92) 0%,
+      rgba(12, 10, 8, 0.88) 44%,
+      rgba(12, 10, 8, 0.50) 58%,
+      rgba(12, 10, 8, 0.16) 78%,
+      rgba(12, 10, 8, 0.18) 100%),
+    linear-gradient(to bottom,
+      rgba(12, 10, 8, 0.22) 0%,
+      rgba(12, 10, 8, 0.04) 24%,
+      rgba(12, 10, 8, 0.04) 72%,
+      rgba(12, 10, 8, 0.30) 100%);
+}
+.chapter--daylight::after {
+  background:
+    linear-gradient(100deg,
+      rgba(12, 10, 8, 0.92) 0%,
+      rgba(12, 10, 8, 0.88) 44%,
+      rgba(12, 10, 8, 0.50) 58%,
+      rgba(12, 10, 8, 0.16) 78%,
+      rgba(12, 10, 8, 0.18) 100%),
+    linear-gradient(to bottom,
+      rgba(12, 10, 8, 0.22) 0%,
+      rgba(12, 10, 8, 0.04) 24%,
+      rgba(12, 10, 8, 0.04) 72%,
+      rgba(12, 10, 8, 0.30) 100%);
+}
+
+/* The body simply stops before the lit half of the picture. */
+.chapter--band .chapter-body { max-width: 33rem; }
+/* Mirrored: the text takes the right of the band and the picture is left lit on
+   the left. `order` is what swaps the columns in the grid chapters and means
+   nothing in a block container, so the body is pushed over by its own margin. */
+.chapter--band.chapter--reverse .chapter-body { margin-left: auto; }
+.chapter--band.chapter--reverse::after {
+  background:
+    linear-gradient(260deg,
+      rgba(14, 11, 9, 0.93) 0%,
+      rgba(14, 11, 9, 0.90) 32%,
+      rgba(14, 11, 9, 0.62) 54%,
+      rgba(14, 11, 9, 0.38) 76%,
+      rgba(14, 11, 9, 0.44) 100%),
+    linear-gradient(to bottom,
+      rgba(14, 11, 9, 0.45) 0%,
+      rgba(14, 11, 9, 0.10) 22%,
+      rgba(14, 11, 9, 0.10) 78%,
+      rgba(14, 11, 9, 0.45) 100%);
+}
 
 
 /* ---- The masthead rides on the band. Taken out of flow entirely, so the
    painting begins at the very top of the page and the nav sits over it; absolute
    rather than fixed or sticky, so it still scrolls away with the page. The
    scrim's top lobe is sized for exactly this, so the bar needs no ground of its
-   own. Scoped by :has(.hero), which only the homepage carries — and it now
-   overrides position and ground ONLY, because the light-on-dark colouring it
-   used to carry has become the masthead's base state. ---------------------- */
-body:has(.hero) .site-main { padding-top: 0; }
-body:has(.hero) .site-header {
+   own. Scoped by `.home`, the class build.py puts on the root element of this
+   one route — and it now overrides position and ground ONLY, because the
+   light-on-dark colouring it used to carry has become the masthead's base state.
+   A class on <html> rather than `:has(.hero)` for a reason worth keeping: :has()
+   cannot match an element that has not been parsed yet, so every rule keyed off
+   the hero waited for the middle of the document to arrive. The page painted
+   once as an ordinary scrolling page, scrollbar and all, and then corrected
+   itself. The root class is there before the first paint. -------------------- */
+.home .site-main { padding-top: 0; }
+.home .site-header {
   position: absolute;
   top: 0;
   left: 0;
@@ -805,7 +1082,7 @@ body:has(.hero) .site-header {
    box edge, leaving the wrapped nav row in the weak tail of the gradient; the
    overhang keeps it strong to the bar's foot and then fades into the band's own
    scrim with no seam. 4.7:1 at worst on a phone now. */
-body:has(.hero) .site-header::before {
+.home .site-header::before {
   content: "";
   position: absolute;
   inset: 0 0 -4rem 0;
@@ -2410,7 +2687,31 @@ body:has(.hero) .site-header::before {
      rather than orphaning "Saint". Measured 4.9:1 worst-case where large text
      needs 3.0, so the scrim carries it unchanged. */
   .hero-title { font-size: clamp(3.4rem, 17vw, 5rem); }
-  .features { grid-template-columns: 1fr; gap: 1.5rem; }
+  /* Chapters stack. The picture comes first when they do: the alternation the
+     wide layout carried has nothing to say in one column, and a photograph
+     under the button would read as the section's leftovers. It also flattens
+     toward a band, since a 5:4 frame eats most of a phone screen. */
+  .chapter { padding: clamp(3.25rem, 8vh, 4.5rem) 0; }
+  /* The fine print and the pill stop sharing a line: the pill is sized by its
+     label and will not shrink, so on a phone the text beside it would be left
+     wrapping in a column a few words wide. */
+  .chapter-foot {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+    max-width: none;
+  }
+  /* The band's text now runs the full width, so its scrim can no longer clear
+     one side for the picture: it becomes an even veil, deep enough to carry the
+     words wherever the candles fall behind them. */
+  .chapter--band .chapter-body { max-width: none; margin-left: 0; }
+  .chapter--band::after,
+  .chapter--band.chapter--reverse::after {
+    background: linear-gradient(to bottom,
+      rgba(14, 11, 9, 0.90) 0%,
+      rgba(14, 11, 9, 0.82) 40%,
+      rgba(14, 11, 9, 0.86) 100%);
+  }
 }
 
 /* Rosary hero: unlike the homepage hero (which shares a row with text and so
