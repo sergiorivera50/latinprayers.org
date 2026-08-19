@@ -2692,12 +2692,17 @@ body:has(.page-band) .site-header {
      under the button would read as the section's leftovers. It also flattens
      toward a band, since a 5:4 frame eats most of a phone screen. */
   .chapter { padding: clamp(3.25rem, 8vh, 4.5rem) 0; }
-  /* The fine print and the pill stop sharing a line: the pill is sized by its
-     label and will not shrink, so on a phone the text beside it would be left
-     wrapping in a column a few words wide. */
+  /* The fine print goes entirely. On a phone it can no longer sit beside the pill
+     (which is sized by its label and will not shrink), so it would drop to a
+     full-width paragraph of its own and stop reading as fine print at all, under
+     a band that is already carrying a lead and a list. The pill is then the only
+     thing left in the row, and it takes the centre: on one narrow column a
+     left-hung button reads as a loose end, while centred it reads as the band's
+     conclusion. */
+  .chapter-meta { display: none; }
   .chapter-foot {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     gap: 1.25rem;
     max-width: none;
   }
