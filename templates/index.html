@@ -1,41 +1,29 @@
 <section class="hero" aria-labelledby="hero-title">
-  <div class="hero-text">
-    <p class="hero-kicker">Traditional Catholic Prayers</p>
-    <h1 class="hero-title" id="hero-title">Prayers in Latin</h1>
-    <p class="hero-lead">
-      Latin has been the voice of the Western Church for sixteen centuries. Come and lift up your heart in the tongue of the saints so that you too may become more like Christ.
-    </p>
-    <div class="hero-actions">
-      <a class="hero-cta" href="#prayers">Browse the prayers</a>
-      <a class="hero-link" href="/rosary/">Learn the Rosary<svg class="hero-link-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></a>
-    </div>
-  </div>
-  <figure class="hero-figure">
-    <img src="/assets/img/christ.webp" alt="Christ on the Cross (1880). Oil on canvas. Petit Palais, Paris." width="425" height="627">
-    <figcaption class="hero-figure-cry" lang="arc" aria-hidden="true">Eloi, Eloi, lema sabachthani?</figcaption>
-  </figure>
+  <img class="hero-bg" src="/assets/img/christ.webp" alt="Léon Bonnat, Christ on the Cross (1880)" width="1920" height="2736" fetchpriority="high">
+  <h1 class="hero-title" id="hero-title">Pray like a <i>Saint</i></h1>
+  <a class="hero-scroll" href="#begin" aria-label="Skip to what is here">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+  </a>
 </section>
 
-<div id="prayers" class="prayer-index">
-  <h2 class="index-title">Find any prayer</h2>
-<form class="prayer-search" role="search" hidden>
-  <label class="prayer-search-label" for="prayer-search-input">Search prayers</label>
-  <input
-    type="search"
-    id="prayer-search-input"
-    class="prayer-search-input"
-    placeholder="Search prayers by name or category…"
-    autocomplete="off"
-    spellcheck="false"
-    enterkeyhint="search"
-    aria-describedby="prayer-search-status">
-  <p class="prayer-search-status" id="prayer-search-status" role="status" aria-live="polite"></p>
-</form>
+<section class="features" id="begin" aria-label="Where to begin">
+  <article class="feature">
+    <img class="feature-img" src="/assets/img/tridentine-altar.jpg" alt="" width="1288" height="859" loading="lazy" decoding="async">
+    <div class="feature-body">
+      <p class="feature-eyebrow">The collection</p>
+      <h2 class="feature-title">Prayers in Latin</h2>
+      <p class="feature-lead">The Pater Noster, the Ave Maria, the Salve Regina and more, each in the received Latin with a faithful English translation beside it.</p>
+      <a class="feature-link" href="/prayers/">Browse the prayers<svg class="feature-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></a>
+    </div>
+  </article>
 
-{{categories}}
-</div>
-
-<section class="suggest" aria-labelledby="suggest-title">
-  <h2 class="suggest-title" id="suggest-title">Suggest a prayer</h2>
-  <p class="suggest-lead">Our collection grows prayer by prayer. If a traditional prayer you hold dear is not yet among them, send it along with its source to <a href="mailto:contact@latinprayers.org?subject=Prayer%20suggestion">contact@latinprayers.org</a>.</p>
+  <article class="feature">
+    <img class="feature-img" src="/assets/img/rosary-hand.jpg" alt="" width="1100" height="742" loading="lazy" decoding="async">
+    <div class="feature-body">
+      <p class="feature-eyebrow">Special devotion</p>
+      <h2 class="feature-title">The Holy Rosary</h2>
+      <p class="feature-lead">The fifteen mysteries as they have always been prayed, with the prayers of each decade and how to pray the whole devotion.</p>
+      <a class="feature-link" href="/rosary/">Pray the Rosary<svg class="feature-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></a>
+    </div>
+  </article>
 </section>

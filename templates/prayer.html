@@ -1,14 +1,13 @@
-<nav class="breadcrumb" aria-label="Breadcrumb">
-  <a class="backlink" href="/#prayers"><svg class="backlink-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/></svg>All prayers</a>
-</nav>
+<header class="page-band">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a class="backlink" href="/prayers/"><svg class="backlink-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/></svg>All prayers</a>
+  </nav>
+  <h1 class="prayer-title" lang="la">{{title}}</h1>
+  <p class="prayer-subtitle">{{subtitle}}</p>
+  {{description}}
+</header>
 
 <article class="prayer">
-  <header class="prayer-header">
-    <h1 class="prayer-title" lang="la">{{title}}</h1>
-    <p class="prayer-subtitle">{{subtitle}}</p>
-    {{description}}
-  </header>
-
   <div class="prayer-body" style="grid-template-rows: repeat({{stanza_rows}}, auto)">
     <section class="prayer-col prayer-latin" lang="la">
 {{latin_stanzas}}

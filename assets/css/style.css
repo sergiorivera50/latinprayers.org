@@ -85,6 +85,21 @@
 /* --------------------------------------------------------------------------- */
 /* Design tokens                                                                */
 /* --------------------------------------------------------------------------- */
+/* Cormorant Garamond italic, the one weight the family was missing here. The
+   hero title sets a word in true italic; without this the browser would
+   synthesise one — a mechanically slanted roman, which shows badly at display
+   size. Same subset split as the uprights above. */
+@font-face {
+  font-family: "Cormorant Garamond"; font-style: italic; font-weight: 600; font-display: swap;
+  src: url("/assets/fonts/cormorant-600i.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: "Cormorant Garamond"; font-style: italic; font-weight: 600; font-display: swap;
+  src: url("/assets/fonts/cormorant-600i-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+
 :root {
   /* Ink & ivory: a high-contrast warm palette. The page is a warm ivory, cards
      are near-white, text is a deep warm near-black, and gold + liturgical red
@@ -113,6 +128,10 @@
   --dark-deep:  #171715;   /* a layer below it (rails, chips) */
   --dark-gold:  #d7b264;   /* accent on the dark ground */
   --dark-line:  rgba(255, 255, 255, 0.09);
+  --masthead:   #100c0b;   /* the bar's ground on every page but the root, where
+                              it goes transparent and rides on the hero band.
+                              Deeper and warmer than --dark, so the bar reads as
+                              chrome rather than as another of the dark cards. */
 
   /* Primary button: liturgical crimson (the Passion / Sacred Heart register).
      The label is set in cream for strong contrast on its deep face. */
@@ -177,7 +196,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 .rosary-intro a,
 .rosary-steps a,
 .rosary-close-steps a,
-.suggest-lead a,
+.prayer-empty-note a,
 .prayer-source a {
   text-decoration: none;
   background-image: radial-gradient(circle, color-mix(in srgb, currentColor 60%, transparent) 0.75px, transparent 1.25px);
@@ -194,7 +213,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 .rosary-intro a:hover, .rosary-intro a:focus,
 .rosary-steps a:hover, .rosary-steps a:focus,
 .rosary-close-steps a:hover, .rosary-close-steps a:focus,
-.suggest-lead a:hover, .suggest-lead a:focus,
+.prayer-empty-note a:hover, .prayer-empty-note a:focus,
 .prayer-source a:hover, .prayer-source a:focus {
   text-decoration: none;
   background-image: linear-gradient(currentColor, currentColor);
@@ -262,9 +281,12 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   /* Not sticky: it scrolls away with the page. The translucency and blur it once
      carried existed only so content could glide beneath it — with nothing passing
      behind, an opaque bar is the honest version and one less thing to reason
-     about. Nor does it need a z-index now that it never overlaps anything. */
-  background: var(--ivory);
-  border-bottom: 1px solid var(--line);
+     about. Nor does it need a z-index now that it never overlaps anything.
+     Dark by default and light-on-dark throughout, so the root page's overlay bar
+     is the same object in a different position rather than a second design; that
+     page only turns the ground transparent (further down). */
+  background: var(--masthead);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 .site-header .wrap {
   display: flex;
@@ -286,7 +308,7 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 }
 .brand-lockup:hover, .brand-lockup:focus { text-decoration: none; }
 .brand-lockup:hover .brand-name,
-.brand-lockup:focus .brand-name { color: var(--gold-deep); }
+.brand-lockup:focus .brand-name { color: var(--dark-gold); }
 .brand-mark {
   flex: none;
   width: auto;
@@ -300,12 +322,12 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   font-size: clamp(1.4rem, 4.4vw, 1.7rem);
   line-height: 1.05;
   letter-spacing: 0.005em;
-  color: var(--ink);
+  color: var(--ivory);
   transition: color 0.15s var(--ease);
 }
 .site-motto {
   margin: 0.12rem 0 0;
-  color: var(--ink-soft);
+  color: rgba(246, 241, 231, 0.62);
   font-size: 0.84rem;
   letter-spacing: 0.005em;
 }
@@ -326,17 +348,17 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   position: relative;
   padding-bottom: 0.15rem;
 }
-.site-nav a { color: var(--ink-soft); }
+.site-nav a { color: rgba(246, 241, 231, 0.74); }
 .site-nav a::after {
   content: "";
   position: absolute;
   left: 0; right: 100%; bottom: 0;
   height: 1.5px;
-  background: var(--gold);
+  background: var(--dark-gold);
   transition: right 0.2s var(--ease);
 }
 .site-nav a:hover, .site-nav a:focus {
-  color: var(--gold-deep);
+  color: var(--dark-gold);
   text-decoration: none;
 }
 .site-nav a:hover::after, .site-nav a:focus::after { right: 0; }
@@ -351,8 +373,10 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   right: -1.1rem;
   padding: 0.1rem 0.36rem;
   border-radius: 999px;
-  background: var(--crimson);
-  color: #fffdf8;
+  /* Crimson measures 1.8:1 on this ground, under the 3:1 a badge needs; it takes
+     the same inversion the dark-ground CTAs do: near-black on gold. */
+  background: var(--dark-gold);
+  color: var(--dark-deep);
   /* The one sans face on the site: a UI badge, not liturgical text. Kept to the
      system stack so it costs no download and breaks no font doctrine. */
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
@@ -362,83 +386,376 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   line-height: 1;
 }
 
-/* --------------------------------------------------------------------------- */
-/* Main                                                                         */
-/* --------------------------------------------------------------------------- */
-.site-main { padding: 3.5rem 0 2rem; }
+/* ---- Page band: the dark opening the inner pages share with the masthead. ---
+   The bar is dark and sits in flow, so a band of the same ground directly beneath
+   it reads as one region rather than as a bar stranded on a light page — which is
+   what made the dark masthead look accidental. Below the band the page returns to
+   ivory, which is what a 34-item directory, a page of prose and the prayer leaf
+   are all drawn for. It is the grammar the homepage already uses (a dark band,
+   then paper) at the scale an inner page needs.
+   The dark palette lives HERE rather than on <body>: scoping it to the band is
+   what makes the difference between an accent and a dark-mode site. `color` is
+   re-read as well as redeclared, because it resolves on <body> and inherits down
+   as a literal — the tokens alone would leave every line in the page's dark ink
+   on the band's dark ground. */
+.page-band {
+  /* The band starts at the very top of the page and the masthead rides ON it
+     (see below), so the missal runs behind the nav exactly as the painting does
+     on the root page. Break out of .wrap so the dark spans the viewport; the
+     padding sets the content back on the page's own 57rem measure, and the top
+     padding is what clears the bar — generous enough for the taller stacked bar
+     a phone gets, since the bar's height is content-driven and cannot be known
+     here. */
+  margin: 0 calc(50% - 50vw) 3.25rem;
+  padding: 8.5rem max(1.5rem, calc(50vw - 28.5rem)) 3rem;
+  /* One height for every band, and the reason is the picture, not the layout.
+     background-size: cover scales the image to the element, so when the index's
+     band (a title and a field) and a prayer's (breadcrumb, title, subtitle,
+     description) differed in height, the crop moved and the missal appeared to
+     shift focus on every navigation. Holding the height constant holds the crop.
+     25rem clears the tallest case measured — a prayer band on a phone, where the
+     longest description wraps to three lines, comes to about 24rem — so nothing
+     overflows it and no band ever exceeds the min. The top padding is a fixed
+     8.5rem rather than a vh clamp for the same reason: anything viewport-height
+     dependent would let the two drift apart again on tall screens.
+     Anchored top, so that if a band ever did outgrow the min, it would reveal
+     more of the image downward rather than rescaling it. */
+  min-height: 25rem;
+  display: flex;
+  flex-direction: column;
+  /* Anchored to the top, not centred. Centring floated each title on however
+     much content sat beneath it, so /prayers/ (a field and a status line below
+     its heading) and /rosary/ (a subtitle) opened at different heights — 4.2rem
+     apart. Anchoring puts every band's first line at the same 8.5rem, and the
+     slack collects at the foot where it simply shows more of the picture. */
+  justify-content: flex-start;
+  /* A missal leaf behind the band, under a graded scrim. Two things come of it.
+     The band stops being a flat slab, so the meeting with the paper below reads
+     as a transition rather than as a cliff. And what shows through is an engraved
+     plate and red rubric, which is the register the whole site is written in.
+     0.86 to 0.60 is the lightest it goes, and only because the muted text is
+     lifted with it (below). The binding element is the prayer description: at
+     1.02rem it is small text held to 4.5:1, and in --ink-soft it failed at 4.0:1
+     a step earlier than everything else. Lifted it reads 4.8:1. The gradient
+     stays heaviest at the top, where the nav sits and cannot be tuned for this
+     page — it is shared with every other.
+     background-color stays under it: it is what the masthead matches, so the two
+     still meet seamlessly, and it is what shows if the image ever 404s.
+     Positioned high (15%) to sit on the engraving rather than on the display
+     type further down, which would compete with the page's own title. */
+  background-color: var(--masthead);
+  background-image:
+    linear-gradient(rgba(16, 12, 11, 0.86) 0%, rgba(16, 12, 11, 0.72) 50%, rgba(16, 12, 11, 0.60) 100%),
+    url("/assets/img/missal.jpg");
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  text-align: center;
+  color: #f2ece0;
+  --ink:        #f2ece0;
+  --ink-soft:   #b9b0a0;
+  --ink-faint:  #958d80;
+  --surface:    #221a16;
+  --surface-2:  #2a211b;
+  --line:       rgba(255, 255, 255, 0.11);
+  --line-soft:  rgba(255, 255, 255, 0.06);
+  --gold:       #e6c47b;
+  --gold-deep:  #d7b264;
+  --gold-tint:  rgba(215, 178, 100, 0.18);
+  --crimson:        #d0616a;
+  --crimson-bright: #d76e75;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 10px 30px -14px rgba(0, 0, 0, 0.8);
+}
+/* The masthead rides on the band. Taken out of flow entirely — unpositioned it
+   paints BEFORE the main content in document order, so the band's background
+   would cover the nav rather than run behind it. Absolute rather than fixed or
+   sticky, so it still scrolls away with the page. Its ground goes transparent:
+   the band's own scrim is already 0.90 at the top, which is where the nav sits,
+   so the bar needs nothing of its own (brand 14.3:1, nav links 9.0:1 worst).
+   Scoped by :has(.page-band), so only the pages that carry a band are affected. */
+body:has(.page-band) .site-main { padding-top: 0; }
+body:has(.page-band) .site-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  background: transparent;
+  border-bottom-color: transparent;
+}
 
-/* ---- Homepage hero: a horizontal split — copy and entry points on the left,
-   a framed devotional image on the right. Collapses to one centred column on
-   small screens (image first). Kept deliberately shorter than a full screen so
-   the prayer list peeks above the fold. */
+/* On a painting rather than a flat ground, the two muted elements are lifted:
+   the eyebrow from --gold-deep to --gold, the subtitle from --ink-soft to a warm
+   ivory. This is what let the scrim lighten — brightness in the type and darkness
+   in the scrim buy the same contrast, and only one of them costs the picture. */
+.page-band--rosary .rosary-eyebrow { color: var(--gold); }
+.page-band--rosary .rosary-subtitle { color: #e2dacb; }
+
+/* The Rosary opens on Veronese's Lepanto — the victory Christendom credited to
+   this devotion, and the reason Pius V set the feast the page goes on to
+   describe. It was a plate in the prose below; as the ground it does the same
+   work without asking for a second large image on the page.
+   The scrim is heavier than the missal's (0.90 against 0.90 at the top but
+   holding to 0.78 at the foot rather than easing to 0.76) because the painting
+   is the brightest of the three grounds — a heavenly vision, lit throughout,
+   where the missal is cream paper and the clasped hands are near-black.
+   0.86 to 0.58 is the lightest it goes, and getting there took brightening the
+   type as well as enlarging it: at the muted --gold-deep and --ink-soft the
+   subtitle sat on 3.0:1 and the eyebrow on 4.6:1, both exactly on the line. Lifted
+   to --gold and a warm ivory they read 5.5:1 and 4.6:1 with room to spare. One
+   step further (0.82 to 0.48) and the eyebrow fails at 4.3:1 whatever the colour.
+   It stays heaviest at the top, where the nav sits and can neither grow nor
+   brighten to compensate — it is shared with every other page.
+   Positioned at 30%, which holds Our Lady and the saints in frame rather than the
+   fleet below them. */
+.page-band--rosary {
+  background-position: center 30%;
+  background-image:
+    linear-gradient(rgba(16, 12, 11, 0.86) 0%, rgba(16, 12, 11, 0.70) 50%, rgba(16, 12, 11, 0.58) 100%),
+    url("/assets/img/lepanto.webp");
+}
+
+/* On a picture rather than a flat ground the muted elements are lifted, exactly
+   as on the Rosary's band: the backlink from --gold-deep to --gold, the subtitle
+   and description from --ink-soft to a warm ivory. Brightness in the type and
+   darkness in the scrim buy the same contrast, and only one of them costs the
+   picture. Scoped to the band, so the same elements below it are untouched. */
+.page-band .backlink { color: var(--gold); }
+.page-band .prayer-subtitle,
+.page-band .prayer-description { color: #e2dacb; }
+
+/* Making the band a flex column had a side effect worth naming: a flex item with
+   auto side-margins takes its SHRINK-TO-FIT width instead of stretching, so every
+   child written as `max-width: X; margin: 0 auto` collapsed. The search field
+   fell back to the input's intrinsic size (about twenty characters), and the
+   breadcrumb and the description quietly narrowed with it. width: 100% restores
+   the block behaviour those rules were written for; their own max-width and auto
+   margins then cap and centre them exactly as before. */
+.page-band .breadcrumb,
+.page-band .prayer-search,
+.page-band .prayer-description { width: 100%; }
+/* The band's padding is the spacing, so the children's own outer margins would
+   compound with it. */
+.page-band .breadcrumb { margin-bottom: 1.5rem; }
+.page-band .prayer-search { margin-bottom: 0; }
+/* The magnifier is a data-URI SVG with its stroke baked in, one of the few
+   colours no token reaches. Restated in the band's --ink-soft. */
+.page-band .prayer-search-input {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%23b9b0a0'%20stroke-width='2'%20stroke-linecap='round'%3E%3Ccircle%20cx='10.5'%20cy='10.5'%20r='6.5'/%3E%3Cpath%20d='M21%2021l-4.5-4.5'/%3E%3C/svg%3E");
+}
+
+/* ---- Homepage hero: a full-bleed band of the Crucifixion carrying nothing but
+   its title, with the masthead riding on it. The lede and the two calls to
+   action live in .intro below, back on the ivory page. --------------------- */
 .hero {
-  display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
+  position: relative;
+  isolation: isolate;           /* keeps the negative-z layers inside the band */
+  display: flex;
   align-items: center;
-  gap: clamp(2rem, 5vw, 4rem);
-  max-width: 62rem;
-  margin: 0 auto 4rem;
-  padding-top: 0.5rem;
+  justify-content: center;
+  text-align: center;
+  min-height: 100vh;            /* fallback for engines without the v* units */
+  min-height: 100svh;           /* small viewport height: fills the screen without
+                                   overflowing behind a phone's browser chrome, and
+                                   without the reflow 100dvh causes as it retracts */
+  /* Break out of .wrap to the viewport edges, then set the title back on the
+     page's own 57rem measure (its 60rem cap less its 1.5rem gutters). The two
+     expressions meet continuously at a 60rem viewport. The top padding is much
+     the larger of the pair, which is what biases the title below the optical
+     centre — it clears the masthead and lands the line on the darkest part of
+     the scrim rather than across the lit torso. */
+  margin: 0 calc(50% - 50vw) 4rem;
+  padding: clamp(14rem, 38vh, 26rem) max(1.5rem, calc(50vw - 34rem)) clamp(4rem, 9vh, 7rem);
+  overflow: hidden;
+  background: var(--dark);      /* stands in while the painting loads */
 }
-/* The image column is taller than the copy, so centring the text leaves it
-   sitting low against the frame. Nudge it up toward the top of the image. */
-.hero-text { position: relative; top: -1.5rem; }
-.hero-kicker {
-  margin: 0 0 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--crimson);
+/* An <img>, not a CSS background, so the preload scanner can find it: this is
+   the page's LCP element. object-position is vertical only by necessity — the
+   band is far wider than the canvas is proportionally tall, so cover never crops
+   horizontally and a horizontal value would do nothing at all. 10% puts the face
+   about a third down and keeps both pierced hands in frame. */
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 8%;
 }
+/* One vertical scrim, and it is shaped rather than merely deep. A clearing
+   through the middle where the face and hands are, which is the whole point of
+   the picture; a plateau at 0.80 through the title; then it EASES BACK to 0.58
+   before closing again at the foot.
+   That easing is the fix for the void under the title. A monotonic scrim buried
+   the lower canvas in flat black, so the space below the line read as empty —
+   because it was. Letting the painting climb back through means the space is
+   occupied by the picture itself rather than by anything added to fill it. The
+   close at the very bottom does two jobs: it gives the chevron a ground (at 0.58
+   the lit torso put it at 2.6:1 on a 1280x800 window) and it firms the cut to
+   the ivory section below. The masthead is not this layer's problem; it carries
+   its own (below). Title 11-15:1, chevron >= 3.6:1, measured across nine
+   windows, against 1.6:1 unscrimmed. */
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(to bottom,
+    rgba(14, 11, 9, 0.30) 0%,
+    rgba(14, 11, 9, 0.12) 14%,
+    rgba(14, 11, 9, 0.08) 30%,
+    rgba(14, 11, 9, 0.42) 44%,
+    rgba(14, 11, 9, 0.80) 62%,
+    rgba(14, 11, 9, 0.80) 76%,
+    rgba(14, 11, 9, 0.58) 90%,
+    rgba(14, 11, 9, 0.74) 96%,
+    rgba(14, 11, 9, 0.80) 100%);
+}
+/* Set at a measured size, and 10.5rem is the ceiling rather than a preference:
+   "Pray like a Saint" runs 1181px in this face at that size, against the 1224px
+   the band's 68rem measure allows. One step up (11rem) puts it at 1236px and the
+   line wraps. The vw term is matched to it — at 10.5vw a 1920 viewport would ask
+   for 202px and gets clamped back to 189px, so the cap is what holds on wide
+   screens and the wrap can't creep in.
+   text-wrap: balance stays as insurance: if a longer title ever does wrap, it
+   breaks evenly rather than dropping one orphaned word. */
 .hero-title {
   font-family: var(--display);
   font-weight: 600;
-  font-size: clamp(2.3rem, 4.6vw, 3.5rem);
-  line-height: 1.03;
-  letter-spacing: 0.005em;
+  font-size: clamp(3.4rem, 10.5vw, 10.5rem);
+  line-height: 0.96;
+  letter-spacing: -0.005em;
+  text-wrap: balance;
   margin: 0;
-  color: var(--ink);
+  color: var(--ivory);
   overflow-wrap: break-word;
+  /* Rises into place: the fill mode holds the from-state through the delay, so
+     there is no flash of the title at rest before it starts. */
+  animation: hero-rise 1.15s var(--ease) 0.12s both;
 }
-.hero-lead {
-  margin: 1rem 0 0;
-  max-width: 30rem;
-  color: var(--ink-soft);
-  font-size: 1.1rem;
-  line-height: 1.66;
+/* True italic, from the face committed above — the emphasis falls on "Saint",
+   the word the whole line is reaching for. */
+.hero-title i { font-style: italic; }
+@keyframes hero-rise {
+  from { opacity: 0; transform: translateY(1.4rem); }
+  to   { opacity: 1; transform: none; }
 }
-.hero-actions {
+/* A full-screen band with nothing under the title reads as an ending, not a
+   beginning: the fold gives no sign there is a page below it. The chevron is the
+   affordance for that, and it earns the space the title left. It is a real link
+   now rather than decoration, so it does the thing it promises — initSmoothScroll
+   picks it up as an in-page anchor and eases down to the cards, and with JS off
+   the href still jumps there. Sized to a 2.6rem box so the tap target clears the
+   44px minimum even though the glyph inside is smaller. */
+.hero-scroll {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(1.75rem, 4vh, 2.75rem);
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0.8rem 0.9rem;
-  margin-top: 1.7rem;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  margin-left: -1.3rem;
+  color: rgba(246, 241, 231, 0.72);
+  transition: color 0.15s var(--ease);
+  /* Two animations on two different properties, so they compose rather than the
+     later one overriding the earlier — one transform animation would cancel the
+     other. The bob runs indefinitely; hovering or focusing pauses it, which also
+     stops it drifting out from under the cursor mid-click. */
+  animation: hero-fade 0.9s var(--ease) 0.55s both,
+             hero-bob 2.6s var(--ease) 1.2s infinite;
 }
-.hero-cta {
-  display: inline-block;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  font-size: 0.72rem;
-  color: var(--btn-text);
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  border-radius: 999px;
-  padding: 0.56rem 1.25rem;
-  box-shadow: var(--shadow-sm);
-  transition: background 0.15s var(--ease), transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
-}
-.hero-cta:hover, .hero-cta:focus {
+.hero-scroll svg { width: 1.7rem; height: 1.7rem; }
+.hero-scroll:hover, .hero-scroll:focus-visible {
+  color: var(--dark-gold);
   text-decoration: none;
-  color: var(--btn-text);
-  background: var(--btn-hover);
-  transform: translateY(-1px);
+  animation-play-state: paused;
+}@keyframes hero-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes hero-bob {
+  0%, 58%, 100% { transform: translateY(0); }
+  76%           { transform: translateY(0.4rem); }
+}
+/* Motion off, but never the opacity: animation:none returns the title to its
+   at-rest state, which is fully visible. Leaving the keyframes running with a
+   0s duration would risk it painting at opacity 0. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-title, .hero-scroll { animation: none; }
+}
+
+
+/* ---- Homepage entry points. The root page carries no prayer data now — the
+   collection lives at /prayers/ — so these two cards are what it offers in its
+   place. Kept light on the ivory page: after a full-screen band of night, a
+   second dark block would give the eye nowhere to rest. ------------------- */
+.features { scroll-margin-top: 2rem; }
+.features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.75rem;
+  max-width: 58rem;
+  margin: 0 auto 3.5rem;
+}
+.feature {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;              /* clips the image into the card's corners */
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease);
+}
+/* focus-within, not just hover: the lift should follow the keyboard too. */
+.feature:hover, .feature:focus-within {
+  transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
-/* Secondary action: the outlined counterpart to .hero-cta, in the same crimson.
-   Same pill silhouette and type as the primary so the pair reads as a set. */
-.hero-link {
+.feature-img {
+  display: block;
+  width: 100%;
+  height: auto;                  /* let aspect-ratio drive height despite the
+                                    width/height attributes, which are there for
+                                    layout stability while the image loads */
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-bottom: 1px solid var(--line);
+}
+.feature-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 1.5rem 1.6rem 1.6rem;
+}
+.feature-eyebrow {
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--gold-deep);
+}
+.feature-title {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.6rem;
+  letter-spacing: 0.005em;
+  color: var(--ink);
+  margin: 0 0 0.55rem;
+}
+.feature-lead {
+  margin: 0 0 1.4rem;
+  color: var(--ink-soft);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+/* margin-top:auto pins the link to the card's foot, so the two sit on one line
+   however unevenly the leads above them run. */
+.feature-link {
+  margin-top: auto;
+  align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: 0.42rem;
@@ -448,184 +765,91 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   letter-spacing: 0.09em;
   font-size: 0.72rem;
   color: var(--btn);
-  background: transparent;
   border: 1px solid color-mix(in srgb, var(--btn) 32%, transparent);
   border-radius: 999px;
   transition: color 0.15s var(--ease), border-color 0.15s var(--ease),
     background 0.15s var(--ease), box-shadow 0.15s var(--ease);
 }
-.hero-link:hover, .hero-link:focus-visible {
+.feature-link:hover, .feature-link:focus-visible {
   color: var(--btn-hover);
   border-color: var(--btn);
-  background: var(--surface);
+  background: var(--surface-2);
   box-shadow: var(--shadow-sm);
   text-decoration: none;
 }
-/* The .backlink arrow, mirrored. Strokes in currentColor, so it shifts with
-   the label on hover. */
-.hero-link-arrow { width: 0.95em; height: 0.95em; flex: none; }
+.feature-arrow { width: 0.95em; height: 0.95em; flex: none; }
 
-/* Quick entry points to the most familiar prayers, as small chips. */
-/* Framed devotional image: a simple rounded frame lifted off the page with a
-   soft shadow. object-fit lets any 4:5 image drop in cleanly. */
-.hero-figure { margin: 0; position: relative; }
-/* The dying cry from the Cross (Mark 15:34), hidden by default. Revealed as a
-   faint overlay only on desktop pointers that can hover (see media query below). */
-.hero-figure-cry {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  margin: 0;
-  border-radius: 16px;
-  font-family: var(--display);
-  font-style: italic;
-  font-size: clamp(1.3rem, 2vw, 1.8rem);
-  line-height: 1.4;
-  text-align: center;
-  color: #fdf4e3;
-  background: rgba(20, 12, 8, 0.42);
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.5s var(--ease);
-}
-.hero-figure img {
-  display: block;
-  width: 100%;
-  height: auto;              /* let aspect-ratio drive height despite the img's
-                               width/height attributes */
-  aspect-ratio: 4 / 5;
-  object-fit: cover;
-  object-position: center 18%;
-  border-radius: 16px;
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow-lg);
-}
-/* Desktop only: fade the cry in when the figure is hovered (or focused within). */
-@media (hover: hover) and (pointer: fine) and (min-width: 48rem) {
-  .hero-figure:hover .hero-figure-cry,
-  .hero-figure:focus-within .hero-figure-cry {
-    opacity: 1;
-  }
-}
 
-/* ---- The hero in the dark: the homepage's one band of night, on the same dark
-   ground as the rosary's decade cards and devotion CTA. It is what separates the
-   marketing hero from the browse area below, which stays on ivory paper.
-   Written as an override block so the light hero rules above are never edited
-   around, exactly as .mysteries .decade-card treats the light card. ---------- */
-.hero {
-  /* Pull up through .site-main's 3.5rem top padding so the band starts flush
-     beneath the masthead instead of floating on a strip of ivory. */
-  margin-top: -3.5rem;
-  padding: 5rem 0 4.5rem;
-  background: var(--dark);
-  /* Painted edge to edge by a spread shadow rather than a negative-margin
-     breakout: box-shadow never enters layout (nor scrollable overflow), so the
-     grid keeps its 62rem measure and its auto centring, and nothing needs
-     clipping further up the tree. clip-path lets the spread escape sideways
-     while trimming it flush top and bottom. */
-  box-shadow: 0 0 0 100vmax var(--dark);
-  /* Trimmed flush top and bottom. The band must NOT reach up over the masthead
-     any more: with the header unpositioned it paints before .site-main in
-     document order, so a spread extending over it would cover the nav instead of
-     passing behind it. The masthead carries the dark itself instead. */
-  clip-path: inset(0 -100vmax);
-}
-.hero-kicker { color: var(--dark-gold); }
-.hero-title  { color: var(--ivory); }
-/* Warm off-white held back from the title, so the hierarchy survives without
-   dropping to a grey that would go murky on black (as .rosary-cta-lead). */
-.hero-lead   { color: rgba(246, 241, 231, 0.74); }
-
-/* The crimson pill inverts to near-black on gold: the only pairing that holds
-   contrast against this ground, and the same object .rosary-cta-link already is. */
-.hero-cta {
-  color: var(--dark-deep);
-  background: var(--dark-gold);
-  border-color: var(--dark-gold);
-  box-shadow: 0 8px 20px -12px rgba(215, 178, 100, 0.65);
-}
-.hero-cta:hover, .hero-cta:focus {
-  color: var(--dark-deep);
-  background: #e6c47b;
-  border-color: #e6c47b;
-  box-shadow: 0 12px 26px -12px rgba(215, 178, 100, 0.75);
-}
-/* The outlined counterpart, now drawn in the ivory the title uses. */
-.hero-link {
-  color: var(--ivory);
-  /* 0.40 is the floor that keeps the outline at 3:1 against --dark
-     (WCAG 1.4.11, non-text contrast); 0.32 measured 2.73:1. */
-  border-color: rgba(246, 241, 231, 0.40);
-}
-.hero-link:hover, .hero-link:focus-visible {
-  color: var(--dark-gold);
-  border-color: var(--dark-gold);
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: none;
-}
-/* A fillet: the ruled double border of a missal binding, drawn round the plate.
-   Inner gilt line on the image itself, a band of ground, then a second, fainter
-   rule outside it. Both rules and the gap between them are box-shadow spread
-   rings rather than extra elements, so nothing is added to the markup and
-   nothing enters layout: the ring painted in --dark IS the gap, reading as the
-   band showing between the two lines.
-   Square, not rounded. The base rule's 16px reads as a UI card, and a ruled
-   border on a folio plate has corners; a zero radius also keeps the spread rings
-   square (a radius would grow by the spread and bow the outer rule wider than
-   the inner). The outer rule is held to 0.28 so it reads as the quieter of the
-   two, the way a binding's outer fillet is always the finer line.
-   The base rule's warm hairline and page shadow are both pitched for ivory and
-   vanish on black, so both are restated here. */
-.hero-figure img {
-  border-color: rgba(215, 178, 100, 0.50);
-  border-radius: 0;
-  box-shadow:
-    0 0 0 10px var(--dark),
-    0 0 0 11px rgba(215, 178, 100, 0.28),
-    0 22px 44px -22px rgba(0, 0, 0, 0.85);
-}
-/* The hover overlay sits inside the inner rule, so it squares off to match. */
-.hero-figure-cry { border-radius: 0; }
-
-/* ---- The masthead over the hero: it simply belongs to the band. -------------
-   Solid --dark, not glass. Nothing passes behind an unpositioned header, so
-   translucency has nothing to sample and would only composite against the ivory
-   body (#454441, a mid-grey). Opaque matches the band exactly, and with the
-   hero's -3.5rem pull-up and no bottom border the two read as one dark region
-   from the top of the page down to the browse area. There is no second skin and
-   no cross-fade: once the bar scrolls away with the page, it never has to be
-   anything but this.
-   Scoped by :has(.hero), which only the homepage carries — the prayer, rosary
-   and manifesto pages keep the ivory bar. ---------------------------------- */
+/* ---- The masthead rides on the band. Taken out of flow entirely, so the
+   painting begins at the very top of the page and the nav sits over it; absolute
+   rather than fixed or sticky, so it still scrolls away with the page. The
+   scrim's top lobe is sized for exactly this, so the bar needs no ground of its
+   own. Scoped by :has(.hero), which only the homepage carries — and it now
+   overrides position and ground ONLY, because the light-on-dark colouring it
+   used to carry has become the masthead's base state. ---------------------- */
+body:has(.hero) .site-main { padding-top: 0; }
 body:has(.hero) .site-header {
-  background: var(--dark);
-  /* A hairline here would draw a seam across an otherwise continuous dark. */
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  background: transparent;
   border-bottom-color: transparent;
 }
-body:has(.hero) .brand-name { color: var(--ivory); }
-body:has(.hero) .brand-lockup:hover .brand-name,
-body:has(.hero) .brand-lockup:focus .brand-name { color: var(--dark-gold); }
-/* 6.5:1 on this ground, and a clear step below the brand name above it. */
-body:has(.hero) .site-motto { color: rgba(246, 241, 231, 0.62); }
-body:has(.hero) .site-nav a { color: rgba(246, 241, 231, 0.74); }
-body:has(.hero) .site-nav a:hover,
-body:has(.hero) .site-nav a:focus { color: var(--dark-gold); }
-body:has(.hero) .site-nav a::after { background-color: var(--dark-gold); }
-/* Crimson measures 1.83:1 against this ground (--crimson-bright only 2.21:1),
-   well under the 3:1 a badge needs. It takes the CTA's inversion: black on gold. */
-body:has(.hero) .nav-new {
-  background-color: var(--dark-gold);
-  color: var(--dark-deep);
+/* The bar carries its own scrim, and it has to: the bar's height is
+   content-driven — the nav wraps below the brand on a phone, roughly half again
+   as tall — so a fixed lobe in the band cannot know where the links will land.
+   Measured 2.4:1 that way. Drawn on a pseudo-element that hangs 4rem BELOW the
+   bar rather than as the bar's own background, because a background stops at the
+   box edge, leaving the wrapped nav row in the weak tail of the gradient; the
+   overhang keeps it strong to the bar's foot and then fades into the band's own
+   scrim with no seam. 4.7:1 at worst on a phone now. */
+body:has(.hero) .site-header::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 -4rem 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(to bottom,
+    rgba(14, 11, 9, 0.90) 0%,
+    rgba(14, 11, 9, 0.72) 55%,
+    rgba(14, 11, 9, 0) 100%);
 }
 
 /* The prayer index (search + category lists); the hero CTA scrolls here, so it
    lands with a little air above it. Stays on ivory paper: the dark hero band is
    what separates it from the marketing register. */
+/* ---- The empty list. What used to be a standing "Suggest a prayer" card at the
+   foot of the page now lives here, as the list's own empty state: when a search
+   matches nothing every category hides and this takes their place, so the
+   invitation arrives at the moment it is useful rather than sitting permanently
+   under 34 prayers that already answered the question.
+   Prose, not a panel — it occupies the space a list would, and a bordered card
+   alone in an empty column would read as a UI object rather than as an answer. */
+.prayer-empty {
+  max-width: 34rem;
+  margin: 1.5rem auto 3rem;
+  text-align: center;
+}
+.prayer-empty[hidden] { display: none; }
+.prayer-empty-line {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.5rem;
+  letter-spacing: 0.005em;
+  color: var(--ink);
+  margin: 0 0 0.7rem;
+}
+.prayer-empty-note {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 1.02rem;
+  line-height: 1.75;
+}
+.prayer-empty-note a { color: var(--ink); }
+.prayer-empty-note a:hover, .prayer-empty-note a:focus { color: var(--gold-deep); }
+
 .prayer-index { scroll-margin-top: 1.5rem; padding-top: 1rem; }
 /* Section header that separates the marketing hero from the functional browse
    area (search + category lists) and labels the hero CTA's destination. */
@@ -633,10 +857,14 @@ body:has(.hero) .nav-new {
   text-align: center;
   font-family: var(--display);
   font-weight: 600;
-  font-size: 1.9rem;
+  /* Pulled back from the .intro-title scale: at a single short word, that size
+     read as oversized. Still above the 1.9rem it carried as an <h2> section
+     heading on the old homepage, since it is now a page's <h1>. */
+  font-size: clamp(1.9rem, 3.8vw, 2.4rem);
+  line-height: 1.08;
   letter-spacing: 0.005em;
   color: var(--ink);
-  margin: 0 0 1.6rem;
+  margin: 0 0 1.8rem;
 }
 
 /* ---- Generic intro block (404 page) ---- */
@@ -788,13 +1016,78 @@ body:has(.hero) .nav-new {
   border-color: var(--gold);
   box-shadow: 0 0 0 4px var(--gold-tint), var(--shadow-sm);
 }
+/* The count is the only thing tying the field to the list it filters, so it is
+   centred under the field rather than tucked to the right in small italics.
+   Its full height is reserved whether or not anything is showing. The band
+   centres its content, so ANY change in this element's height moves the title and
+   the field as well — the line is 1.46rem and the chevron another 1.12rem, so
+   letting them appear on demand shifted the whole band by about 2.6rem.
+   nowrap and an ellipsis are part of that guarantee: the no-match message echoes
+   whatever was typed, which would otherwise wrap to a second line and shift the
+   band again on a long query. */
 .prayer-search-status {
-  margin: 0.55rem 0.4rem 0;
-  min-height: 1.05rem;
-  font-size: 0.84rem;
-  font-style: italic;
+  margin: 0.7rem 0 0;
+  min-height: 1.5rem;
+  font-size: 0.88rem;
   color: var(--ink-soft);
-  text-align: right;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* The chevron hangs off the FORM, not off the status. The status clips its
+   overflow so a long query stays on one line, and a square rotated 45deg pushes
+   its corners outside its own layout box — inside that clip they were sheared
+   off. The form is unclipped, so the diamond survives.
+   It is always laid out and only fades, for the same reason as before: toggling
+   its presence would toggle the band's height, and the band centres its content.
+   Between the two elements the reserved space is unchanged (1.5rem of line plus
+   1.12rem of chevron). Decorative — the count is already announced to screen
+   readers by the status region's aria-live. */
+.page-band .prayer-search::after {
+  content: "";
+  display: block;
+  width: 0.62rem;
+  height: 0.62rem;
+  margin: 0.5rem auto 0;
+  border-right: 1.5px solid var(--gold);
+  border-bottom: 1.5px solid var(--gold);
+  transform: rotate(45deg);
+  opacity: 0;
+  transition: opacity 0.25s var(--ease);
+}
+.page-band .prayer-search.is-filtering .prayer-search-status { color: var(--gold); }
+.page-band .prayer-search.is-filtering::after { opacity: 0.75; }
+@media (prefers-reduced-motion: reduce) {
+  .page-band .prayer-search::after { transition: none; }
+}
+/* Leaves a little air above the field when the first keystroke pulls it up. */
+.page-band .prayer-search { scroll-margin-top: 1.75rem; }
+
+/* The clear control. WebKit draws it as a fixed dark glyph that all but vanishes
+   on this field, and its colour cannot be set directly — so the native button is
+   replaced by a mask filled with currentColor, which puts it on the gold the band
+   already uses and lets it follow the token rather than a hardcoded value.
+   Blink and WebKit only; Firefox renders no clear control for type=search, and
+   Escape clears the field there (and everywhere) regardless. */
+.page-band .prayer-search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 0.85rem;
+  height: 0.85rem;
+  margin-left: 0.5rem;
+  cursor: pointer;
+  background-color: var(--gold-deep);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%23000'%20stroke-width='2.6'%20stroke-linecap='round'%3E%3Cpath%20d='M6%206l12%2012M18%206L6%2018'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%23000'%20stroke-width='2.6'%20stroke-linecap='round'%3E%3Cpath%20d='M6%206l12%2012M18%206L6%2018'/%3E%3C/svg%3E");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  transition: background-color 0.15s var(--ease);
+}
+.page-band .prayer-search-input::-webkit-search-cancel-button:hover {
+  background-color: var(--gold);
 }
 
 /* ---- Suggest a prayer ---- */
@@ -803,43 +1096,8 @@ body:has(.hero) .nav-new {
    the crimson frame and the filled button are gone: heading and note side by
    side, pitched down to a hairline on a recessed surface. The address is the
    only action, carried inline in the prose. */
-.suggest {
-  display: grid;
-  grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
-  /* centred against the note as a whole, so the heading reads as a label for
-     the block rather than as the head of its first line */
-  align-items: center;
-  gap: 0.5rem 2.5rem;
-  max-width: 46rem;
-  margin: 3.5rem auto 0;
-  padding: 1.85rem 1.9rem;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-}
-.suggest-title {
-  font-family: var(--display);
-  font-weight: 600;
-  font-size: 1.28rem;
-  letter-spacing: 0.005em;
-  color: var(--ink);
-  margin: 0;
-}
-.suggest-lead {
-  margin: 0;
-  color: var(--ink-soft);
-  font-size: 0.94rem;
-  line-height: 1.65;
-}
-.suggest-lead a { color: var(--ink); }
-.suggest-lead a:hover, .suggest-lead a:focus { color: var(--gold-deep); }
 /* Too narrow for two columns: the heading stacks above its note. */
 @media (max-width: 40rem) {
-  .suggest {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.5rem;
-    padding: 1.6rem 1.4rem;
-  }
 }
 
 /* --------------------------------------------------------------------------- */
@@ -1429,25 +1687,27 @@ body:has(.hero) .nav-new {
 /* The Rosary                                                                   */
 /* --------------------------------------------------------------------------- */
 .rosary { max-width: 50rem; margin: 0 auto; }
-.rosary-header { text-align: center; margin-bottom: 2rem; }
 .rosary-eyebrow {
-  margin: 0 0 0.85rem;
+  margin: 0 0 0.95rem;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: var(--gold-deep);
 }
 .rosary-title {
   font-family: var(--display);
   font-weight: 600;
-  font-size: clamp(2.3rem, 6vw, 3.8rem);
+  font-size: clamp(2.7rem, 7vw, 4.6rem);
   line-height: 1.04;
   letter-spacing: 0.005em;
   margin: 0;
   overflow-wrap: break-word;
 }
-.rosary-subtitle { margin: 0.5rem 0 0; color: var(--ink-soft); font-style: italic; font-size: 1.15rem; }
+/* 1.45rem is 26px at the root size, which puts it over WCAG's 24px large-text
+   threshold — so it is held to 3:1 rather than 4.5:1. That is what let the band's
+   scrim lighten: the type growing is what paid for the picture showing. */
+.rosary-subtitle { margin: 0.6rem 0 0; color: var(--ink-soft); font-style: italic; font-size: 1.45rem; }
 
 /* Hero band: a wide devotional image between the title and the intro prose,
    reusing the .ph-figure treatment (cover-fit, bordered, rounded). */
@@ -1523,7 +1783,11 @@ body:has(.hero) .nav-new {
 .mysteries { max-width: 50rem; margin: 0 auto 3rem; }
 .mysteries-lead {
   max-width: 40rem;
-  margin: 0 auto 1.75rem;
+  /* Set the panels apart from the section's heading and standfirst. 1.75rem left
+     the tabs reading as a third line of the intro rather than as the start of the
+     content; the gap now clearly exceeds the 1.5rem between the heading and this
+     paragraph, so the two group together and the content reads as separate. */
+  margin: 0 auto 3.25rem;
   text-align: center;
   color: var(--ink-soft);
   font-size: 1.04rem;
@@ -1880,33 +2144,50 @@ body:has(.hero) .nav-new {
 .mysteries .mystery-fruit { color: var(--dark-gold); }
 .mysteries .mystery-med { color: rgba(246, 241, 231, 0.78); }
 
-/* The painting dissolves into the card at the inner edge, as the photograph
-   does in the devotion card: a blurred, darkening band in place of a hard seam.
-   Stacked layout first, so the fade runs down into the text; the desktop rule
-   below turns it on its side. */
-.mysteries .decade-figure { position: relative; }
-.mysteries .decade-figure::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 0 0;
-  height: 34%;
-  background: linear-gradient(to bottom, transparent, var(--dark) 94%);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-  /* the frost itself fades in, so the blur begins gradually rather than at a
-     visible line partway across the picture */
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 62%);
-  mask-image: linear-gradient(to bottom, transparent, #000 62%);
-  pointer-events: none;
+/* The painting dissolves into the page at its inner edge. The figure itself is
+   MASKED rather than having a blurred, darkening band painted over it, which is
+   what this was before. Three things follow from the change: the blur goes, and
+   with it the smeared inner edge; the picture fades to real transparency, so
+   whatever sits behind shows through — including the page's fixed pool of light,
+   which an opaque band could never participate in; and the dissolve no longer
+   has to know the ground's colour, so it stays correct if the theme is reverted
+   and the cards go back to being dark cards on ivory.
+   Masking the figure and not the <img> takes its faint tint with it, so the two
+   fade as one object instead of the tint outliving the picture.
+   Stacked layout first, where the fade runs down into the text; the desktop rule
+   below turns it on its side. Both spans mirror the band they replace. */
+.mysteries .decade-figure {
+  position: relative;
+  -webkit-mask-image: linear-gradient(to bottom, #000 66%, transparent 99%);
+  mask-image: linear-gradient(to bottom, #000 66%, transparent 99%);
 }
 @media (min-width: 44rem) {
-  .mysteries .decade-figure::after {
-    inset: 0 0 0 auto;
-    width: 26%;
-    height: auto;
-    background: linear-gradient(to right, transparent, var(--dark) 94%);
-    -webkit-mask-image: linear-gradient(to right, transparent, #000 62%);
-    mask-image: linear-gradient(to right, transparent, #000 62%);
+  /* A softly rounded vignette: the picture sits on the page as a form with no
+     corners rather than as a cropped rectangle.
+     Three layers intersected. The two linears carry the edges to nothing, and
+     the radial is what rounds it — an ellipse a little wider than the box, so it
+     bites hard at the corners and only lightly at the mid-edges. Slightly
+     rounded, not circular: sizing the ellipse to reach zero at the mid-edges
+     would inscribe it in the box and turn the picture into a full oval.
+     The linears also run wider than they did (22%/30% across, 18% down, against
+     16%/25% and 12%). That is the half that actually reads: the narrow spans left
+     a hard rectangular plateau across the middle, so the shape stayed square
+     however round its corners measured.
+     mask-composite matters — mask layers ADD by default, so each gradient would
+     reveal what the others hide and the vignette would vanish. It is given twice:
+     the standard keyword, and WebKit's older source-in, which is what Safari
+     understood before it took the spec syntax. */
+  .mysteries .decade-figure {
+    -webkit-mask-image:
+      linear-gradient(to right, transparent 0%, #000 22%, #000 70%, transparent 100%),
+      linear-gradient(to bottom, transparent 0%, #000 18%, #000 82%, transparent 100%),
+      radial-gradient(ellipse 82% 82% at 50% 50%, #000 46%, transparent 100%);
+    mask-image:
+      linear-gradient(to right, transparent 0%, #000 22%, #000 70%, transparent 100%),
+      linear-gradient(to bottom, transparent 0%, #000 18%, #000 82%, transparent 100%),
+      radial-gradient(ellipse 82% 82% at 50% 50%, #000 46%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
   }
 }
 
@@ -2101,22 +2382,35 @@ body:has(.hero) .nav-new {
 /* --------------------------------------------------------------------------- */
 /* Responsive                                                                   */
 /* --------------------------------------------------------------------------- */
-/* Collapse the split hero to one centred column, image first. */
+/* The hero band on a phone. Here the band approaches the canvas's own
+   proportions, so cover barely crops at all and the whole figure fills the frame
+   (past a 1.43 aspect — a 390x560 viewport and taller — it flips to cropping
+   horizontally instead). The title needs more ground under it than on the wide
+   band, since the figure now occupies the full width, so the foot comes up
+   earlier and deeper. */
 @media (max-width: 48rem) {
-  .hero {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-    text-align: center;
-    max-width: 34rem;
-    /* less air on a phone; the pull-up under the masthead still applies */
-    padding: 3.25rem 0 3rem;
+  /* min-height is inherited from the base rule — the band is full-screen here too. */
+  .hero { padding: clamp(7rem, 18vh, 11rem) 1.5rem clamp(3rem, 8vh, 5rem); }
+  .hero-bg { object-position: center 16%; }
+  .hero::after {
+    background: linear-gradient(to bottom,
+      rgba(14, 11, 9, 0.30) 0%,
+      rgba(14, 11, 9, 0.16) 18%,
+      rgba(14, 11, 9, 0.16) 32%,
+      rgba(14, 11, 9, 0.56) 48%,
+      rgba(14, 11, 9, 0.86) 70%,
+      rgba(14, 11, 9, 0.62) 88%,
+      rgba(14, 11, 9, 0.78) 96%,
+      rgba(14, 11, 9, 0.84) 100%);
   }
-  .hero-text { top: 0; }
-  .hero-lead { margin-left: auto; margin-right: auto; }
-  .hero-actions { justify-content: center; }
-  .hero-figure { order: -1; max-width: 17rem; margin: 0 auto; }
-  /* shorter on phones: a square crop anchored to the top trims the lower body */
-  .hero-figure img { aspect-ratio: 1 / 1; object-position: center top; }
+  /* Deliberately large enough to wrap. On a phone the line has room to spare on
+     two lines (275px of a 312px measure even at 5rem), so holding it to one line
+     was wasting the width: this sets ~4.2rem on a 390px screen against the ~2.9rem
+     a single line allowed. text-wrap: balance on the base rule splits it evenly
+     rather than orphaning "Saint". Measured 4.9:1 worst-case where large text
+     needs 3.0, so the scrim carries it unchanged. */
+  .hero-title { font-size: clamp(3.4rem, 17vw, 5rem); }
+  .features { grid-template-columns: 1fr; gap: 1.5rem; }
 }
 
 /* Rosary hero: unlike the homepage hero (which shares a row with text and so
@@ -2219,7 +2513,7 @@ body:has(.hero) .nav-new {
 /* --------------------------------------------------------------------------- */
 @media print {
   body { background: #fff; color: #000; }
-  .site-header, .site-footer, .breadcrumb, .skip-link, .suggest, .prayer-search { display: none; }
+  .site-header, .site-footer, .breadcrumb, .skip-link, .prayer-empty, .prayer-search { display: none; }
   .prayer-body { border: none; box-shadow: none; padding: 0; background-image: none; }
   .prayer-body::before, .prayer-body::after, .prayer-english::after { display: none; }
 }

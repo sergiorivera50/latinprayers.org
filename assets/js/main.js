@@ -20,6 +20,8 @@
     var sections = Array.prototype.slice.call(
       document.querySelectorAll(".category")
     );
+    var index = document.getElementById("prayers");
+    var empty = document.querySelector(".prayer-empty");
     if (!cards.length) return;
 
     // Reveal the search now that the enhancement is active.
@@ -48,17 +50,49 @@
         );
       });
 
+      // "Showing" carries the point that a list is being filtered — the
+      // connection the layout cannot make on its own, since the field is in the
+      // dark band and the list it filters is in the section below. The total is
+      // left out: it dates as the collection grows, and a small number beside
+      // the result undersells a collection that is still being added to.
       if (!tokens.length) {
         status.textContent = "";
       } else if (visible === 0) {
         status.textContent = "No prayers match “" + input.value.trim() + "”.";
       } else {
         status.textContent =
-          visible + (visible === 1 ? " prayer" : " prayers") + " found.";
+          "Showing " + visible + (visible === 1 ? " prayer" : " prayers");
       }
+      form.classList.toggle("is-filtering", tokens.length > 0);
+
+      // With every category hidden there is nothing between the field and the
+      // closing note, so the note becomes the answer to the failed search. This
+      // says so in words first, and pulls the two together into one message.
+      var none = tokens.length > 0 && visible === 0;
+      if (empty) empty.hidden = !none;
+      if (index) index.classList.toggle("is-empty", none);
     }
 
-    input.addEventListener("input", apply);
+    // The list often starts at or below the fold, so the first keystroke changes
+    // something nobody can see. Pull the field to the top of the viewport once,
+    // which brings the results up under it. Once only, and never when the list is
+    // already in view, so it cannot fight the reader's own scrolling.
+    var revealed = false;
+    function reveal() {
+      if (revealed) return;
+      var list = document.getElementById("prayers");
+      if (!list || !input.value.trim()) return;
+      revealed = true;
+      if (list.getBoundingClientRect().top < window.innerHeight * 0.75) return;
+      var reduce = window.matchMedia &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      form.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    }
+
+    input.addEventListener("input", function () {
+      apply();
+      reveal();
+    });
     input.addEventListener("keydown", function (e) {
       if (e.key === "Escape" && input.value) {
         input.value = "";

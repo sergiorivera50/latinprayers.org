@@ -149,10 +149,17 @@ def head_extra(path: str | None) -> str:
     marked noindex with no canonical."""
     if path is None:
         return '  <meta name="robots" content="noindex">'
-    return (
+    out = (
         f'  <link rel="canonical" href="{BASE_URL + path}">\n'
         f"  {site_jsonld()}"
     )
+    if path == "/":
+        # The display italic is used by one element on one page (the word set in
+        # the hero title), so it is preloaded here rather than in base.html,
+        # which would put it on every other page's critical path for nothing.
+        out = ('  <link rel="preload" as="font" type="font/woff2" '
+               'href="/assets/fonts/cormorant-600i.woff2" crossorigin>\n') + out
+    return out
 
 
 def write_robots(dist: Path) -> None:
@@ -169,11 +176,11 @@ def write_robots(dist: Path) -> None:
 
 
 def write_sitemap(prayers: list[dict], dist: Path) -> None:
-    """Write sitemap.xml covering the homepage, every prayer, and any standalone
-    page. lastmod is the build date for now; a per-prayer date can replace it
-    later."""
+    """Write sitemap.xml covering the homepage, the prayer index, every prayer,
+    and any standalone page. lastmod is the build date for now; a per-prayer date
+    can replace it later."""
     today = datetime.date.today().isoformat()
-    paths = ["/"]
+    paths = ["/", "/prayers/"]
     paths += [f"/prayers/{p['id']}/" for p in prayers]
     paths += [f"/{slug}/" for slug, _, _ in STANDALONE_PAGES]
     paths.append("/rosary/")
@@ -465,7 +472,24 @@ def build_prayer_page(
     )
 
 
-def build_index_page(
+def build_home_page(base_tpl: str, index_tpl: str) -> str:
+    """The root page: the hero band and the entry-point cards. It holds no prayer
+    data of its own — the collection lives at /prayers/ (build_prayers_page)."""
+    return render(
+        base_tpl,
+        page_title="Traditional Catholic Prayers in Latin",
+        page_description=(
+            "Traditional Catholic prayers in Latin with faithful English "
+            "translations, and the fifteen mysteries of the Holy Rosary. "
+            "In the defense of Tradition and the Tridentine Mass."
+        ),
+        content=index_tpl,
+        year=BUILD_YEAR,
+        head_extra=head_extra("/"),
+    )
+
+
+def build_prayers_page(
     prayers: list[dict], base_tpl: str, index_tpl: str, descriptions: dict[str, str]
 ) -> str:
     # Group by category, preserving first-seen category order; sort within by order.
@@ -513,7 +537,7 @@ def build_index_page(
         ),
         content=content,
         year=BUILD_YEAR,
-        head_extra=head_extra("/"),
+        head_extra=head_extra("/prayers/"),
     )
 
 
@@ -722,6 +746,7 @@ def build() -> int:
     base_tpl = load_template("base.html")
     prayer_tpl = load_template("prayer.html")
     index_tpl = load_template("index.html")
+    prayers_tpl = load_template("prayers.html")
     rosary_tpl = load_template("rosary.html")
 
     # Start from a clean, self-contained output directory.
@@ -751,12 +776,21 @@ def build() -> int:
         )
         print(f"  wrote {out.relative_to(ROOT)}")
 
-    # Render the homepage.
-    index_out = DIST_DIR / "index.html"
-    index_out.write_text(
-        build_index_page(prayers, base_tpl, index_tpl, category_descriptions),
+    # The prayer index, at /prayers/. It shares the directory the individual
+    # prayer pages are written into above, which is why this comes after them:
+    # dist/prayers/index.html sits alongside dist/prayers/<id>/index.html and the
+    # two never collide, since one is a file and the others are directories.
+    prayers_out.mkdir(parents=True, exist_ok=True)
+    prayers_index = prayers_out / "index.html"
+    prayers_index.write_text(
+        build_prayers_page(prayers, base_tpl, prayers_tpl, category_descriptions),
         encoding="utf-8",
     )
+    print(f"  wrote {prayers_index.relative_to(ROOT)}")
+
+    # Render the homepage.
+    index_out = DIST_DIR / "index.html"
+    index_out.write_text(build_home_page(base_tpl, index_tpl), encoding="utf-8")
     print(f"  wrote {index_out.relative_to(ROOT)}")
 
     # Render standalone pages (content held directly in their templates).
@@ -813,7 +847,8 @@ def main() -> None:
     if "--check" in sys.argv[1:]:
         prayers = load_prayers()
         mysteries = load_mysteries()
-        templates = ["base.html", "prayer.html", "index.html", "404.html", "rosary.html"]
+        templates = ["base.html", "prayer.html", "index.html", "prayers.html",
+                     "404.html", "rosary.html"]
         templates += [f"{slug}.html" for slug, _, _ in STANDALONE_PAGES]
         for name in templates:
             load_template(name)

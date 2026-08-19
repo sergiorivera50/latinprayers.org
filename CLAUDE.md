@@ -69,7 +69,8 @@ on every push by GitHub Actions and published from the `dist/` artifact.
 │   └── categories.csv    # optional one-line blurb per homepage category
 ├── templates/
 │   ├── base.html         # outer HTML shell (header, footer, <head>)
-│   ├── index.html        # homepage content block
+│   ├── index.html        # the root landing page (hero + entry-point cards)
+│   ├── prayers.html      # the prayer index (search + category lists) at /prayers/
 │   └── prayer.html       # single-prayer content block
 ├── assets/
 │   ├── css/style.css     # hand-authored styles
@@ -220,6 +221,28 @@ build.py` and publishes the `dist/` artifact to GitHub Pages. `CNAME` (copied in
 **One-time setup required:** in repo *Settings → Pages*, set **Source = "GitHub
 Actions"** (not "Deploy from a branch"). DNS is configured at Cloudflare (apex
 `A`/`AAAA` records to GitHub Pages IPs, `www` `CNAME` to `<user>.github.io`).
+
+## Page structure: the root page is a landing page, not the index
+
+**The prayer index lives at `/prayers/`, not at `/`.** This was a deliberate
+split, so it does not need re-deciding:
+
+- **`/`** (`templates/index.html`) is a landing page: a full-screen hero band of
+  the Crucifixion carrying only its title, then `.features`, a grid of
+  entry-point cards (one per section of the site). It holds **no prayer data**.
+  More featured content is intended to join the cards there.
+- **`/prayers/`** (`templates/prayers.html`) is the collection: the `<h1>`, the
+  optional search field, and the category lists. `build.py` writes it to
+  `dist/prayers/index.html`, which sits alongside the individual
+  `dist/prayers/<id>/index.html` directories without colliding.
+- The primary nav's "Prayers" link therefore points at `/prayers/`, and the
+  brand lockup is what returns you to `/`.
+
+Two consequences worth knowing. The masthead is styled by `body:has(.hero)`,
+which **only the root page matches** — it alone gets the transparent overlay nav
+sitting on the band; every other page keeps the ivory bar. And `build_home_page`
+and `build_prayers_page` are separate functions in `build.py` with separate
+titles, descriptions and canonicals.
 
 ## Conventions
 

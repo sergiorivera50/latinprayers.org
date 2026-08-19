@@ -1,0 +1,24 @@
+<header class="page-band">
+  <h1 class="index-title">Find any prayer</h1>
+<form class="prayer-search" role="search" hidden>
+  <label class="prayer-search-label" for="prayer-search-input">Search prayers</label>
+  <input
+    type="search"
+    id="prayer-search-input"
+    class="prayer-search-input"
+    placeholder="Search prayers by name or category…"
+    autocomplete="off"
+    spellcheck="false"
+    enterkeyhint="search"
+    aria-describedby="prayer-search-status">
+  <p class="prayer-search-status" id="prayer-search-status" role="status" aria-live="polite"></p>
+</form>
+</header>
+
+<div id="prayers" class="prayer-index">
+{{categories}}
+  <div class="prayer-empty" hidden>
+    <p class="prayer-empty-line">No prayer here by that name, yet.</p>
+    <p class="prayer-empty-note">Our collection grows prayer by prayer. If a traditional prayer you hold dear is not yet among them, send it along with its source to <a href="mailto:contact@latinprayers.org?subject=Prayer%20suggestion">contact@latinprayers.org</a>.</p>
+  </div>
+</div>
