@@ -1,6 +1,9 @@
 # Generated site output — built by build.py, published by CI, never committed.
 dist/
 
+# Timestamped copies the local Prayer Studio takes before each save.
+data/.studio-backups/
+
 # Python
 __pycache__/
 *.pyc

@@ -76,8 +76,13 @@ on every push by GitHub Actions and published from the `dist/` artifact.
 │   ├── css/style.css     # hand-authored styles
 │   ├── fonts/            # self-hosted woff2 (Cormorant Garamond, EB Garamond)
 │   └── js/main.js        # hand-authored, minimal, optional-enhancement only
+├── studio/               # LOCAL-ONLY prayer editor UI (never published)
+│   ├── index.html
+│   ├── studio.css
+│   └── studio.js
 ├── build.py              # the generator (stdlib only) — emits dist/
 ├── serve.py              # local dev server: build + serve dist/ (stdlib only)
+├── studio.py             # the editor's backend, mounted by serve.py --studio
 ├── dist/                 # GENERATED output, gitignored — the published site
 ├── .github/workflows/
 │   └── deploy.yml        # CI: build on push to main, deploy dist/ to Pages
@@ -164,6 +169,7 @@ python3 build.py --check  # validate data + templates only, write nothing
 python3 serve.py          # build once, then serve dist/ at http://localhost:8000
 python3 serve.py --watch  # also rebuild automatically when source files change
 python3 serve.py --port 8080
+python3 serve.py --no-studio  # leave the prayer editor unmounted (it is on by default)
 ```
 
 `build.py` reads `data/prayers.csv`, validates every row, and renders the static
@@ -202,15 +208,124 @@ wording with small, targeted questions (one or two short prayers at a time), or 
 asking it to confirm and correct a text you supply, rather than asking it to
 reproduce a whole page.
 
-## Standalone pages (e.g. the Manifesto)
+## Prayer Studio: the local-only editor at `/_studio/`
 
-Pages that aren't prayers (Manifesto, and later About/etc.) are plain content
-templates rendered through `base.html`. To add one: create `templates/<slug>.html`
-holding the content block, then register it in the `STANDALONE_PAGES` tuple in
-`build.py` as `(slug, title, description)`. It is emitted to `dist/<slug>/index.html`
-and served at the clean URL `/<slug>/`. Link to it with an absolute path
-(`/<slug>/`). Image placeholders use `<div class="placeholder">` with a fixed
-`aspect-ratio`; replace each with an `<img>` (in `assets/img/`) when the art exists.
+`python3 serve.py` mounts a small editor for `data/prayers.csv` at
+`http://127.0.0.1:8000/_studio/`. **It is on by default**, because a local dev
+server for this site is a thing you run in order to work on the content, and
+having to remember a flag for the tool you came for is friction with no safety
+value (the safety is the bind address, not the flag). `--no-studio` turns it off;
+so does binding anywhere but loopback, which is left working rather than refused
+so that `--host 0.0.0.0` for checking the site on a phone still does what it
+always did.
+
+It is a convenience for the maintainer, not a CMS, and **it changes nothing about
+how the site is built or published.** The CSV remains the source of truth; the
+studio is one more way to edit it, alongside Excel and a text editor. Prefer it
+for single-row work (fixing a translation, correcting a source URL, adding a
+prayer); the CSV is still the right tool for sweeping changes.
+
+**It cannot reach the published site, by construction.** `build.py` copies exactly
+three things into `dist/` (`assets/`, `CNAME`, `.nojekyll`); the studio's markup
+lives in `studio/` at the repo root, outside `assets/`, and `build.py` contains no
+reference to it at all. The dependency runs one way (`studio.py` imports `build`,
+never the reverse), so there is no guard to maintain and nothing to forget. The
+handler also rejects any request whose client is not `127.0.0.1`/`::1`.
+
+**The badge on locally served pages is injected, not built.** The prayer routes,
+and only those, get a small tab in the **bottom-left** corner: `/prayers/<slug>/`
+links to that prayer's own editor (`/_studio/#<slug>`, so spotting a typo while
+reading and fixing it are one click apart) and `/prayers/` links to the studio's
+index. `STUDIO_ROUTE_RE` is the whole rule. The landing page, the Rosary and the
+404 carry nothing, because the studio edits prayers and a permanent ornament with
+nothing behind it is worse than no affordance; bottom-left because bottom-right is
+where a reader's scrollbar and thumb already are. `StudioHandler._site_page`
+resolves the request to its built `.html` file and `inject_badge` slips the markup
+in before `</body>` on the way out; anything that is not a plain HTML hit (an
+asset, a directory still owed its 301, a miss) is handed straight back to
+`SimpleHTTPRequestHandler`. **The files in `dist/` never contain it**, so there is
+nothing to strip before publishing. The alternative, a `location.hostname` check
+in `main.js`, was rejected: it would ship dev tooling to every visitor to do
+nothing.
+
+**The client is never trusted with the corpus.** The browser sends one row and one
+operation (`create` / `update` / `delete`); the server re-reads the CSV from disk,
+applies that single change, and writes the whole file back. A stale tab therefore
+cannot clobber the other prayers, and renaming a slug is an ordinary `update`
+rather than a delete-and-create.
+
+**The round-trip is byte-exact, and that is load-bearing.** Reading
+`data/prayers.csv` with `csv.DictReader` and writing it straight back with
+`csv.DictWriter(fieldnames=…, lineterminator="\n")` reproduces the file
+byte-for-byte (verified against the live file; the `lineterminator` matters, since
+`csv` defaults to `\r\n`). That is what keeps a one-field edit to a one-line git
+diff instead of re-quoting all 34 prayers. **If you change how the studio writes
+the CSV, re-verify this property first** — losing it does not break the site, but
+it destroys the reviewability of every future commit to the data file.
+
+**Errors block a save; warnings never do.** The errors are exactly what
+`build.py`'s `load_prayers()` would refuse (missing required column, duplicate
+slug, non-integer `order`) plus the slug's kebab-case shape, since the slug
+becomes a URL. Everything else is a warning shown beside the field and in the save
+dialog, and the maintainer is free to save anyway: `la`/`en` stanza and line-count
+mismatches, an em-dash in authored prose, a category with no row in
+`categories.csv`, an `order` collision within a category, a `source` with no
+`source_url`, a missing `description` or `context`. **The studio never makes a
+doctrinal or editorial judgement; it only points.** `check_row()` in `studio.py`
+imports `build._split_stanzas` rather than copying it, because the studio's idea of
+a stanza must be the site's idea of a stanza or the warnings lie.
+
+**Every save is reviewed before it is written, field by field.** Pressing save
+runs the same code path as the write, without the write, and shows what would
+change. A whole prayer is a single CSV line, so a line diff of the file can only
+say *this prayer changed* and leaves you to find the difference by eye across a
+hundred characters of Latin; `field_changes()` therefore diffs the row column by
+column, and within a column word by word (`_word_parts`, split on words because a
+character diff of Latin picks out single letters and reads as noise). Multi-line
+cells get a line diff with two lines of context, unchanged runs collapsed to a
+gap, and equal-length replacements paired up and word-diffed, which is what a
+reworded line of a translation actually looks like. The raw unified diff of the
+CSV is still produced and still shown, folded into a `<details>`: it is the
+literal bytes about to be written, and the field view is a reading of it, so the
+readable view can never quietly disagree with the file. Confirming writes atomically (`tempfile` + `os.replace`, so a
+crash cannot truncate the file) after copying the current file into
+`data/.studio-backups/` (gitignored, last 20 kept, millisecond-stamped because two
+saves inside one second are ordinary). Those backups are a convenience for the
+minutes before a commit; **git is the real undo**, and the studio does not stage,
+commit, or push anything. A save that would change nothing writes nothing.
+
+Saving rebuilds the site and reports the result, so the rendered page is correct
+by the time the toast appears. `build.fail()` calls `sys.exit`, so both `rebuild()`
+here and `safe_build()` in `serve.py` catch `SystemExit` and turn it into a
+message. Both take `studio.BUILD_LOCK` first, because a `--watch` rebuild and a
+studio save can land together and `build()` wipes `dist/` before writing it.
+
+The open prayer lives in the URL hash, so a reload keeps your place and the badge
+on a prayer page lands in the right editor.
+
+Deliberately absent, and not oversights: no editing of `mysteries.csv` or
+`categories.csv` (rarely touched, and the CSVs are fine for fifteen fixed rows),
+no git integration, no undo stack, no reordering by drag, no auth (loopback is the
+auth), no rendered preview of the prayer page (the site itself is one click away,
+rebuilds on save, and now carries a link back).
+
+## Standalone pages (e.g. a future About page)
+
+Pages that aren't prayers are plain content templates rendered through
+`base.html`. To add one: create `templates/<slug>.html` holding the content block,
+then register it in the `STANDALONE_PAGES` tuple in `build.py` as
+`(slug, title, description)`. It is emitted to `dist/<slug>/index.html` and served
+at the clean URL `/<slug>/`. Link to it with an absolute path (`/<slug>/`).
+
+**`STANDALONE_PAGES` is currently empty.** The Manifesto was the only one, and it
+has been removed: the route is not coming back, so `templates/manifesto.html` and
+its CSS are gone rather than left commented out. The machinery stays, because the
+SEO plan calls for an About page and this is how it will be built. One thing
+survived the removal and is worth knowing about: the base `.placeholder` rules
+(the dashed-gold stand-in for missing art) were defined inside the Manifesto's CSS
+block but are used by the Rosary's decade figures, so they were kept and moved to
+their own section. `build.py` emits `<div class="placeholder">` for any mystery
+with no image in `assets/img/mysteries/`.
 
 ## Deployment
 

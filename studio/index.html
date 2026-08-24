@@ -1,0 +1,81 @@
+<!doctype html>
+<!--
+  Prayer Studio — the local-only editor for data/prayers.csv.
+  Served by serve.py --studio at http://127.0.0.1:8000/_studio/.
+  This file is never copied into dist/ and never published. Deliberately plain:
+  it is a tool, not part of the site, and shares none of its styling.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Prayer Studio · latinprayers.org</title>
+<link rel="stylesheet" href="/_studio/studio.css">
+</head>
+<body>
+
+<header class="topbar">
+  <span class="brand">Prayer&nbsp;Studio</span>
+  <span class="tag">local only</span>
+  <code class="file" id="data-file">data/prayers.csv</code>
+  <span class="spacer"></span>
+  <span class="toast" id="toast" hidden></span>
+  <button type="button" class="btn" id="rebuild">Rebuild site</button>
+  <a class="btn" href="/" target="_blank" rel="noopener">Open site</a>
+</header>
+
+<main id="view-list" class="view">
+  <div class="toolbar">
+    <input type="search" id="search" class="input search" placeholder="Search slug, title, English name…" autocomplete="off">
+    <select id="filter-category" class="input"><option value="">All categories</option></select>
+    <select id="filter-status" class="input">
+      <option value="">All rows</option>
+      <option value="errors">Errors only</option>
+      <option value="warnings">Warnings only</option>
+    </select>
+    <span class="spacer"></span>
+    <span class="count" id="count"></span>
+    <button type="button" class="btn btn-primary" id="new-prayer">New prayer</button>
+  </div>
+
+  <div class="table-wrap">
+    <table class="grid">
+      <thead>
+        <tr>
+          <th data-sort="slug" class="sortable">Slug</th>
+          <th data-sort="title" class="sortable">Latin title</th>
+          <th data-sort="subtitle" class="sortable">English name</th>
+          <th data-sort="category" class="sortable">Category</th>
+          <th data-sort="order" class="sortable num">Order</th>
+          <th data-sort="source" class="sortable">Source</th>
+          <th data-sort="status" class="sortable">Checks</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p class="empty" id="empty" hidden>No prayers match those filters.</p>
+  </div>
+</main>
+
+<main id="view-edit" class="view" hidden></main>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+    <header class="dialog-head">
+      <h2 id="dialog-title">Review changes</h2>
+      <button type="button" class="icon" id="dialog-close" aria-label="Close">&times;</button>
+    </header>
+    <div class="dialog-body" id="dialog-body"></div>
+    <footer class="dialog-foot">
+      <span class="dialog-note" id="dialog-note"></span>
+      <span class="spacer"></span>
+      <button type="button" class="btn" id="dialog-cancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="dialog-confirm">Save to CSV</button>
+    </footer>
+  </div>
+</div>
+
+<script src="/_studio/studio.js"></script>
+</body>
+</html>

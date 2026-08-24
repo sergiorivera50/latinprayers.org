@@ -201,8 +201,9 @@ hard part (authentic texts, cited sources). It should now make authority legible
 
 - **Publish an About page** (mission, the editorial doctrine in reader-facing
   form, how texts are sourced and vetted, who maintains the site, how to make
-  corrections). The Manifesto is intentionally hidden and is a different artifact;
-  About is a calmer, evergreen trust page. Register it via `STANDALONE_PAGES`.
+  corrections). Register it via `STANDALONE_PAGES`. (This originally noted that
+  the Manifesto was a different, intentionally hidden artifact; that page has
+  since been removed altogether, so About would be the first standalone page.)
 - **Machine-readable publisher identity** via the `Organization` JSON-LD above,
   plus a stable logo.
 - **Keep and strengthen source citations** (already present). Consider citing

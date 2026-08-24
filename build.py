@@ -68,17 +68,10 @@ ORDINAL = {1: "First", 2: "Second", 3: "Third", 4: "Fourth", 5: "Fifth"}
 
 # Standalone pages: (url slug / template stem, <title>, meta description).
 # Each renders templates/<slug>.html into dist/<slug>/index.html at /<slug>/.
-STANDALONE_PAGES = (
-    # Manifesto is written but not yet publishing-ready (WIP): its source stays
-    # in templates/manifesto.html, but it is neither built nor linked. To
-    # publish, uncomment this entry and restore the nav link in base.html.
-    # (
-    #     "manifesto",
-    #     "Manifesto",
-    #     "The manifesto of latinprayers.org: in the defense of Tradition, the "
-    #     "Tridentine Mass, and Catholic living.",
-    # ),
-)
+# Content pages that are not prayers, as (slug, title, description). Each needs a
+# templates/<slug>.html holding its content block; it is emitted to /<slug>/.
+# Empty for now: the Manifesto lived here and has been removed.
+STANDALONE_PAGES: tuple[tuple[str, str, str], ...] = ()
 
 
 # --------------------------------------------------------------------------- #
