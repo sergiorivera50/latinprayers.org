@@ -620,8 +620,36 @@
     var hero = document.querySelector(".hero-title");
     var heroFree = false;
     var shown = [];
+    var slack = [];
+    var measuredH = 0;    // the viewport the slack was measured against: both
+    var measuredW = 0;    // axes, since the title's wrap moves its centre too
     var queued = false;
     var cleared = false;
+
+    // Where a block SITS when its own band is squared up to the screen, measured
+    // as the gap that position already carries — and it is not always nothing.
+    // The hero centres its title in a deliberately lopsided box (a great deal of
+    // padding above, little below) to bias the line under the optical centre and
+    // onto the darkest part of the scrim. That resting offset was being read as
+    // "already fading": the title arrived at about 0.9 and, worse, the fade
+    // confiscated its entrance animation before it had played a frame, on every
+    // window where the line does not straddle the middle. Its own band being
+    // squared up is what "at rest" means for a block, so that is what the fade
+    // measures from; anything sitting dead centre of its band, as every chapter
+    // body does, still measures zero here and is unaffected.
+    function restingGap(el, height) {
+      var band = el.closest ? el.closest(".hero, .chapter") : null;
+      if (!band) return 0;
+      var box = el.getBoundingClientRect();
+      var ground = band.getBoundingClientRect();
+      // Subtracting the band's own top gives the block's position within it,
+      // which IS its position on screen once that band is squared up. No scroll
+      // offset needed, and it holds wherever the page happens to be sitting.
+      var top = box.top - ground.top;
+      var bottom = top + box.height;
+      var mid = height / 2;
+      return top > mid ? top - mid : bottom < mid ? mid - bottom : 0;
+    }
 
     function clear() {
       for (var i = 0; i < blocks.length; i++) {
@@ -647,11 +675,23 @@
       if (!height) return;
       var mid = height / 2;
 
+      // Only when the screen changes shape: the resting gap is a fact about the
+      // layout, not about where the page is scrolled to.
+      var width = window.innerWidth || document.documentElement.clientWidth;
+      if (height !== measuredH || width !== measuredW) {
+        for (var k = 0; k < blocks.length; k++) slack[k] = restingGap(blocks[k], height);
+        measuredH = height;
+        measuredW = width;
+      }
+
       for (var i = 0; i < blocks.length; i++) {
         var el = blocks[i];
         var rect = el.getBoundingClientRect();
         var gap =
           rect.top > mid ? rect.top - mid : rect.bottom < mid ? mid - rect.bottom : 0;
+        // Everything a block carries at rest is free; the fade starts from there.
+        gap = gap - slack[i];
+        if (gap < 0) gap = 0;
 
         var t = (gap / height - FADE_HOLD) / (FADE_EDGE - FADE_HOLD);
         t = t < 0 ? 0 : t > 1 ? 1 : t;
@@ -668,7 +708,12 @@
         // its end (which is the state the element computes to anyway, so nothing
         // shows) and the fade takes the property over from there.
         if (el === hero && !heroFree) {
-          if (value > 0.995) continue;
+          // At the top of the page the title is at rest by definition, whatever
+          // the arithmetic above makes of it. Measuring it a few pixels off (a
+          // web font landing after this first ran, say) must not be able to cost
+          // the entrance its animation, so the position of the page decides it
+          // rather than the measurement.
+          if (value > 0.995 || !window.pageYOffset) continue;
           if (el.getAnimations) {
             var running = el.getAnimations();
             for (var j = 0; j < running.length; j++) running[j].finish();

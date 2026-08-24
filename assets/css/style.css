@@ -128,6 +128,11 @@
   --dark-deep:  #171715;   /* a layer below it (rails, chips) */
   --dark-gold:  #d7b264;   /* accent on the dark ground */
   --dark-line:  rgba(255, 255, 255, 0.09);
+  --hero-canvas: #131212;  /* the ground Bonnat painted the Crucifixion on. The
+                              root route's canvas and its hero's standing-in
+                              colour are both this, so the page the painting
+                              fades onto is the painting's own darkness rather
+                              than a near-match that shows as a seam. */
   --masthead:   #100c0b;   /* the bar's ground on every page but the root, where
                               it goes transparent and rides on the hero band.
                               Deeper and warmer than --dark, so the bar reads as
@@ -197,10 +202,10 @@ html {
    Only its COLOUR changes here, which is layout-neutral: a default light-grey bar
    down the side of three screens of night is the very strip this route was trying
    to avoid, and the ivory pages keep the browser's own. */
-.home { scrollbar-color: #3f3b36 var(--dark); }
+.home { scrollbar-color: #3f3b36 var(--hero-canvas); }
 /* The canvas is dark on this route: the overscroll bounce at either end should be
    night rather than a flash of ivory on a page of three night screens. */
-.home { background-color: var(--dark); }
+.home { background-color: var(--hero-canvas); }
 /* Too short to hold a screen: the sections give up their full-height rule and
    revert to their content height, rather than making the reader scroll through a
    band that is mostly padding. */
@@ -814,7 +819,8 @@ body:has(.page-band) .site-header {
   margin: 0 calc(50% - 50vw);
   padding: clamp(14rem, 38vh, 26rem) max(1.5rem, calc(50vw - 34rem)) clamp(4rem, 9vh, 7rem);
   overflow: hidden;
-  background: var(--dark);      /* stands in while the painting loads */
+  background: var(--hero-canvas);   /* the painting's own ground, standing in
+                                       for it while it arrives and fades up */
 }
 /* An <img>, not a CSS background, so the preload scanner can find it: this is
    the page's LCP element. object-position is vertical only by necessity — the
@@ -829,6 +835,43 @@ body:has(.page-band) .site-header {
   height: 100%;
   object-fit: cover;
   object-position: center 8%;
+  /* The page opens on the painting's own darkness and the picture surfaces out
+     of it, drawing back the last of a slow push as it settles. Then, and only
+     then, the title and the masthead together, and the chevron once those are
+     down. Picture, then word and frame, then the way out.
+
+     The beats overlap, and that is the whole of how this stays both unhurried
+     and short: each movement is as long as it wants to be, but the next one
+     starts before it has finished rather than after. --ease is long-tailed, so
+     by the time the words begin the picture is ~59% up, and by the time the
+     chevron does the words are ~77%, which is about the ratio the whole sequence
+     is tuned around: each beat plainly begun before the next joins it, none of
+     them spent waiting on a tail. Around 60% is the floor — under it the three
+     beats stop reading as a sequence and become one cross-fade.
+
+     1.15s end to end, and the two numbers move independently. How long the page
+     WAITS is the three delays; how much weight the motion has is the three
+     durations. Lengthening a beat without moving what follows it buys the second
+     at almost no cost to the first, which is how this arrived here: the same
+     durations laid end to end would run 2.4s. Shortening the
+     durations is the wrong lever if this needs to be quicker again; widen the
+     overlap instead, and let each movement keep its own pace. It plays on every
+     arrival at the route because a CSS animation runs when the document loads.
+
+     The fade is stated only in the keyframes, never as a resting `opacity: 0`.
+     That is what makes it safe: with animations off — reduced motion, a browser
+     that never runs it — the element simply computes to its at-rest state, which
+     is fully visible, rather than staying invisible forever.
+
+     If the painting is still decoding when its turn comes, nothing pops: an
+     <img> paints nothing until it is ready, and the ground it would have been
+     covering is its own colour, so it joins the fade already in progress. */
+  animation: hero-reveal 1s var(--ease) both;
+  transform-origin: center 30%;   /* the face, so the settle closes on it */
+}
+@keyframes hero-reveal {
+  from { opacity: 0; transform: scale(1.045); }
+  to   { opacity: 1; transform: none; }
 }
 /* One vertical scrim, and it is shaped rather than merely deep. A clearing
    through the middle where the face and hands are, which is the whole point of
@@ -879,7 +922,7 @@ body:has(.page-band) .site-header {
   overflow-wrap: break-word;
   /* Rises into place: the fill mode holds the from-state through the delay, so
      there is no flash of the title at rest before it starts. */
-  animation: hero-rise 1.15s var(--ease) 0.12s both;
+  animation: hero-rise 0.8s var(--ease) 0.25s both;
 }
 /* True italic, from the face committed above — the emphasis falls on "Saint",
    the word the whole line is reaching for. */
@@ -911,8 +954,8 @@ body:has(.page-band) .site-header {
      later one overriding the earlier — one transform animation would cancel the
      other. The bob runs indefinitely; hovering or focusing pauses it, which also
      stops it drifting out from under the cursor mid-click. */
-  animation: hero-fade 0.9s var(--ease) 0.55s both,
-             hero-bob 2.6s var(--ease) 1.2s infinite;
+  animation: hero-fade 0.6s var(--ease) 0.55s both,
+             hero-bob 2.6s var(--ease) 1.15s infinite;
 }
 .hero-scroll svg { width: 1.7rem; height: 1.7rem; }
 .hero-scroll:hover, .hero-scroll:focus-visible {
@@ -928,7 +971,7 @@ body:has(.page-band) .site-header {
    at-rest state, which is fully visible. Leaving the keyframes running with a
    0s duration would risk it painting at opacity 0. */
 @media (prefers-reduced-motion: reduce) {
-  .hero-title, .hero-scroll { animation: none; }
+  .hero-bg, .hero-title, .hero-scroll, .home .site-header { animation: none; }
 }
 
 
@@ -1272,6 +1315,15 @@ body:has(.page-band) .site-header {
    once as an ordinary scrolling page, scrollbar and all, and then corrected
    itself. The root class is there before the first paint. -------------------- */
 .home .site-main { padding-top: 0; }
+/* The bar is not there when the page opens: nothing frames the picture until the
+   picture has finished arriving. It comes up WITH the title, on the same delay
+   and over the same length, so the two read as one beat — the page's furniture
+   and its first word arriving together — rather than as a third thing turning up
+   afterwards. Scoped to this route: everywhere else the masthead is simply
+   present. Its scrim is a pseudo-element of the bar, so it comes up with it, and
+   `hero-fade` touches nothing but opacity, leaving the pinning and condensing
+   transitions to their own business. */
+.home .site-header { animation: hero-fade 0.8s var(--ease) 0.25s both; }
 .home .site-header {
   position: absolute;
   top: 0;

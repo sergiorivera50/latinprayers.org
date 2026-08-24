@@ -279,6 +279,34 @@ split, so it does not need re-deciding:
   window), `max-height: 34rem`, and `prefers-reduced-motion`. Note `rem` in a media
   query means 16px, not the root's 18px, so 48rem is 768px in both the CSS
   breakpoint and this guard, and the two agree by construction.
+- **The root route opens in three stages.** The canvas and the hero's standing-in
+  colour are both `--hero-canvas` (`#131212`), the ground Bonnat painted the
+  Crucifixion on, so the page the painting arrives onto is the painting's own
+  darkness rather than a near-match that would show as a seam. On that ground the
+  picture surfaces (`hero-reveal`, 1s, drawing back the last of a slow push
+  toward the face); the title follows, with the masthead coming up on the same
+  delay over the same length so the two read as one beat; the chevron follows once
+  those are down. Picture, then word and frame, then the way out. About 1.15s end
+  to end, on every arrival, since a CSS animation runs whenever the document
+  loads. **The beats overlap, and that is how this stays both unhurried and
+  short:** each movement is as long as it wants to be, but the next starts before
+  it has finished rather than after (the same durations laid end to end run
+  2.4s). `--ease` is long-tailed, so the picture is ~59% up when the words begin
+  and the words ~77% when the chevron does: each beat plainly begun before the
+  next joins it, none of them spent waiting on a tail. Around 60% is the floor —
+  under it the three beats stop reading as a sequence and become one cross-fade.
+  The two things worth keeping apart when tuning this: **how long the page waits
+  is the three delays, how much weight the motion has is the three durations.**
+  Lengthening a beat without moving what follows it buys the second at almost no
+  cost to the first. The masthead's beat is `.home`-scoped —
+  everywhere else the bar is simply present — and it animates opacity only, so
+  the pinning and condensing transitions are left to their own business. It is CSS alone, and the reason it can be is that **the fades live only
+  in the keyframes, never as a resting `opacity: 0`** — with animations off
+  (reduced motion, or anything that never runs them) each element simply computes
+  to its at-rest state, which is visible. If the painting is still decoding when
+  its turn comes nothing pops either: an `<img>` paints nothing until it is ready,
+  and the ground it would be covering is its own colour, so it joins the fade
+  already in progress.
 - **The words fade with the band that carries them.** `initTextFade` in `main.js`
   holds each text block on the landing page (`.hero-title` and every
   `.chapter-body`) at full strength while it is near the middle of the screen and
@@ -287,7 +315,18 @@ split, so it does not need re-deciding:
   screen to the block's **nearest edge**, not the distance between the two
   centres: a block taller than half the screen (a chapter body on a phone, where
   the bands stack) straddles the middle for as long as it is being read, and
-  centre-to-centre would fade it out from under the reader. Unlike the wheel
+  centre-to-centre would fade it out from under the reader. **The gap a block
+  already carries when its own band is squared up is subtracted first**
+  (`restingGap`, re-measured whenever the viewport changes on either axis). Not
+  every block sits dead centre of its band: the hero centres its title in a
+  deliberately lopsided box to bias the line under the optical centre, and reading
+  that resting offset as a fade meant the title arrived at ~0.9 and, worse, that
+  the fade confiscated `hero-rise` before it had played a frame, on every window
+  where the line does not straddle the middle. A block's own band being squared up
+  is what "at rest" means, so that is where its fade starts. Belt and braces, the
+  hero title is left alone entirely while `pageYOffset` is 0: at the top of the
+  page it is at rest by definition, and no measurement error (a web font landing
+  late, say) may cost the entrance its animation. Unlike the wheel
   takeover this runs everywhere, touch included, since it is about what is on
   screen rather than about how the page is being driven; `prefers-reduced-motion`
   turns it off, asked live, and puts any part-faded text back. One trap: a CSS
