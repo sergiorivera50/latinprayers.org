@@ -132,6 +132,16 @@
                               it goes transparent and rides on the hero band.
                               Deeper and warmer than --dark, so the bar reads as
                               chrome rather than as another of the dark cards. */
+  /* The bar's ground once it is pinned over the reading: not --masthead thinned
+     but a lighter, warmer grey-brown, because a near-black slab crossing ivory
+     paper is the harshest edge on the site. Written out rather than mixed from
+     --masthead so it needs nothing newer than rgba() to work. Over the paper it
+     resolves to about #5c5752 where the blur is unsupported and the veil is
+     doing the whole job: ivory type holds 6.3:1 on it, and the gold a link takes
+     on hover 3.6:1. That last figure is why the nav firms up to full-strength
+     ivory while it is pinned (below) — at its resting 0.74 the links measure
+     4.3:1 on this ground, a shade under what small caps need. */
+  --masthead-veil: rgba(38, 33, 29, 0.74);
 
   /* Primary button: liturgical crimson (the Passion / Sacred Heart register).
      The label is set in cream for strong contrast on its deep face. */
@@ -148,6 +158,11 @@
   --shadow-md: 0 10px 30px -16px rgba(33, 26, 16, 0.30);
   --shadow-lg: 0 18px 44px -22px rgba(33, 26, 16, 0.38);
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  /* How much an in-page link's target has to duck to clear the masthead.
+     Zero while the bar scrolls away with the page; the height of the
+     condensed bar once it stays (set with `.hdr`, further down). Anything
+     carrying a scroll-margin-top adds it, so there is one place to change. */
+  --anchor-clear: 0rem;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -317,13 +332,14 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 /* Masthead                                                                     */
 /* --------------------------------------------------------------------------- */
 .site-header {
-  /* Not sticky: it scrolls away with the page. The translucency and blur it once
-     carried existed only so content could glide beneath it — with nothing passing
-     behind, an opaque bar is the honest version and one less thing to reason
-     about. Nor does it need a z-index now that it never overlaps anything.
-     Dark by default and light-on-dark throughout, so the root page's overlay bar
-     is the same object in a different position rather than a second design; that
-     page only turns the ground transparent (further down). */
+  /* The resting bar: opaque, dark, light-on-dark throughout, so the root page's
+     overlay bar is the same object in a different position rather than a second
+     design (that page only turns the ground transparent, further down). It is
+     laid out here as an ordinary block that scrolls away with the page; sticking
+     it down and condensing it is an enhancement added on top (see `.hdr` below),
+     so with JS off this is the whole of it. Opaque while it is here, where it has
+     nothing passing behind it; it thins to --masthead-veil only once it is pinned
+     and the page has started to run underneath it. */
   background: var(--masthead);
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
@@ -335,6 +351,186 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
   gap: 0.5rem 1.5rem;
   padding-top: 0.85rem;
   padding-bottom: 0.85rem;
+}
+
+
+/* ---- Stuck and condensed ---------------------------------------------------
+   The bar pins itself to the top once the page has moved, and gives up some of
+   its height while it is there: the mark and the wordmark come down a size and
+   the motto folds away, since a bar that is going to sit over the reading for
+   the rest of the page should ask for less room than one seen at rest.
+
+   Two classes, both on <html>, both put there by `initStickyHeader`. `hdr` says
+   the enhancement is running at all; every rule here hangs off it, so with JS
+   off — or on a phone, where a two-row masthead pinned to the top would eat a
+   third of the screen — the masthead is exactly the plain block above. Keying
+   off <html> rather than the header itself is the same rule the rest of the site
+   follows, and it lets a route-level class combine with it in one selector.
+
+   `top: 0` with no offset works because these are the first thing in the page;
+   there is nothing above the bar for it to clear. */
+.hdr {
+  /* The condensed bar's own height: a 2rem mark with 0.5rem of padding either
+     side of it. An anchor target that ignored this would land underneath it, so
+     it moves whenever the metrics below do. */
+  --anchor-clear: 3rem;
+}
+.hdr .site-header {
+  position: sticky;
+  top: 0;
+  /* Over the share dock (20), under the skip link (50). It needs a stacking
+     order now that it does overlap the page. */
+  z-index: 30;
+}
+/* The two overlay routes do not sit in the flow above their band, they ride on
+   top of it — so for them "pinned" is fixed rather than sticky. A sticky element
+   cannot leave the box it was laid out in, and theirs has been taken out of the
+   flow entirely. */
+.hdr.home .site-header,
+.hdr body:has(.page-band) .site-header {
+  position: fixed;
+  /* Repeated rather than inherited from the rule above: both routes set a
+     z-index of their own further down the file, and at equal specificity the
+     later rule would win and leave the bar on 2. */
+  z-index: 30;
+}
+
+/* What condensing costs, and what it moves. Only the bar's own metrics change:
+   nothing below it is touched, and the nav keeps its size, since shrinking the
+   links would cost legibility for no height (they are shorter than the brand). */
+.hdr .site-header,
+.hdr .site-header::before {
+  transition:
+    background-color 0.28s var(--ease),
+    border-color 0.28s var(--ease),
+    opacity 0.28s var(--ease);
+}
+.hdr .site-header .wrap { transition: padding 0.28s var(--ease); }
+.hdr .brand-mark { transition: height 0.28s var(--ease); }
+.hdr .brand-name {
+  transition: font-size 0.28s var(--ease), color 0.15s var(--ease);
+}
+/* The motto folds rather than vanishes: `display: none` cannot be animated, so
+   it is a max-height (a hair over its real 1.39rem line, so nothing is clipped
+   while it is open) collapsing to nothing under `overflow: hidden`. */
+.hdr .site-motto {
+  overflow: hidden;
+  max-height: 1.5rem;
+  transition:
+    max-height 0.28s var(--ease),
+    opacity 0.18s var(--ease),
+    margin-top 0.28s var(--ease);
+}
+
+.hdr-stuck .site-header .wrap { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.hdr-stuck .brand-mark { height: 2rem; }
+/* Pinned, the bar is over the reading rather than above it, so it stops being a
+   solid lid and lets the page show through. The blur is what keeps type legible
+   over whatever passes beneath (a photograph, a line of Latin); where it is not
+   supported the veil alone still holds contrast, so there is no @supports gate
+   and nothing to fall back to. */
+.hdr-stuck .site-header {
+  background: var(--masthead-veil);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+}
+/* The links come up to full strength on the lighter ground: at rest they are
+   ivory at 0.74, which is right on the near-black bar and a shade thin on this
+   one. The hover colour has to be restated, or it would lose to the rule above
+   it — same specificity, and this block comes later in the file. */
+.hdr-stuck .site-nav a { color: var(--ivory); }
+.hdr-stuck .site-nav a:hover,
+.hdr-stuck .site-nav a:focus { color: var(--dark-gold); }
+.hdr .site-nav a { transition: color 0.28s var(--ease); }
+/* The badge is an announcement for someone arriving, not something to carry down
+   the page. Absolutely positioned, so it never held any space and can simply go;
+   visibility takes it out of the reading order and off the pointer once it has
+   finished fading. */
+.hdr .nav-new {
+  transition:
+    opacity 0.18s var(--ease),
+    transform 0.28s var(--ease),
+    visibility 0.18s var(--ease);
+}
+.hdr-stuck .nav-new {
+  opacity: 0;
+  transform: scale(0.86);
+  visibility: hidden;
+}
+.hdr-stuck .brand-name { font-size: clamp(1.25rem, 3.6vw, 1.45rem); }
+.hdr-stuck .site-motto { max-height: 0; opacity: 0; margin-top: 0; }
+/* The overlay routes have to find a ground once they are no longer sitting on
+   the dark head of their own band: from here down the bar can be over anything,
+   including ivory paper, and its type is light. */
+.hdr-stuck.home .site-header,
+.hdr-stuck body:has(.page-band) .site-header {
+  background: var(--masthead-veil);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+}
+/* The band scrim the root page's bar carries at rest would double the ground it
+   has just been given, so it stands down. */
+.hdr-stuck.home .site-header::before { opacity: 0; }
+
+/* ---- Over paper instead of over a picture ---------------------------------
+   A dark slab is right when the bar is crossing a photograph and wrong when it
+   is crossing the reading. Where a page runs out of band and onto ivory (every
+   route but the root: a prayer, the index, the Rosary, a standalone page), the
+   bar stops being chrome laid over the page and becomes the page's own surface
+   instead — the same frosting, but the paper's colour with the paper's ink on
+   it, so it reads as the sheet continuing under the type rather than as a lid
+   on top of it.
+
+   `hdr-paper` is set by initStickyHeader, which asks on every frame whether the
+   bar's lower edge is still inside one of the site's dark grounds; it is not a
+   route rule, because the same page is a picture at the top and paper below it.
+
+   The veil is --ivory, the page's own colour, and TWO things conspired to make
+   an earlier version of it read as white. It was mixed from --surface (#fffdf8,
+   the near-white card face) rather than from the page; and body's radial pool of
+   light is `background-attachment: fixed`, so it does not scroll away — it sits
+   at the top of the viewport permanently, directly under the pinned bar, which
+   means the backdrop here is about #fefcf6 and never the flat #f6f1e7 the rest of
+   the page shows. Blurring that and thinning ivory over it lands at #f7f3e9,
+   within two points a channel of the page. `saturate()` comes off for this state
+   too: on a warm near-neutral it only pushes the paper creamier.
+
+   Measured over that ground (and, worst case, with a dark prayer card passing
+   beneath the blur): ink 15.4:1 and 12.6:1, the nav's --ink-soft 5.7:1 and
+   4.7:1, --gold-deep on hover 5.5:1. */
+/* `html` is doing real work in this one selector. The overlay routes' stuck rule
+   above is `.hdr-stuck body:has(.page-band) .site-header` — three classes and an
+   element — and the prayer pages are precisely the ones that run onto paper, so
+   without the extra element here that rule would win and the bar would stay dark
+   on the pages this exists for. */
+html.hdr-stuck.hdr-paper .site-header {
+  background: rgba(246, 241, 231, 0.9);      /* --ivory */
+  border-bottom-color: var(--line);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+.hdr-stuck.hdr-paper .brand-name { color: var(--ink); }
+.hdr-stuck.hdr-paper .site-motto { color: var(--ink-faint); }
+.hdr-stuck.hdr-paper .site-nav a { color: var(--ink-soft); }
+.hdr-stuck.hdr-paper .site-nav a::after { background: var(--gold-deep); }
+/* Both hovers have to be restated at this weight: the resting rules for them sit
+   earlier in the file at the same specificity as the two rules above, so without
+   these the bar would keep its colours but lose its hover. */
+.hdr-stuck.hdr-paper .site-nav a:hover,
+.hdr-stuck.hdr-paper .site-nav a:focus { color: var(--gold-deep); }
+.hdr-stuck.hdr-paper .brand-lockup:hover .brand-name,
+.hdr-stuck.hdr-paper .brand-lockup:focus .brand-name { color: var(--gold-deep); }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Still pinned, still condensed — that is position and size, not motion. It
+     simply arrives there rather than travelling. */
+  .hdr .site-header,
+  .hdr .site-header::before,
+  .hdr .site-header .wrap,
+  .hdr .brand-mark,
+  .hdr .brand-name,
+  .hdr .site-motto,
+  .hdr .site-nav a,
+  .hdr .nav-new { transition: none; }
 }
 
 /* Brand: mark beside name-over-motto. */
@@ -1127,7 +1323,7 @@ body:has(.page-band) .site-header {
 .prayer-empty-note a { color: var(--ink); }
 .prayer-empty-note a:hover, .prayer-empty-note a:focus { color: var(--gold-deep); }
 
-.prayer-index { scroll-margin-top: 1.5rem; padding-top: 1rem; }
+.prayer-index { scroll-margin-top: calc(1.5rem + var(--anchor-clear)); padding-top: 1rem; }
 /* Section header that separates the marketing hero from the functional browse
    area (search + category lists) and labels the hero CTA's destination. */
 .index-title {
@@ -1339,7 +1535,7 @@ body:has(.page-band) .site-header {
   .page-band .prayer-search::after { transition: none; }
 }
 /* Leaves a little air above the field when the first keystroke pulls it up. */
-.page-band .prayer-search { scroll-margin-top: 1.75rem; }
+.page-band .prayer-search { scroll-margin-top: calc(1.75rem + var(--anchor-clear)); }
 
 /* The clear control. WebKit draws it as a fixed dark glyph that all but vanishes
    on this field, and its colour cannot be set directly — so the native button is
@@ -2001,7 +2197,9 @@ body:has(.page-band) .site-header {
   color: var(--ink);
   text-align: center;
   margin: 0 0 1.5rem;
-  scroll-margin-top: 1.5rem;   /* a little air above an in-page link's target */
+  /* A little air above an in-page link's target, plus room for the masthead
+     if it is one of the routes where the masthead stays. */
+  scroll-margin-top: calc(1.5rem + var(--anchor-clear));
 }
 .rosary-h2::after {
   content: "";
@@ -2188,7 +2386,12 @@ body:has(.page-band) .site-header {
 /* Panels: stacked & all visible without JS; one at a time with it. Positioned,
    because the set rail docks against this box: its top edge is the card's top
    edge but for the track's 0.25rem of padding. */
-.mysteries-panels { position: relative; display: grid; gap: 2rem; scroll-margin-top: 1.5rem; }
+.mysteries-panels {
+  position: relative;
+  display: grid;
+  gap: 2rem;
+  scroll-margin-top: calc(1.5rem + var(--anchor-clear));
+}
 /* Dock the rail into the card's top-right corner. Only where the card is laid
    out side by side: stacked, that corner belongs to the painting. And only with
    JS, since one absolutely-placed rail cannot serve three panels shown at once. */

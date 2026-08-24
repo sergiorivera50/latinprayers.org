@@ -238,41 +238,113 @@ split, so it does not need re-deciding:
   side the words hold. On phones the text runs full width, so the scrim becomes
   an even veil. Each band carries a `.chapter-list` glimpse of what it links to
   (a few prayers; the three sets of mysteries) above its call to action.
-  **Every band is at least one viewport tall (`100svh`), and the landing page
-  **turns a screen at a time.** One gesture commits the whole move to the next
-  section and eases it into place, in either direction (`initSectionScroll` in
-  `main.js`, a 650ms cubic ease-in-out), so the page reads as a sequence of
-  screens rather than a strip to be crept down. Two guards keep it from trapping
-  the reader: a section taller than the screen is left alone until its far edge
-  is in view, and past the last section the takeover releases so the footer is
-  reached by an ordinary scroll. A scroll that came to rest off a section's top
-  spends the next gesture squaring that section up rather than skipping it.
-  There is **no CSS scroll-snap** on this page: the script is the only thing
-  moving the scroll, and two magnets pulling at one position fight each other.
-  One earlier design was tried and removed, and is recorded here so it is not
-  re-attempted: easing the whole scroll with a magnet to finish, instead of
-  committing the move, felt slow at every tuning. (Cross-fading the bands in a
-  pinned stack was also built and removed: a great deal of machinery for an
-  effect that fought ordinary reading.) Two traps found on the way are worth keeping in mind if
-  anything here is ever driven from script again. `scroll-behavior: smooth` is
-  set on the root and `window.scrollTo(x, y)` OBEYS it, so a script writing the
-  scroll every frame has the browser easing toward the script's easing and never
-  arriving — the tween sets it to `auto` for its duration and restores it. And a
-  magnet's settle delay has to outlast the gap between a mouse wheel's separate
-  notches, or it fires between them and hauls the reader back once per notch.
-  The momentum lock is capped by a hard ceiling (`SECTION_CEILING_MS`): without
-  it, uninterrupted scrolling pushes the wait back forever and the page stops
-  responding until the reader pauses.
+  **Every band is at least one viewport tall (`100svh`).** The wheel is taken
+  over and given weight on **every route**, not only this one (`initFloatScroll`
+  in `main.js`): the weight is how the site scrolls, not a trick the landing page
+  does, and nothing on the site scrolls inside the page (the one `overflow-x:
+  auto` track, the Mysteries tabs, is horizontal, and sideways wheels are let
+  through), so taking the wheel over cannot make anything unreachable.
+  The wheel no longer moves the page directly: each notch adds to a target the
+  page then chases, closing a share of the remaining gap every frame
+  (`FLOAT_PULL`), so the page travels on for a moment after the fingers stop and
+  coasts to rest by itself. The share is per 60Hz frame and is scaled by the
+  frame's real duration, so the feel does not depend on the monitor's refresh
+  rate. Nothing is committed and nothing is squared up: the reader may stop
+  anywhere, including halfway between two bands (off the landing page there are
+  no bands and nothing to land on: the weight is simply how the page moves).
+  Between glides the loop is not
+  running at all, so anything else that moves the page (a scrollbar drag, a
+  keyboard, an anchor jump) simply wins, and the next gesture reads the position
+  back off the page rather than hauling it to where the loop last left it.
+  There is **no CSS scroll-snap** on this page, and **no magnet** onto the
+  nearest band's top: two things pulling at one scroll position fight each other,
+  and a tug at the end of every glide reads as the page correcting the reader.
+  Two designs were built and removed, recorded here so they are not re-attempted:
+  turning a screen at a time (one gesture committing the whole move to the next
+  band, with a momentum lock and a settle delay) which read as a snap the reader
+  could not stop inside; and cross-fading the bands in a pinned stack, a great
+  deal of machinery for an effect that fought ordinary reading. One trap is worth
+  keeping in mind for anything here ever driven from script: `scroll-behavior:
+  smooth` is set on the root and `window.scrollTo(x, y)` OBEYS it, so a script
+  writing the scroll every frame has the browser easing toward the script's
+  easing and never arriving — the loop sets it to `auto` while it drives and
+  restores it after.
   **It only ever runs on a pointer-driven desktop window.** `takeover()` in
-  `initSectionScroll` asks four questions LIVE, on every event rather than once at
+  `initFloatScroll` asks four questions LIVE, on every event rather than once at
   load, since a window gets resized, a phone rotated and a keyboard detached under
-  pages that are already open: `pointer: coarse` (a touch flick already carries a
-  whole screen, and taking the gesture over robs it of its momentum and its
-  rubber-band, so a committed move is a mouse-and-trackpad idea), `max-width: 48rem`
+  pages that are already open: `pointer: coarse` (a touch flick already carries its
+  own momentum and its own rubber-band, and taking the gesture over replaces both
+  with a worse copy, so this is a mouse-and-trackpad idea), `max-width: 48rem`
   (the phone layout, which `pointer: coarse` alone would miss on a narrow laptop
   window), `max-height: 34rem`, and `prefers-reduced-motion`. Note `rem` in a media
   query means 16px, not the root's 18px, so 48rem is 768px in both the CSS
   breakpoint and this guard, and the two agree by construction.
+- **The words fade with the band that carries them.** `initTextFade` in `main.js`
+  holds each text block on the landing page (`.hero-title` and every
+  `.chapter-body`) at full strength while it is near the middle of the screen and
+  fades it out as it leaves, in either direction, on a smoothstep between
+  `FADE_HOLD` and `FADE_EDGE`. The measure is the gap from the middle of the
+  screen to the block's **nearest edge**, not the distance between the two
+  centres: a block taller than half the screen (a chapter body on a phone, where
+  the bands stack) straddles the middle for as long as it is being read, and
+  centre-to-centre would fade it out from under the reader. Unlike the wheel
+  takeover this runs everywhere, touch included, since it is about what is on
+  screen rather than about how the page is being driven; `prefers-reduced-motion`
+  turns it off, asked live, and puts any part-faded text back. One trap: a CSS
+  animation outranks an inline style, and `.hero-title` carries `hero-rise` with
+  `animation-fill-mode: both`, so its fill would keep overriding the fade even
+  after the entrance had ended. The entrance is therefore left alone while the
+  title is still at rest and full, and stood down (hurried to its end, then
+  `animation: none`) at the first moment the fade wants something else from it.
+- **The masthead pins itself and condenses once the page moves.** `initStickyHeader`
+  in `main.js` puts two classes on `<html>`: `hdr` (the enhancement is running)
+  and `hdr-stuck` (the page has moved past `HEADER_ON`, and back open below
+  `HEADER_OFF` — two thresholds, because a bar that flips at a single line
+  flutters for anyone resting on it). Everything about how it looks is in
+  `style.css` under `.hdr`: the bar goes `sticky` on ordinary routes and `fixed`
+  on the two that ride on top of a band (`.home` and `body:has(.page-band)`,
+  which are already out of the flow and so cannot stick). Condensing takes the
+  Sacred Heart mark down to 2rem and the wordmark a size, folds the motto away
+  with a max-height, drops the nav's `New` badge (an announcement for someone
+  arriving, not something to carry down the page), and swaps the bar's ground
+  from `--masthead` to `--masthead-veil` behind a blur, since pinned it is over
+  the reading rather than above it. The veil is not `--masthead` thinned but a
+  lighter, warmer grey-brown: a near-black slab crossing ivory paper is the
+  harshest edge on the site. It resolves to about `#5c5752` over the paper where
+  `backdrop-filter` is unsupported and holds 6.3:1 for ivory type there, so there
+  is no `@supports` gate; the nav links firm up from their resting 0.74 alpha to
+  full ivory while pinned, because at 0.74 they measure 4.3:1 on that ground, a
+  shade under what small caps need.
+  **A third class, `hdr-paper`, says which surface the bar is crossing.** A dark
+  veil is right over a photograph and wrong over the reading, and the same page
+  is both: a prayer opens on its band and runs onto ivory a screen later. So
+  `initStickyHeader` asks on every frame whether the bar's own lower edge is
+  still inside one of the site's dark grounds (`.hero`, `.chapter`, `.page-band`)
+  and, when it is not, the bar stops being chrome laid over the page and becomes
+  the page's surface instead: the same frosting in the paper's colour with the
+  paper's ink on it (ink 15.4:1, `--ink-soft` for the nav 5.7:1, `--gold-deep` on
+  hover 5.5:1; worst case with a dark prayer card passing under the blur, 12.6:1
+  and 4.7:1). It is a live question, not a route rule. **The veil is mixed from
+  `--ivory`, not `--surface`, and that alone is not enough:** body's radial pool
+  of light is `background-attachment: fixed`, so it never scrolls away — it sits
+  at the top of the viewport permanently, right under the pinned bar, making the
+  backdrop there about `#fefcf6` rather than the flat `#f6f1e7` the rest of the
+  page shows. Anything translucent pinned to the top of this site reads lighter
+  than its own colour for that reason. `saturate()` also comes off for this
+  state: on a warm near-neutral it only pushes the paper creamier. Two specificity traps live
+  in that block, both commented in place: the paper background needs an `html`
+  prefix to outweigh the `body:has(.page-band)` stuck rule (the prayer pages are
+  exactly the ones that run onto paper), and both hover colours have to be
+  restated, or the bar keeps its new colours and loses its hover.
+  Because every rule hangs off `hdr`, a page with no JS keeps the plain
+  scroll-away bar it always had. It is off below 48rem, asked live: a two-row
+  masthead pinned to the top of a phone is a third of the screen spent on
+  navigation. Two things to know if it is touched. The overlay routes set a
+  z-index of their own further down the file, so the fixed rule repeats
+  `z-index: 30` (at equal specificity the later rule would win and leave the bar
+  on 2). And a masthead that stays put means in-page links land underneath it,
+  so every `scroll-margin-top` on the site adds `var(--anchor-clear)`, which is
+  `0` at `:root` and the condensed bar's height under `.hdr`.
 - **Route-level rules hang off a class on `<html>`, not `:has()`.** `build.py`
   fills `{{root_attr}}` in `base.html`, and the landing page alone gets
   `class="home"`; everything that makes that route what it is (no scrollbar, dark

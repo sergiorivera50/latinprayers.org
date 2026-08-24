@@ -372,8 +372,8 @@
   // Backs up the CSS `scroll-behavior: smooth`, and honours reduced-motion by
   // simply not intercepting (the browser then jumps instantly). The Mysteries
   // tabs are excluded — they switch panels rather than scroll. So is the hero's
-  // chevron, which initSectionScroll owns, so that it arrives at the same pace
-  // and settles onto the section the same way as every other move on that page.
+  // chevron, which initFloatScroll owns, so that it travels with the same weight
+  // as every other move on that page.
   function initSmoothScroll() {
     if (
       window.matchMedia &&
@@ -401,37 +401,46 @@
     });
   }
 
-  // The landing page turns a screen at a time. One gesture commits the whole
-  // move to the next section and eases it into place, in either direction, so
-  // the page reads as a sequence of screens rather than a strip to be crept
-  // down. Past the last section the takeover releases, so the footer is reached
-  // by an ordinary scroll.
+  // The site scrolls freely, but with weight. The wheel no longer moves the page
+  // directly: each notch adds to a target the page then chases, closing
+  // a fraction of whatever is left every frame. So the page keeps travelling for
+  // a moment after the fingers stop and coasts to rest on its own. Nothing is
+  // committed and nothing is squared up: the reader can stop anywhere, halfway
+  // between two bands included.
   //
-  // Two things keep it from trapping the reader. A section taller than the
-  // screen is left alone until its far edge is in view, so nothing inside one
-  // can become unreachable. And a scroll that has come to rest off a section's
-  // top — a scrollbar drag, a keyboard PageDown — spends the next gesture
-  // squaring up that section rather than skipping past it.
+  // On the landing page this replaced a version that turned a screen at a time,
+  // one gesture buying the whole move to the next band. The bands are still a
+  // screen tall, so that page still reads as a sequence of screens; where each
+  // one comes to rest is now the reader's to decide. Elsewhere there are no
+  // bands and nothing to land on, and the weight is simply how the page moves.
   //
-  // One earlier pass is worth not repeating: easing the whole scroll instead of
-  // committing it, with a magnet to finish, felt slow at any tuning.
+  // Two traps are worth not repeating. `scroll-behavior: smooth` is set on the
+  // root and window.scrollTo OBEYS it, so the browser would be easing toward
+  // this loop's easing, starting a fresh animation every frame, and the page
+  // would crawl without ever arriving; it stands down while the loop drives and
+  // is put back afterwards. And a magnet onto the nearest band's top does not
+  // belong on top of this: two things pulling at one scroll position fight each
+  // other, and the tug at the end of every glide reads as the page correcting
+  // the reader.
   //
   // It is an enhancement in the strict sense: with JS off, off a fine pointer,
   // or under reduced motion, the page is an ordinary scroll throughout.
-  var SECTION_SNAP_MS = 650;     // the committed move: deliberate, but not slow
-  var SECTION_QUIET_MS = 140;    // silence that must follow before another
-  var SECTION_CEILING_MS = 500;  // hard cap on that wait, whatever the input does
+  var FLOAT_PULL = 0.062;      // share of the remaining gap closed per 60Hz frame
+  var FLOAT_REACH = 1;         // how far one notch of the wheel asks for
+  var FLOAT_LINE_PX = 40;      // a "line" of scroll, for wheels that report lines
+  var FLOAT_MAX_FRAME_MS = 64; // a backgrounded tab comes back with one huge frame
 
-  function initSectionScroll() {
-    var sections = Array.prototype.slice.call(
-      document.querySelectorAll(".hero, .chapter")
-    );
-    if (sections.length < 2) return;                     // landing page only
+  function initFloatScroll() {
     if (!window.matchMedia) return;
+    // The whole site, not just the landing page: the weight is how the site
+    // scrolls, not a trick the landing page does. There is nowhere on the site
+    // that scrolls inside the page (the one `overflow-x: auto` track, the
+    // Mysteries tabs, is horizontal, and sideways wheels are let through below),
+    // so taking the wheel over cannot make anything unreachable.
+    var sections = document.querySelectorAll(".hero, .chapter");
 
     var root = document.documentElement;
     var chevron = document.querySelector(".hero-scroll");
-    var frame = null;
 
     // Every condition is asked LIVE rather than once at startup, because every
     // one of them can change under a page that is already open: a window is
@@ -444,97 +453,103 @@
     var still = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     // Where the script drives the scroll, and where it keeps its hands off.
-    //   coarse   — a touch screen. A flick already carries a whole screen there,
-    //              and taking the gesture over robs it of its momentum and its
-    //              rubber-band; a committed move is a mouse and trackpad idea.
+    //   coarse   — a touch screen. A flick already carries its own momentum and
+    //              its own rubber-band; taking the gesture over replaces both
+    //              with a worse copy. This is a mouse and trackpad idea.
     //   narrow   — the phone layout, where the bands stack and the page is read
-    //              rather than turned. `pointer: coarse` covers real handsets on
-    //              its own, but not a narrow window on a laptop, which is the
-    //              same layout and wants the same plain scroll.
-    //   tooShort — no room for a screen-tall section to be worth committing to.
+    //              rather than glided through. `pointer: coarse` covers real
+    //              handsets on its own, but not a narrow window on a laptop,
+    //              which is the same layout and wants the same plain scroll.
+    //   tooShort — no room for the bands, so no reason to take the wheel.
     //   still    — reduced motion: nothing should move that was not asked to.
     function takeover() {
       return (
         !coarse.matches && !narrow.matches && !tooShort.matches && !still.matches
       );
     }
-    // Three instants rather than a boolean. The lock has to survive the momentum
-    // a trackpad keeps firing after the fingers have gone, or the tail would be
-    // read as a fresh gesture the moment the move lands. But it must ALSO be
-    // guaranteed to lift: an earlier version extended the wait on every event it
-    // swallowed, so scrolling without pause could hold it shut indefinitely and
-    // the page stopped responding until the reader stopped and started again.
-    // `ceiling` is the fix — the wait can be pushed back, but never past it.
-    var animatesUntil = 0;
-    var quietUntil = 0;
-    var ceiling = 0;
+
+    var target = window.scrollY;   // where the wheel has asked the page to be
+    var position = target;         // the loop's own idea of where it is, unrounded
+    var frame = null;
+    var last = 0;
+    var behavior = "";
 
     function clock() {
       return window.performance && performance.now ? performance.now() : Date.now();
     }
 
-    function isLocked() {
-      var t = clock();
-      if (t < animatesUntil) return true;
-      return t < quietUntil && t < ceiling;
+    function limit() {
+      return Math.max(0, root.scrollHeight - window.innerHeight);
     }
 
-    // The section the viewport is resting on: the last one whose top has passed
-    // the middle of the screen. Measured live rather than remembered, so a
-    // scrollbar drag, a keyboard scroll or an anchor jump all leave the right
-    // answer behind.
-    function currentIndex() {
-      var mid = window.scrollY + window.innerHeight / 2;
-      var index = 0;
-      for (var i = 0; i < sections.length; i++) {
-        if (sections[i].offsetTop < mid) index = i;
-      }
-      return index;
+    function reach(value) {
+      return Math.max(0, Math.min(limit(), value));
     }
 
-    // Cubic ease-in-out: the move gathers itself, travels, and sets down, which
-    // is what makes a whole screen of travel read as one deliberate step.
-    function ease(t) {
-      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-    }
-
-    function animateTo(target) {
-      if (frame) cancelAnimationFrame(frame);
-      var from = window.scrollY;
-      var distance = target - from;
-      var began = clock();
-
-      // `scroll-behavior: smooth` is set on the root, and window.scrollTo OBEYS
-      // it — which would set the browser easing toward this tween's easing, one
-      // fresh animation per frame, and the page would crawl. It stands down for
-      // the duration and is put back exactly as it was found.
-      var behavior = root.style.scrollBehavior;
+    function drive() {
+      if (frame) return;
+      behavior = root.style.scrollBehavior;
       root.style.scrollBehavior = "auto";
-
-      animatesUntil = began + SECTION_SNAP_MS;
-      quietUntil = animatesUntil + SECTION_QUIET_MS;
-      ceiling = animatesUntil + SECTION_CEILING_MS;
-
-      function step() {
-        var progress = Math.min(1, (clock() - began) / SECTION_SNAP_MS);
-        window.scrollTo(0, Math.round(from + distance * ease(progress)));
-        if (progress < 1) {
-          frame = requestAnimationFrame(step);
-          return;
-        }
-        frame = null;
-        root.style.scrollBehavior = behavior;
-      }
+      last = clock();
       frame = requestAnimationFrame(step);
     }
 
-    if (chevron) {
+    function release() {
+      if (frame) cancelAnimationFrame(frame);
+      frame = null;
+      root.style.scrollBehavior = behavior;
+    }
+
+    function step() {
+      var now = clock();
+      var dt = Math.min(FLOAT_MAX_FRAME_MS, now - last);
+      last = now;
+
+      // Anything that moved the page from outside this loop — a scrollbar drag,
+      // a keyboard, an anchor jump, the browser restoring a position — wins.
+      // The page is picked up from where it actually is rather than hauled back
+      // to where the loop last left it.
+      if (Math.abs(window.scrollY - position) > 2) {
+        position = window.scrollY;
+        target = position;
+      }
+
+      target = reach(target);
+      var gap = target - position;
+      if (Math.abs(gap) < 0.3) {
+        position = target;
+        window.scrollTo(0, Math.round(position));
+        release();
+        return;
+      }
+
+      // FLOAT_PULL is the share of the gap closed in one 60Hz frame, and the
+      // exponent converts it to whatever this frame actually took. Without that,
+      // a 120Hz display would close the same share twice as often and arrive in
+      // half the time, so the whole feel would depend on the monitor.
+      position += gap * (1 - Math.pow(1 - FLOAT_PULL, dt / 16.667));
+      window.scrollTo(0, position);
+      frame = requestAnimationFrame(step);
+    }
+
+    // The loop only runs while it has somewhere to go, so between glides the
+    // page is an ordinary document and `position` goes stale. Every fresh
+    // gesture starts by reading the truth back off the page.
+    function resync() {
+      if (frame) return;
+      position = window.scrollY;
+      target = position;
+    }
+
+    if (chevron && sections.length > 1) {
       // initSmoothScroll leaves this one alone (see its selector) so that it
-      // makes the same committed move as the wheel does.
+      // travels with the same weight as the wheel does.
       chevron.addEventListener("click", function (e) {
         if (!takeover()) return;                         // plain anchor jump
         e.preventDefault();
-        animateTo(sections[1].offsetTop);
+        resync();
+        target = reach(sections[1].offsetTop);
+        drive();
       });
     }
 
@@ -543,48 +558,244 @@
       function (e) {
         if (!takeover()) return;
         if (e.ctrlKey) return;                           // pinch-zoom, not a scroll
-        if (isLocked()) {
-          // Still riding out the move: swallow the momentum so its tail cannot
-          // push straight on past the band being landed on. Pushing `quietUntil`
-          // back keeps the tail out, and `ceiling` keeps that from lasting.
-          e.preventDefault();
-          quietUntil = clock() + SECTION_QUIET_MS;
-          return;
-        }
         if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;   // sideways
 
-        var down = e.deltaY > 0;
-        var index = currentIndex();
-        var section = sections[index];
-
-        // A section with more content than screen has to be readable the
-        // ordinary way, so the wheel is left alone until its far edge is in view.
-        if (section.offsetHeight > window.innerHeight + 2) {
-          var box = section.getBoundingClientRect();
-          if (down && box.bottom > window.innerHeight + 2) return;
-          if (!down && box.top < -2) return;
-        }
-
-        // Resting off a section's top rather than on it — dropped there by a
-        // scrollbar drag, say. The gesture then spends itself squaring up the
-        // section it is already on, and only the one after moves on.
-        var drift = window.scrollY - section.offsetTop;
-        if ((down && drift < -2) || (!down && drift > 2)) {
-          e.preventDefault();
-          animateTo(section.offsetTop);
-          return;
-        }
-
-        var next = down ? index + 1 : index - 1;
-        // Past the last section lies the footer: let the page scroll to it as it
-        // normally would rather than trapping the reader on the final screen.
-        if (next < 0 || next >= sections.length) return;
+        // deltaY is in pixels for most wheels, but Firefox reports lines and a
+        // few devices report pages. Taken at face value, a line would move the
+        // page by a single pixel.
+        var delta = e.deltaY;
+        if (e.deltaMode === 1) delta *= FLOAT_LINE_PX;
+        else if (e.deltaMode === 2) delta *= window.innerHeight;
 
         e.preventDefault();
-        animateTo(sections[next].offsetTop);
+        resync();
+        target = reach(target + delta * FLOAT_REACH);
+        drive();
       },
       { passive: false }
     );
+  }
+
+  // The words come and go with the band that carries them. Each text block is
+  // held at full strength while it is near the middle of the screen and fades
+  // away as it leaves in either direction, so a band arrives with its text
+  // gathering rather than already sitting there, and gives it up on the way out.
+  //
+  // The measure is the gap between the middle of the screen and the NEAREST edge
+  // of the block, not the distance between the two centres. A block taller than
+  // half the screen (a chapter body on a phone, where the bands stack) straddles
+  // the middle for as long as it is being read, and the gap stays zero the whole
+  // time; measuring centre-to-centre would fade it out from under the reader
+  // while its lower half was still being read. That is also the floor on how
+  // early a fade can possibly begin: nothing can start fading until it has
+  // stopped straddling the middle, which for a half-screen block is a quarter of
+  // its band's travel. Wanting it sooner than that means wanting text to fade
+  // while it sits in the middle of the screen, which is a different effect.
+  //
+  // It runs on every device, touch included: it is about what is on screen, not
+  // about how the page is being driven. Reduced motion turns it off, asked live
+  // so that turning it on under an open page puts the text back.
+  //
+  // Two things are being set here and they are easy to confuse. The thresholds
+  // (a share of the screen's height) decide how LONG the fade takes; the shape
+  // of the ramp decides whether it is NOTICEABLE. Getting the second one wrong
+  // looks like the first one being wrong: a wide range eased with a plain
+  // smoothstep spends its opening third doing almost nothing, which reads as
+  // text that only fades once it is already at the edge of the screen. So the
+  // range is wide — a block is at half strength around the midpoint between two
+  // bands and gone about two-thirds of the way across — and the ramp is mostly
+  // straight, with only its corners taken off, so it is visibly moving from the
+  // first pixel of its travel to the last.
+  var FADE_HOLD = 0;      // within this share of a screen of the middle: full
+  var FADE_EDGE = 0.5;    // beyond this: gone
+  var FADE_SOFT = 0.35;   // how much of the ramp is eased rather than straight
+  var FADE_GRAIN = 1000;  // opacity is written to three decimals, no finer
+
+  function initTextFade() {
+    if (!window.matchMedia) return;
+    var blocks = document.querySelectorAll(".hero-title, .chapter-body");
+    if (!blocks.length) return;                          // landing page only
+
+    var still = window.matchMedia("(prefers-reduced-motion: reduce)");
+    var hero = document.querySelector(".hero-title");
+    var heroFree = false;
+    var shown = [];
+    var queued = false;
+    var cleared = false;
+
+    function clear() {
+      for (var i = 0; i < blocks.length; i++) {
+        blocks[i].style.opacity = "";
+        shown[i] = -1;
+      }
+    }
+
+    function update() {
+      queued = false;
+      if (still.matches) {
+        // Every value is asked live, and this one has an aftermath: text left
+        // part-faded when motion is turned off would stay that way.
+        if (!cleared) {
+          clear();
+          cleared = true;
+        }
+        return;
+      }
+      cleared = false;
+
+      var height = window.innerHeight || document.documentElement.clientHeight;
+      if (!height) return;
+      var mid = height / 2;
+
+      for (var i = 0; i < blocks.length; i++) {
+        var el = blocks[i];
+        var rect = el.getBoundingClientRect();
+        var gap =
+          rect.top > mid ? rect.top - mid : rect.bottom < mid ? mid - rect.bottom : 0;
+
+        var t = (gap / height - FADE_HOLD) / (FADE_EDGE - FADE_HOLD);
+        t = t < 0 ? 0 : t > 1 ? 1 : t;
+        // Mostly a straight ramp, with a smoothstep mixed in to round off both
+        // ends so the fade neither starts nor stops with a corner in it.
+        var soft = t * t * (3 - 2 * t);
+        var value = 1 - ((1 - FADE_SOFT) * t + FADE_SOFT * soft);
+
+        // The hero title arrives with an entrance of its own (`hero-rise`), and
+        // a CSS animation outranks an inline style — including after it has
+        // finished, since it fills `both`. So the entrance is left alone while
+        // the title is still at rest and full, and only stood down at the first
+        // moment this wants something else from it: the animation is hurried to
+        // its end (which is the state the element computes to anyway, so nothing
+        // shows) and the fade takes the property over from there.
+        if (el === hero && !heroFree) {
+          if (value > 0.995) continue;
+          if (el.getAnimations) {
+            var running = el.getAnimations();
+            for (var j = 0; j < running.length; j++) running[j].finish();
+          }
+          el.style.animation = "none";
+          heroFree = true;
+        }
+
+        var next = Math.round(value * FADE_GRAIN) / FADE_GRAIN;
+        if (next === shown[i]) continue;                 // nothing to write
+        shown[i] = next;
+        el.style.opacity = next;
+      }
+    }
+
+    function onScroll() {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(update);
+    }
+
+    for (var i = 0; i < blocks.length; i++) shown[i] = -1;
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    if (still.addEventListener) still.addEventListener("change", onScroll);
+    update();
+  }
+
+  // The masthead pins itself to the top once the page has moved, and gives up
+  // some of its height while it is there. Everything about how that looks is in
+  // `style.css` (see `.hdr`); all this does is say when.
+  //
+  // Two thresholds rather than one, because a bar that flips at a single line
+  // flutters for anyone who comes to rest exactly on it — and the flip changes
+  // the bar's own height, which is the sort of thing that can nudge the reader
+  // back over the line just crossed.
+  var HEADER_ON = 32;    // scrolled past this many pixels: pinned and condensed
+  var HEADER_OFF = 12;   // back above this: open again
+
+  function initStickyHeader() {
+    if (!window.matchMedia) return;
+    if (!document.querySelector(".site-header")) return;
+
+
+    var root = document.documentElement;
+    var header = document.querySelector(".site-header");
+    // Every dark ground on the site. While the bar's lower edge is inside one of
+    // these it is crossing a picture and keeps its dark veil; once it is past
+    // them it is crossing the reading, and turns into the paper instead.
+    var grounds = document.querySelectorAll(".hero, .chapter, .page-band");
+    // The phone layout, asked live like every other query on the page. There the
+    // masthead stacks into two rows, and two rows pinned to the top of a phone
+    // is a third of the screen spent on navigation.
+    var narrow = window.matchMedia("(max-width: 48rem)");
+    var stuck = false;    // is the bar condensed
+    var paper = false;    // is it over the reading rather than over a picture
+    var live = false;     // is the enhancement switched on at all
+    var booting = true;
+    var queued = false;
+
+    // Asked of the bar's own lower edge, live, rather than worked out from the
+    // route: the same page is a picture at the top and paper a screen further
+    // down, and the bar's height changes under it as it condenses.
+    function onPicture() {
+      var edge = header.getBoundingClientRect().bottom - 1;
+      for (var i = 0; i < grounds.length; i++) {
+        var box = grounds[i].getBoundingClientRect();
+        if (box.top <= edge && box.bottom >= edge) return true;
+      }
+      return false;
+    }
+
+    function arm() {
+      // `live` tracks whether the enhancement is switched on, which is the
+      // OPPOSITE of `narrow.matches`, not the same as it. Comparing the two
+      // directly meant that on a desktop window (not narrow, not yet live) the
+      // two were both false, read as "already right", and the class was never
+      // put on at all.
+      var want = !narrow.matches;
+      if (want === live) return;
+      if (want) root.classList.add("hdr");
+      else root.classList.remove("hdr");
+      live = want;
+    }
+
+    function update() {
+      queued = false;
+      var y = window.pageYOffset || root.scrollTop || 0;
+      var next = narrow.matches ? false : stuck ? y >= HEADER_OFF : y > HEADER_ON;
+      if (next !== stuck) {
+        stuck = next;
+        if (stuck) root.classList.add("hdr-stuck");
+        else root.classList.remove("hdr-stuck");
+      }
+      // Only worth asking while the bar is actually over the page; unpinned it
+      // is either dark on its own ground or riding a band, and either way the
+      // answer changes nothing.
+      var onPaper = stuck && !narrow.matches && !onPicture();
+      if (onPaper !== paper) {
+        paper = onPaper;
+        if (paper) root.classList.add("hdr-paper");
+        else root.classList.remove("hdr-paper");
+      }
+      if (!booting) arm();
+    }
+
+    function onScroll() {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(update);
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    if (narrow.addEventListener) narrow.addEventListener("change", onScroll);
+
+    // The order of these two matters on a page that loads already scrolled (a
+    // reload halfway down). The condensed metrics hang off `hdr-stuck` and the
+    // transitions hang off `hdr`, so setting the size first means it is simply
+    // the size the bar loads at, with nothing declared yet to animate it; `hdr`
+    // follows a frame later and only then is there anything to travel. Put on
+    // together, the bar would visibly shrink itself just after the page arrived.
+    update();
+    requestAnimationFrame(function () {
+      booting = false;
+      arm();
+    });
   }
 
   // Copy the Latin text of a prayer. Progressive enhancement: the button is
@@ -913,7 +1124,9 @@
     initMysteries();
     initCarousels();
     initSmoothScroll();
-    initSectionScroll();
+    initFloatScroll();
+    initTextFade();
+    initStickyHeader();
     initCopyButtons();
     initShareDock();
   }
