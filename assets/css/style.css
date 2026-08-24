@@ -756,7 +756,18 @@ body:has(.page-band) .site-header {
    and description from --ink-soft to a warm ivory. Brightness in the type and
    darkness in the scrim buy the same contrast, and only one of them costs the
    picture. Scoped to the band, so the same elements below it are untouched. */
-.page-band .backlink { color: var(--gold); }
+/* On the band the pill has a picture behind it, not paper, and a fully
+   transparent fill leaves a 1px hairline as the only thing to find. A faint white
+   gives it a face without turning it into a solid chip (that is what its hover
+   is for), and the label changes gold with it: --gold is pitched for the ivory
+   page, it measures 4.0:1 on the bare band and the fill closes the gap to 3.1:1
+   by lifting the ground toward it. --dark-gold, the palette's gold for dark
+   grounds, reads 6.2:1 on the filled pill. */
+.page-band .backlink {
+  color: var(--dark-gold);
+  background: rgba(255, 255, 255, 0.08);
+}
+.page-band .backlink-arrow { color: var(--dark-gold); }
 .page-band .prayer-subtitle,
 .page-band .prayer-description { color: #e2dacb; }
 
@@ -2989,6 +3000,11 @@ body:has(.page-band) .site-header {
      to fill the row on one line, centred. Sizes are vw-based so they track the
      screen width, clamped so the text can't overflow or grow too tall. */
   .site-motto { display: none; }
+  /* And the badge with it. Stacked, the nav is a full-width row of its own under
+     a hairline rule, and a tag hung off one link's corner has nothing to hang
+     from: it either clears the rule or sits on it. The Rosary page is one of two
+     links here — it does not need announcing on a screen this size. */
+  .nav-new { display: none; }
   .brand-lockup {
     padding-bottom: 0.8rem;
     justify-content: center;
@@ -3003,8 +3019,6 @@ body:has(.page-band) .site-header {
     padding: 0.7rem 0;
   }
   .site-nav a { font-size: 0.7rem; letter-spacing: 0.1em; }
-  /* The nav sits under a hairline rule here; hold the badge clear of it. */
-  .nav-new { top: -0.5rem; }
 }
 
 @media (max-width: 24rem) {
