@@ -867,6 +867,35 @@ body:has(.page-band) .site-header {
   from { opacity: 0; transform: scale(1.045); }
   to   { opacity: 1; transform: none; }
 }
+/* Framed by height once the band is squarer than 7:5. Cover fits the painting
+   to the band's width only while the band is proportionally wider than the
+   canvas; as the band squares up it shows more and more of the figure (70% of
+   its height on a square window), and a phone, narrower than the canvas itself,
+   flips to fitting the height and shows all of it, feet and all. Here the
+   picture is sized by height instead: --frame is the share of the painting's
+   height the band shows and --from is where that share begins, so every band
+   from a square desktop window down to a phone holds the same stretch of canvas
+   as the wide crop, the crown to the loincloth. 7:5 is where cover itself shows
+   exactly --frame of the height (0.70 / 1.4 = 0.5), so the two regimes meet
+   without a jump. The price on a phone is the hands: the arms span the canvas's
+   full width, and no portrait frame holds both hands and a torso-height crop. */
+@media (max-aspect-ratio: 7/5) {
+  .hero-bg {
+    --frame: 0.5;
+    --from: 0.05;
+    inset: auto;
+    top: calc(-100% * var(--from) / var(--frame));
+    left: 50%;
+    width: auto;
+    min-width: 100%;   /* a band shorter than its screen (max-height: 34rem) */
+    max-width: none;
+    height: calc(100% / var(--frame));
+    /* The translate property, not transform: hero-reveal animates transform and
+       would throw a translateX away. */
+    translate: -50% 0;
+    transform-origin: center 17%;   /* still the face, in this taller box */
+  }
+}
 /* One vertical scrim, and it is shaped rather than merely deep. A clearing
    through the middle where the face and hands are, which is the whole point of
    the picture; a plateau at 0.80 through the title; then it EASES BACK to 0.58
@@ -2817,16 +2846,13 @@ body:has(.page-band) .site-header {
 /* --------------------------------------------------------------------------- */
 /* Responsive                                                                   */
 /* --------------------------------------------------------------------------- */
-/* The hero band on a phone. Here the band approaches the canvas's own
-   proportions, so cover barely crops at all and the whole figure fills the frame
-   (past a 1.43 aspect — a 390x560 viewport and taller — it flips to cropping
-   horizontally instead). The title needs more ground under it than on the wide
-   band, since the figure now occupies the full width, so the foot comes up
-   earlier and deeper. */
+/* The hero band on a phone. The picture is already framed by height (the
+   max-aspect-ratio rule after .hero-bg), so what changes here is the title's
+   ground: it needs more under it than on the wide band, since the figure fills
+   the full width, so the foot comes up earlier and deeper. */
 @media (max-width: 48rem) {
   /* min-height is inherited from the base rule — the band is full-screen here too. */
   .hero { padding: clamp(7rem, 18vh, 11rem) 1.5rem clamp(3rem, 8vh, 5rem); }
-  .hero-bg { object-position: center 16%; }
   .hero::after {
     background: linear-gradient(to bottom,
       rgba(14, 11, 9, 0.30) 0%,
@@ -2838,13 +2864,15 @@ body:has(.page-band) .site-header {
       rgba(14, 11, 9, 0.78) 96%,
       rgba(14, 11, 9, 0.84) 100%);
   }
-  /* Deliberately large enough to wrap. On a phone the line has room to spare on
-     two lines (275px of a 312px measure even at 5rem), so holding it to one line
-     was wasting the width: this sets ~4.2rem on a 390px screen against the ~2.9rem
-     a single line allowed. text-wrap: balance on the base rule splits it evenly
-     rather than orphaning "Saint". Measured 4.9:1 worst-case where large text
-     needs 3.0, so the scrim carries it unchanged. */
-  .hero-title { font-size: clamp(3.4rem, 17vw, 5rem); }
+  /* Deliberately large enough to wrap, and about as large as the wrap allows.
+     On two lines the size is governed by "Pray like", the longer of the pair:
+     at 23vw it fills 235px of a 251px measure on a 320px screen and 289px of
+     321px at 390, so it holds its two lines on every phone. The 5.5rem cap only
+     engages above about 430px, on the small tablets that still take this layout
+     and fit the title on one line again; it keeps the step down to the desktop
+     rule's 10.5vw at the 48rem breakpoint modest. text-wrap: balance on the
+     base rule splits it evenly rather than orphaning "Saint". */
+  .hero-title { font-size: clamp(3.4rem, 23vw, 5.5rem); }
   /* Chapters stack. The picture comes first when they do: the alternation the
      wide layout carried has nothing to say in one column, and a photograph
      under the button would read as the section's leftovers. It also flattens
