@@ -31,8 +31,14 @@ import build
 import studio
 
 ROOT = Path(__file__).resolve().parent
-WATCH_DIRS = (build.TEMPLATE_DIR, build.ASSETS_DIR)
-WATCH_FILES = (build.DATA_FILE, ROOT / "build.py")
+# Every source the build reads. snapshot() skips a directory that does not
+# exist, so ARTICLES_DIR is safe to list before the first article is written.
+# The two extra CSVs are here for the same reason as the articles directory: a
+# source file the watcher does not know about does not fail, it silently stops
+# rebuilding, which reads as a caching bug in the middle of an editing session.
+WATCH_DIRS = (build.TEMPLATE_DIR, build.ASSETS_DIR, build.ARTICLES_DIR)
+WATCH_FILES = (build.DATA_FILE, build.MYSTERIES_FILE, build.CATEGORIES_FILE,
+               ROOT / "build.py")
 
 
 def snapshot() -> dict[Path, float]:

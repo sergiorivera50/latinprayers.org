@@ -22,12 +22,14 @@ import json
 import re
 import shutil
 import sys
+from html.parser import HTMLParser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 DATA_FILE = ROOT / "data" / "prayers.csv"
 MYSTERIES_FILE = ROOT / "data" / "mysteries.csv"
 CATEGORIES_FILE = ROOT / "data" / "categories.csv"
+ARTICLES_DIR = ROOT / "data" / "articles"
 TEMPLATE_DIR = ROOT / "templates"
 ASSETS_DIR = ROOT / "assets"
 DIST_DIR = ROOT / "dist"
@@ -72,6 +74,35 @@ ORDINAL = {1: "First", 2: "Second", 3: "Third", 4: "Fourth", 5: "Fifth"}
 # templates/<slug>.html holding its content block; it is emitted to /<slug>/.
 # Empty for now: the Manifesto lived here and has been removed.
 STANDALONE_PAGES: tuple[tuple[str, str, str], ...] = ()
+
+# Articles: long-form prose at /articles/, one file per article in data/articles/.
+# Prose does not fit the CSV model. esc() makes every character in a CSV cell
+# literal, so a link or an emphasis written into a cell renders as visible markup,
+# and a whole essay on one CSV line is an unreadable git diff. An article is
+# therefore its own file: a 'key: value' header, a line of exactly ---, then a
+# body in which A BLOCK THAT BEGINS WITH '<' IS AUTHORED MARKUP AND EVERY OTHER
+# BLOCK IS A PARAGRAPH. That single rule is the whole format; it is
+# _split_paragraphs (which is how a prayer's 'context' already behaves) plus one
+# condition, so there is no markdown parser here and none is wanted.
+#
+# The body is trusted and not escaped, exactly as templates/rosary.html is
+# trusted. What keeps that honest is check_article_body(): the tag stack is
+# walked so an unclosed or crossed tag is a build error with a line number, the
+# tag vocabulary is a closed allowlist, and the house no-em-dash rule is enforced
+# for the first time on any content in this repo.
+ARTICLE_REQUIRED_KEYS = ("title", "subtitle", "description", "date")
+ARTICLE_OPTIONAL_KEYS = ("image", "image_alt")
+
+# The tag vocabulary an article body may use. A closed set, so the format cannot
+# quietly grow into arbitrary HTML one article at a time.
+ARTICLE_TAGS = {
+    "h2", "h3", "p", "em", "i", "strong", "b", "a", "span", "br",
+    "blockquote", "ul", "ol", "li", "figure", "figcaption", "img", "cite", "hr",
+}
+ARTICLE_VOID_TAGS = {"br", "img", "hr"}
+
+MONTHS = ("January", "February", "March", "April", "May", "June", "July",
+          "August", "September", "October", "November", "December")
 
 
 # --------------------------------------------------------------------------- #
@@ -168,24 +199,29 @@ def write_robots(dist: Path) -> None:
     print("  wrote dist/robots.txt")
 
 
-def write_sitemap(prayers: list[dict], dist: Path) -> None:
+def write_sitemap(prayers: list[dict], articles: list[dict], dist: Path) -> None:
     """Write sitemap.xml covering the homepage, the prayer index, every prayer,
     and any standalone page. lastmod is the build date for now; a per-prayer date
     can replace it later."""
     today = datetime.date.today().isoformat()
-    paths = ["/", "/prayers/"]
-    paths += [f"/prayers/{p['id']}/" for p in prayers]
-    paths += [f"/{slug}/" for slug, _, _ in STANDALONE_PAGES]
-    paths.append("/rosary/")
+    # (path, lastmod). Everything without a real date of its own still carries
+    # the build date, as before; an article carries the date in its own header,
+    # which is the only content on the site that knows when it was written.
+    urls: list[tuple[str, str]] = [("/", today), ("/prayers/", today)]
+    urls += [(f"/prayers/{p['id']}/", today) for p in prayers]
+    urls += [(f"/{slug}/", today) for slug, _, _ in STANDALONE_PAGES]
+    urls.append(("/rosary/", today))
+    urls.append(("/articles/", articles[0]["date"] if articles else today))
+    urls += [(f"/articles/{a['id']}/", a["date"]) for a in articles]
     out = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
     ]
-    for p in paths:
-        out.append(f"  <url><loc>{BASE_URL}{p}</loc><lastmod>{today}</lastmod></url>")
+    for path, lastmod in urls:
+        out.append(f"  <url><loc>{BASE_URL}{path}</loc><lastmod>{lastmod}</lastmod></url>")
     out.append("</urlset>")
     (dist / "sitemap.xml").write_text("\n".join(out) + "\n", encoding="utf-8")
-    print(f"  wrote dist/sitemap.xml ({len(paths)} urls)")
+    print(f"  wrote dist/sitemap.xml ({len(urls)} urls)")
 
 
 # --------------------------------------------------------------------------- #
@@ -333,6 +369,185 @@ def load_category_descriptions() -> dict[str, str]:
         if category and description:
             descriptions[category] = description
     return descriptions
+
+
+# --------------------------------------------------------------------------- #
+# Articles: one long-form piece per file in data/articles/
+# --------------------------------------------------------------------------- #
+SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+# A bare '&' that does not open a character reference: invalid HTML, and the
+# easiest thing to type by accident when writing prose.
+BARE_AMP_RE = re.compile(r"&(?!#\d+;|#x[0-9a-fA-F]+;|[a-zA-Z][a-zA-Z0-9]{1,31};)")
+
+
+class _ArticleTagChecker(HTMLParser):
+    """Walk an article body's tag stack so an unclosed, crossed, or disallowed
+    tag is reported with the line number it occurs on in the source file."""
+
+    def __init__(self, where: str, first_body_line: int) -> None:
+        super().__init__(convert_charrefs=False)
+        self.where = where
+        # NB: NOT self.offset. ParserBase uses that name for the column, and
+        # shadowing it silently corrupts every line number this class reports.
+        self.first_body_line = first_body_line
+        self.stack: list[tuple[str, int]] = []
+        self.problems: list[str] = []
+
+    def _line(self) -> int:
+        return self.getpos()[0] + self.first_body_line - 1
+
+    def handle_starttag(self, tag, attrs):
+        if tag not in ARTICLE_TAGS:
+            self.problems.append(
+                f"{self.where} line {self._line()}: <{tag}> is not allowed in an "
+                f"article body (allowed: {', '.join(sorted(ARTICLE_TAGS))})"
+            )
+            return
+        if tag not in ARTICLE_VOID_TAGS:
+            self.stack.append((tag, self._line()))
+
+    def handle_endtag(self, tag):
+        if tag in ARTICLE_VOID_TAGS:
+            return
+        if not self.stack:
+            self.problems.append(f"{self.where} line {self._line()}: stray </{tag}>")
+            return
+        open_tag, open_line = self.stack[-1]
+        if open_tag != tag:
+            self.problems.append(
+                f"{self.where} line {self._line()}: </{tag}> closes out of order; "
+                f"<{open_tag}> opened on line {open_line} is still open"
+            )
+            return
+        self.stack.pop()
+
+    def finish(self) -> list[str]:
+        self.close()
+        for tag, line in self.stack:
+            self.problems.append(f"{self.where} line {line}: <{tag}> is never closed")
+        return self.problems
+
+
+def check_article_body(body: str, where: str, first_body_line: int) -> list[str]:
+    """Every problem in one article body, each located by source line."""
+    checker = _ArticleTagChecker(where, first_body_line)
+    checker.feed(body)
+    problems = checker.finish()
+
+    for n, line in enumerate(body.split("\n"), start=first_body_line):
+        if BARE_AMP_RE.search(line):
+            problems.append(f"{where} line {n}: bare '&' in text; write '&amp;'")
+        if "—" in line:
+            problems.append(
+                f"{where} line {n}: em-dash in authored prose (house style forbids "
+                f"it); recast with a comma, colon, semicolon, or parentheses"
+            )
+        # render() is a successive str.replace over the same string, so a literal
+        # {{...}} surviving into the body would be substituted by the outer
+        # base.html render. build_article_page passes content last, which already
+        # prevents it; this refuses it at the source so the guarantee is visible.
+        if "{{" in line:
+            problems.append(
+                f"{where} line {n}: '{{{{' is a template token delimiter and may "
+                f"not appear in an article body"
+            )
+    return problems
+
+
+def _split_front_matter(text: str, where: str) -> tuple[dict[str, str], str, int]:
+    """Split 'key: value' header lines from the body at a line of exactly ---.
+    Returns (metadata, body, first body line number). No YAML, no dependency."""
+    lines = text.replace("\r\n", "\n").split("\n")
+    meta: dict[str, str] = {}
+    for n, line in enumerate(lines, start=1):
+        if line.strip() == "---":
+            missing = [k for k in ARTICLE_REQUIRED_KEYS if not meta.get(k)]
+            if missing:
+                fail(f"{where}: missing header field(s): {', '.join(missing)}")
+            return meta, "\n".join(lines[n:]), n + 1
+        if not line.strip():
+            continue
+        if ":" not in line:
+            fail(f"{where} line {n}: header line is not 'key: value', and the "
+                 f"header has not been closed by a line containing only ---")
+        key, _, value = line.partition(":")
+        key, value = key.strip(), value.strip()
+        known = ARTICLE_REQUIRED_KEYS + ARTICLE_OPTIONAL_KEYS
+        if key not in known:
+            fail(f"{where} line {n}: unknown header field '{key}'. "
+                 f"Known fields: {', '.join(known)}")
+        if key in meta:
+            fail(f"{where} line {n}: duplicate header field '{key}'")
+        meta[key] = value
+    fail(f"{where}: the header is never closed (no line containing only ---)")
+
+
+def render_article_body(body: str) -> str:
+    """Blocks separated by blank lines. A block starting with '<' is authored
+    markup and passes through untouched; every other block is one paragraph,
+    its lines flowed together so prose may be wrapped freely in the source."""
+    text = body.replace("\r\n", "\n").strip()
+    blocks: list[str] = []
+    for block in re.split(r"\n\s*\n", text):
+        block = block.strip()
+        if not block:
+            continue
+        if block.startswith("<"):
+            blocks.append("      " + block.replace("\n", "\n      "))
+        else:
+            flowed = " ".join(s for s in (ln.strip() for ln in block.split("\n")) if s)
+            blocks.append(f"      <p>{flowed}</p>")
+    return "\n\n".join(blocks)
+
+
+def load_articles() -> list[dict]:
+    """Load every article in data/articles/, newest first. An empty or absent
+    directory is fine: the section simply has nothing in it yet."""
+    if not ARTICLES_DIR.is_dir():
+        return []
+
+    articles: list[dict] = []
+    for path in sorted(ARTICLES_DIR.glob("*.html")):
+        where = f"data/articles/{path.name}"
+        slug = path.stem
+        if not SLUG_RE.match(slug):
+            fail(f"{where}: filename must be kebab-case; it becomes the URL")
+
+        meta, body, first_line = _split_front_matter(
+            path.read_text(encoding="utf-8"), where
+        )
+        if not ISO_DATE_RE.match(meta["date"]):
+            fail(f"{where}: 'date' must be YYYY-MM-DD, got '{meta['date']}'")
+        try:
+            date = datetime.date.fromisoformat(meta["date"])
+        except ValueError:
+            fail(f"{where}: 'date' is not a real date: '{meta['date']}'")
+        if meta.get("image") and not meta.get("image_alt"):
+            fail(f"{where}: an 'image' also needs an 'image_alt' describing it")
+
+        problems = check_article_body(body, where, first_line)
+        if problems:
+            fail("article body:\n  " + "\n  ".join(problems))
+
+        articles.append({
+            "id": slug,
+            "title": meta["title"],
+            "subtitle": meta["subtitle"],
+            "description": meta["description"],
+            "date": meta["date"],
+            # "2 September 2026". Built by hand rather than with strftime, whose
+            # no-pad day directive (%-d) is not portable.
+            "date_human": f"{date.day} {MONTHS[date.month - 1]} {date.year}",
+            "image": meta.get("image", ""),
+            "image_alt": meta.get("image_alt", ""),
+            "html": render_article_body(body),
+        })
+
+    # Newest first; the slug breaks ties so the order is stable across builds.
+    articles.sort(key=lambda a: (a["date"], a["id"]), reverse=True)
+    return articles
 
 
 # --------------------------------------------------------------------------- #
@@ -553,6 +768,105 @@ def build_prayers_page(
     )
 
 
+def article_jsonld(article: dict) -> str:
+    """Per-article Article JSON-LD. There is no byline on this site, so the
+    author is the publisher: an institutional voice, stated honestly rather than
+    invented. dateModified is not tracked separately yet and equals the date."""
+    data = {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": article["title"],
+        "description": article["description"],
+        "datePublished": article["date"],
+        "dateModified": article["date"],
+        "inLanguage": "en",
+        "url": f'{BASE_URL}/articles/{article["id"]}/',
+        "author": {"@type": "Organization", "name": "latinprayers.org", "url": BASE_URL + "/"},
+        "publisher": {
+            "@type": "Organization",
+            "name": "latinprayers.org",
+            "url": BASE_URL + "/",
+            "logo": {
+                "@type": "ImageObject",
+                "url": BASE_URL + "/assets/img/sacred-heart.png",
+            },
+        },
+    }
+    return ('<script type="application/ld+json">'
+            + json.dumps(data, ensure_ascii=False) + "</script>")
+
+
+def build_article_page(article: dict, base_tpl: str, article_tpl: str) -> str:
+    figure = ""
+    if article["image"]:
+        figure = (
+            '<figure class="article-figure">\n'
+            f'    <img src="{esc(article["image"])}" alt="{esc(article["image_alt"])}" loading="lazy">\n'
+            "  </figure>"
+        )
+
+    content = render(
+        article_tpl,
+        title=esc(article["title"]),
+        subtitle=esc(article["subtitle"]),
+        date=esc(article["date"]),
+        date_human=esc(article["date_human"]),
+        figure=figure,
+        # The body is authored markup and goes in last. render() replaces one key
+        # after another over the same string, so anything substituted before the
+        # body would be re-scanned inside it (a literal {{year}} in an article
+        # would silently become the build year). check_article_body() also
+        # refuses '{{' at the source, so this holds from both ends.
+        body=article["html"],
+    )
+    return render(
+        base_tpl,
+        root_attr="",
+        page_title=esc(article["title"]),
+        page_description=esc(article["description"]),
+        year=BUILD_YEAR,
+        head_extra=head_extra(f'/articles/{article["id"]}/') + "\n  " + article_jsonld(article),
+        content=content,
+    )
+
+
+def build_articles_page(articles: list[dict], base_tpl: str, articles_tpl: str) -> str:
+    if articles:
+        cards = "\n".join(
+            f'    <li class="article-card">\n'
+            f'      <a class="article-card-link" href="/articles/{esc(a["id"])}/">\n'
+            f'        <time class="article-card-date" datetime="{esc(a["date"])}">'
+            f'{esc(a["date_human"])}</time>\n'
+            f'        <h2 class="article-card-title">{esc(a["title"])}</h2>\n'
+            f'        <p class="article-card-subtitle">{esc(a["subtitle"])}</p>\n'
+            f'        <p class="article-card-desc">{esc(a["description"])}</p>\n'
+            f"      </a>\n"
+            f"    </li>"
+            for a in articles
+        )
+        listing = f'  <ul class="article-list">\n{cards}\n  </ul>'
+    else:
+        listing = (
+            '  <p class="article-empty">The first articles are being written. '
+            "In the meantime, the prayers themselves carry notes on their history "
+            'and use: <a href="/prayers/">browse the prayers</a>.</p>'
+        )
+
+    content = render(articles_tpl, listing=listing)
+    return render(
+        base_tpl,
+        root_attr="",
+        page_title="Articles on Tradition and Catholic Living",
+        page_description=(
+            "Writings on the traditional Faith: the Latin tongue of the Church, "
+            "the Tridentine Mass, and Catholic living."
+        ),
+        year=BUILD_YEAR,
+        head_extra=head_extra("/articles/"),
+        content=content,
+    )
+
+
 # The numbered how-to steps, read back out of the rendered markup. Parsing what
 # we just wrote keeps the page itself the single source of truth for the steps,
 # so the HowTo data cannot drift from what a reader actually sees.
@@ -755,12 +1069,15 @@ def build() -> int:
     """Render the whole site into a fresh dist/. Returns the prayer count."""
     prayers = load_prayers()
     mysteries = load_mysteries()
+    articles = load_articles()
     category_descriptions = load_category_descriptions()
     base_tpl = load_template("base.html")
     prayer_tpl = load_template("prayer.html")
     index_tpl = load_template("index.html")
     prayers_tpl = load_template("prayers.html")
     rosary_tpl = load_template("rosary.html")
+    article_tpl = load_template("article.html")
+    articles_tpl = load_template("articles.html")
 
     # Start from a clean, self-contained output directory.
     if DIST_DIR.exists():
@@ -801,6 +1118,29 @@ def build() -> int:
     )
     print(f"  wrote {prayers_index.relative_to(ROOT)}")
 
+    # Articles, at /articles/ and /articles/<slug>/. Emitted in the prayer
+    # route's order for the same reason: the children are written first with
+    # parents=True, then the index file is written alongside them into the
+    # directory they created, so a file and its sibling directories never
+    # collide. (The STANDALONE_PAGES emit below uses a bare mkdir() and could
+    # not host children this way.)
+    articles_out = DIST_DIR / "articles"
+    for article in articles:
+        page_dir = articles_out / article["id"]
+        page_dir.mkdir(parents=True)
+        out = page_dir / "index.html"
+        out.write_text(
+            build_article_page(article, base_tpl, article_tpl), encoding="utf-8"
+        )
+        print(f"  wrote {out.relative_to(ROOT)}")
+
+    articles_out.mkdir(parents=True, exist_ok=True)
+    articles_index = articles_out / "index.html"
+    articles_index.write_text(
+        build_articles_page(articles, base_tpl, articles_tpl), encoding="utf-8"
+    )
+    print(f"  wrote {articles_index.relative_to(ROOT)}")
+
     # Render the homepage.
     index_out = DIST_DIR / "index.html"
     index_out.write_text(build_home_page(prayers, base_tpl, index_tpl), encoding="utf-8")
@@ -836,7 +1176,7 @@ def build() -> int:
 
     # robots.txt and sitemap.xml, generated so their URLs derive from BASE_URL.
     write_robots(DIST_DIR)
-    write_sitemap(prayers, DIST_DIR)
+    write_sitemap(prayers, articles, DIST_DIR)
 
     # Custom 404 page. GitHub Pages serves /404.html for unknown paths; it is
     # marked noindex (it stands in for many URLs) and carries no canonical.
@@ -862,12 +1202,14 @@ def main() -> None:
     if "--check" in sys.argv[1:]:
         prayers = load_prayers()
         mysteries = load_mysteries()
+        articles = load_articles()
         templates = ["base.html", "prayer.html", "index.html", "prayers.html",
-                     "404.html", "rosary.html"]
+                     "404.html", "rosary.html", "article.html", "articles.html"]
         templates += [f"{slug}.html" for slug, _, _ in STANDALONE_PAGES]
         for name in templates:
             load_template(name)
-        print(f"OK: {len(prayers)} prayer(s), {len(mysteries)} mystery(ies), and templates validated.")
+        print(f"OK: {len(prayers)} prayer(s), {len(mysteries)} mystery(ies), "
+              f"{len(articles)} article(s), and templates validated.")
         return
 
     count = build()

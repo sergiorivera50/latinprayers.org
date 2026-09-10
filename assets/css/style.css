@@ -253,6 +253,8 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 .rosary-steps a,
 .rosary-close-steps a,
 .prayer-empty-note a,
+.article-body a,
+.article-empty a,
 .prayer-source a {
   text-decoration: none;
   background-image: radial-gradient(circle, color-mix(in srgb, currentColor 60%, transparent) 0.75px, transparent 1.25px);
@@ -267,6 +269,8 @@ a:hover, a:focus { color: var(--gold); text-decoration: underline; text-underlin
 .rosary-steps a:hover, .rosary-steps a:focus,
 .rosary-close-steps a:hover, .rosary-close-steps a:focus,
 .prayer-empty-note a:hover, .prayer-empty-note a:focus,
+.article-body a:hover, .article-body a:focus,
+.article-empty a:hover, .article-empty a:focus,
 .prayer-source a:hover, .prayer-source a:focus {
   text-decoration: none;
   background-image: linear-gradient(currentColor, currentColor);
@@ -2211,6 +2215,261 @@ body:has(.page-band) .site-header {
     mask-image: linear-gradient(to bottom, #000 42%, transparent 94%);
   }
   .rosary-cta::after { display: none; }
+}
+
+/* --------------------------------------------------------------------------- */
+/* Articles                                                                     */
+/* --------------------------------------------------------------------------- */
+/* Long-form prose, and the first thing on this site that needs an element-level
+   type scale. The stylesheet has NO bare-element typography anywhere (only html,
+   body and a are styled unscoped), and that discipline is deliberate: a global
+   h2 {} or blockquote {} would leak onto the prayer, index, Rosary and 404
+   pages, none of which expect it. So every rule below is scoped under
+   .article-body, and an article body's headings and lists are the only ones on
+   the site styled by tag.
+
+   The measure is --measure (38rem), which the tokens have carried since the
+   beginning for exactly this and which nothing until now has used. Note this is
+   NOT the .prayer-context recipe: that block sets its prose in --ink-soft at
+   40rem, which is right for a short note appended to a prayer and too muted and
+   too wide to read fifteen hundred words in. Articles get the primary ink. */
+
+/* ---- The header band ------------------------------------------------------
+   The same dark .page-band the prayer and index pages open on, so an article
+   arrives looking like part of the site rather than a section bolted on. The
+   band's own rules recolour .prayer-subtitle and .prayer-description; the
+   article's equivalents are added to those lists further down rather than
+   reusing the prayer class names, which would be a lie about what they are. */
+.article-title {
+  font-family: var(--display);
+  font-weight: 600;
+  /* A shade under .prayer-title's ceiling. A prayer's title is one or two Latin
+     words and can carry 3.6rem; an article's is a sentence, and at that size a
+     two-line headline dominates the band. */
+  font-size: clamp(2.1rem, 5vw, 3rem);
+  line-height: 1.06;
+  letter-spacing: 0.005em;
+  margin: 0;
+  max-width: 22ch;
+  margin-inline: auto;
+  overflow-wrap: break-word;
+}
+.article-subtitle {
+  margin: 0.6rem 0 0;
+  color: var(--ink-soft);
+  font-style: italic;
+  font-size: 1.15rem;
+}
+.article-dateline {
+  margin: 1.25rem 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--gold);
+}
+/* The band redefines the token palette locally, but these three are colours the
+   band sets by hand for its own children (see .page-band .prayer-subtitle). */
+.page-band .article-subtitle { color: #e2dacb; }
+.page-band .article-dateline { color: var(--dark-gold); }
+
+/* ---- The prose column ---------------------------------------------------- */
+.article { max-width: var(--measure); margin: 0 auto; }
+.article-body {
+  color: var(--ink);
+  font-size: 1.12rem;
+  line-height: 1.75;
+}
+.article-body > p { margin: 0 0 1.35rem; }
+.article-body > p:last-child { margin-bottom: 0; }
+
+/* The opening paragraph carries a little more weight, which is the one piece of
+   editorial hierarchy an essay needs and the cheapest to give it. */
+.article-body > p:first-child {
+  font-size: 1.2rem;
+  line-height: 1.68;
+  color: var(--ink);
+}
+
+.article-body h2,
+.article-body h3 {
+  font-family: var(--display);
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.005em;
+  /* An in-page anchor must clear the pinned masthead. --anchor-clear is 0rem at
+     :root and 3rem only under .hdr, so this is correct whether or not the bar
+     is pinned, and whether or not JS ran at all. */
+  scroll-margin-top: calc(1.5rem + var(--anchor-clear));
+}
+.article-body h2 {
+  font-size: 1.7rem;
+  line-height: 1.15;
+  margin: 2.75rem 0 1rem;
+}
+.article-body h3 {
+  font-size: 1.25rem;
+  line-height: 1.25;
+  margin: 2rem 0 0.75rem;
+}
+
+.article-body ul,
+.article-body ol {
+  margin: 0 0 1.35rem;
+  padding-left: 1.35rem;
+}
+.article-body li { margin: 0 0 0.5rem; }
+.article-body li:last-child { margin-bottom: 0; }
+.article-body ul { list-style: none; padding-left: 1.5rem; }
+/* A gold lozenge instead of a disc: the same mark the .ornament carries, so a
+   list reads as part of this site rather than as browser default. */
+.article-body ul > li { position: relative; }
+.article-body ul > li::before {
+  content: "";
+  position: absolute;
+  left: -1.15rem;
+  top: 0.66em;
+  width: 5px;
+  height: 5px;
+  background: var(--gold);
+  transform: rotate(45deg);
+}
+.article-body ol::marker { color: var(--gold-deep); }
+
+/* A quotation, set off by a gold hairline rather than a heavy rule or a tinted
+   slab. Latin sits in the display face; an English rendering under it is muted
+   and smaller, the same relation the prayer pages draw between the two. */
+.article-body blockquote {
+  margin: 2rem 0;
+  padding: 0.15rem 0 0.15rem 1.4rem;
+  border-left: 2px solid var(--gold);
+}
+.article-body blockquote p {
+  margin: 0 0 0.5rem;
+  font-family: var(--display);
+  font-size: 1.3rem;
+  line-height: 1.4;
+  color: var(--ink);
+}
+.article-body blockquote p:last-child { margin-bottom: 0; }
+.article-body blockquote .article-quote-en {
+  font-family: var(--serif);
+  font-size: 1.02rem;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+/* Inline Latin in running prose. EB Garamond ships a language-specific ('locl')
+   substitution for Latin that replaces lowercase u with v, so a <span lang="la">
+   renders 'unum' as 'vnvm'. That is a real epigraphic convention and it is why
+   the font does it, but it belongs on an inscription in capitals, not in a
+   lowercase sentence: ecclesiastical Latin has distinguished u from v for three
+   centuries, and a reader meets 'vnvm' as a typo rather than as a convention.
+   Turned off here only. The prayer and Rosary pages are untouched, and never
+   showed this anyway because their Latin is set in small caps, where the
+   substitution does not apply. Verified in Chrome against both spellings. */
+.article-body [lang="la"] { font-feature-settings: "locl" 0; }
+
+.article-body cite { font-style: italic; color: var(--ink-soft); }
+/* No 700 cut of either face is committed, so bold resolves to the 600. Stating
+   it keeps a <strong> from synthesizing a heavier face on some browsers. */
+.article-body strong, .article-body b { font-weight: 600; }
+
+/* An hr is a section break in prose, so it is drawn as the site's ornament
+   rather than as a rule across the column. */
+.article-body hr {
+  border: 0;
+  width: 4.5rem;
+  height: 1px;
+  margin: 2.5rem auto;
+  background: linear-gradient(90deg, transparent, var(--gold) 45%, var(--gold) 55%, transparent);
+}
+
+/* A figure inside the prose. Breaks the measure a little so the picture has
+   presence without leaving the column entirely. */
+.article-figure,
+.article-body figure {
+  margin: 2.25rem 0;
+}
+.article-figure img,
+.article-body figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+}
+.article-figure figcaption,
+.article-body figcaption {
+  margin-top: 0.7rem;
+  text-align: center;
+  color: var(--ink-faint);
+  font-size: 0.92rem;
+  font-style: italic;
+}
+
+/* ---- The index ----------------------------------------------------------- */
+.article-index-lead {
+  margin: 1.1rem auto 0;
+  max-width: var(--measure);
+  color: var(--ink-soft);
+  font-size: 1.02rem;
+  width: 100%;
+}
+.page-band .article-index-lead { color: #e2dacb; }
+
+.article-index { max-width: 46rem; margin: 0 auto; padding-top: 1rem; }
+.article-list { list-style: none; margin: 0; padding: 0; }
+.article-card + .article-card { border-top: 1px solid var(--line); }
+.article-card-link {
+  display: block;
+  padding: 1.9rem 0;
+  color: inherit;
+}
+.article-card-link:hover, .article-card-link:focus-visible { text-decoration: none; }
+.article-card-date {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--gold-deep);
+}
+.article-card-title {
+  margin: 0.6rem 0 0;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.65rem;
+  line-height: 1.15;
+  color: var(--ink);
+  transition: color 0.15s var(--ease);
+}
+.article-card-link:hover .article-card-title,
+.article-card-link:focus-visible .article-card-title { color: var(--gold-deep); }
+.article-card-subtitle {
+  margin: 0.35rem 0 0;
+  font-style: italic;
+  color: var(--ink-soft);
+  font-size: 1.05rem;
+}
+.article-card-desc {
+  margin: 0.7rem 0 0;
+  color: var(--ink-soft);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+.article-empty {
+  margin: 0;
+  padding: 2rem 0;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 48rem) {
+  .article-body { font-size: 1.08rem; }
+  .article-body > p:first-child { font-size: 1.14rem; }
+  .article-body h2 { font-size: 1.5rem; }
+  .article-card-title { font-size: 1.4rem; }
+  .article-card-link { padding: 1.5rem 0; }
 }
 
 /* --------------------------------------------------------------------------- */

@@ -66,12 +66,15 @@ on every push by GitHub Actions and published from the `dist/` artifact.
 ├── data/
 │   ├── prayers.csv       # SOURCE OF TRUTH — one row per prayer
 │   ├── mysteries.csv     # the fifteen Rosary mysteries (one row each)
-│   └── categories.csv    # optional one-line blurb per homepage category
+│   ├── categories.csv    # optional one-line blurb per homepage category
+│   └── articles/         # one long-form article per file: <slug>.html
 ├── templates/
 │   ├── base.html         # outer HTML shell (header, footer, <head>)
 │   ├── index.html        # the root landing page (hero + chapter sections)
 │   ├── prayers.html      # the prayer index (search + category lists) at /prayers/
-│   └── prayer.html       # single-prayer content block
+│   ├── prayer.html       # single-prayer content block
+│   ├── articles.html     # the article index at /articles/
+│   └── article.html      # single-article content block
 ├── assets/
 │   ├── css/style.css     # hand-authored styles
 │   ├── fonts/            # self-hosted woff2 (Cormorant Garamond, EB Garamond)
@@ -308,6 +311,84 @@ Deliberately absent, and not oversights: no editing of `mysteries.csv` or
 no git integration, no undo stack, no reordering by drag, no auth (loopback is the
 auth), no rendered preview of the prayer page (the site itself is one click away,
 rebuilds on save, and now carries a link back).
+
+## Articles: long-form prose at `/articles/`
+
+Essays and teaching pieces live at `/articles/` and `/articles/<slug>/`. **One
+article is one file**, `data/articles/<slug>.html`; the filename is the URL.
+
+**Prose does not go in a CSV, and this is not a preference.** `esc()` makes every
+character of a CSV cell literal, so a link or an emphasis written into a cell
+renders as visible markup; and a whole essay on one CSV line is precisely the
+unreadable git diff that `field_changes()` in the studio exists to work around.
+Articles are therefore deliberately **outside the studio and outside the CSVs**.
+
+**The format is a header, a `---`, and a body, and the body has exactly one
+rule: a block beginning with `<` is authored markup, every other block is a
+paragraph.** That is `_split_paragraphs` (how a prayer's `context` already
+behaves) plus one condition. There is no markdown parser and none is wanted: a
+regex markdown subset is a tar pit, and the maintainer never has to type a `<p>`
+anyway, because ordinary prose blocks become paragraphs on their own.
+
+Header fields: `title`, `subtitle`, `description`, `date` (all required, `date`
+as `YYYY-MM-DD`), plus optional `image` and `image_alt` (an `image` without its
+`image_alt` is an error). Unknown or duplicate fields are errors, so a typo in a
+field name cannot silently drop content.
+
+**The body is trusted and unescaped, exactly as `templates/rosary.html` is.**
+What keeps that honest is `check_article_body()`, which walks the tag stack, so
+an unclosed or crossed tag is a build error naming the line; refuses any tag
+outside the closed `ARTICLE_TAGS` allowlist; catches a bare `&`; refuses a
+literal `{{`; and enforces the house **no-em-dash** rule, which is the first
+machine-enforced editorial rule in this repo. `build.py --check` runs all of it,
+so mistakes are caught before a push rather than in CI.
+
+**Ordering, and the two traps that shaped the wiring.** Articles sort newest
+first, the slug breaking ties so the order is stable across builds. Two things
+are load-bearing and easy to undo by accident:
+
+- `render()` is a successive `str.replace` in kwargs order, so **anything
+  substituted before the body is re-scanned inside it**: a literal `{{year}}` in
+  an article would silently become the build year. `build_article_page` passes
+  `content` **last**, and `check_article_body` refuses `{{` at the source, so the
+  guarantee holds from both ends. Keep `content` last.
+- The article pages are emitted **children first** (`mkdir(parents=True)`), then
+  the index file alongside them, copying the prayer route. `STANDALONE_PAGES`
+  cannot host a route like this at all: its emit uses a bare `page_dir.mkdir()`
+  and would raise `FileExistsError` against its own children.
+
+**`serve.py` watches `data/articles/` (and now `mysteries.csv` and
+`categories.csv` too).** A source the watcher does not know about does not fail,
+it silently stops rebuilding, which reads as a caching bug mid-session.
+
+**Styling is scoped under `.article-body`, and must stay that way.** This is the
+only place on the site with element-level typography (`h2`, `ul`, `blockquote`).
+The stylesheet otherwise styles no bare element but `html`, `body`, and `a`, and
+a global `h2 {}` would leak onto the prayer, index, Rosary, and 404 pages. The
+prose column uses `--measure` (38rem, declared since the beginning for exactly
+this and unused until now) and `--ink`. It is **not** the `.prayer-context`
+recipe: that sets prose in `--ink-soft` at 40rem, which is right for a short note
+under a prayer and too muted and too wide for fifteen hundred words.
+
+**One typographic trap worth knowing: `lang="la"` turns lowercase `u` into `v`.**
+EB Garamond ships a language-specific (`locl`) substitution for Latin, so a
+`<span lang="la">` renders `unum` as `vnvm`. It is a real epigraphic convention
+and belongs on an inscription in capitals, not in a lowercase sentence. It is
+turned off under `.article-body` only. The prayer and Rosary pages never showed
+it because their Latin is set in small caps, where it does not apply.
+
+**Deliberately not in this route yet:** no landing-page chapter band, no Open
+Graph cards (`base.html` still has none, and articles are the one thing here
+people share as a link, so this is now the first thing worth doing), no
+cross-links from prayer pages, no table of contents, no tags or series, no RSS.
+A table of contents in particular needs care: `initFloatScroll` calls
+`preventDefault()` on every vertical wheel on desktop, so any element with its
+own `overflow-y` would be unreachable by wheel.
+
+Articles carry a dateline and **no byline**: the site speaks with one
+institutional voice, and the `Article` JSON-LD names the Organization as author
+rather than inventing a person. The sitemap gives each article its own `date` as
+`lastmod`; everything else still carries the build date.
 
 ## Standalone pages (e.g. a future About page)
 
