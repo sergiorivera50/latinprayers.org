@@ -2289,8 +2289,19 @@ body:has(.page-band) .site-header {
   background: linear-gradient(90deg, transparent, var(--gold), transparent);
 }
 
-.rosary-intro { max-width: 40rem; margin: 0 auto 3rem; }
-.rosary-intro p { margin: 0 0 1.1rem; color: var(--ink-soft); font-size: 1.06rem; line-height: 1.8; }
+/* The opening prose is the page's article, not an aside, so it is set as one:
+   larger and nearly full ink (#30271b, 13:1 on the paper), every paragraph
+   alike (a larger standfirst was tried and rejected). It deliberately does not share
+   .prayer-context's muted register, which is supplementary reading below a
+   prayer; here the narrative is the first thing the reader meets. */
+.rosary-intro { max-width: 38rem; margin: 0 auto 3.5rem; }
+.rosary-intro p {
+  margin: 0 0 1.35rem;
+  color: #30271b;
+  font-size: 1.15rem;
+  line-height: 1.75;
+  text-wrap: pretty;
+}
 .rosary-intro p:last-child { margin-bottom: 0; }
 
 /* How to pray: diagram beside numbered steps (stacks on phones) */
@@ -2302,8 +2313,10 @@ body:has(.page-band) .site-header {
   margin: 0;
   padding-left: 1.4rem;
   color: var(--ink);
-  font-size: 1.05rem;
-  line-height: 1.7;
+  /* The intro's size, so the page reads at one size from the narrative into the
+     steps. The phone step-down is shared, after the concluding prayers. */
+  font-size: 1.15rem;
+  line-height: 1.75;
   counter-reset: step;
   list-style: none;
 }
@@ -2320,7 +2333,7 @@ body:has(.page-band) .site-header {
   top: 0.05rem;
   font-family: var(--display);
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 1.04rem;
   color: var(--gold-deep);
   width: 1.3rem;
   text-align: right;
@@ -2752,13 +2765,16 @@ body:has(.page-band) .site-header {
 
 /* Concluding prayers */
 .rosary-close { max-width: 40rem; margin: 0 auto; }
-.rosary-close-intro { color: var(--ink-soft); margin: 0 0 1.5rem; text-align: center; }
-.rosary-close-steps { margin: 0; padding-left: 1.6rem; }
+.rosary-close-intro { color: #30271b; font-size: 1.15rem; line-height: 1.75; margin: 0 0 1.5rem; text-align: center; }
+/* Sized on the list, not the labels, so the numerals (::marker) grow with them;
+   the prayer cards are set back to the base size below. */
+.rosary-close-steps { margin: 0; padding-left: 1.6rem; font-size: 1.15rem; line-height: 1.75; }
 .rosary-close-steps > li { margin: 0 0 1.75rem; }
 .rosary-close-steps > li:last-child { margin-bottom: 0; }
 .rosary-close-steps > li::marker { color: var(--gold); }
 .rosary-step-label { margin: 0 0 0.7rem; color: var(--ink); }
 .rosary-collect {
+  font-size: 1rem;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -2773,6 +2789,17 @@ body:has(.page-band) .site-header {
   letter-spacing: 0.02em;
 }
 .rosary-collect p:last-child { margin-bottom: 0; color: var(--ink-soft); }
+
+/* The page's reading text (intro, steps, the concluding section's own words)
+   steps down together on phones. It lives here, after all of them, because a
+   media query adds no specificity: placed earlier, each rule's desktop size
+   would come later in the file and win. */
+@media (max-width: 40rem) {
+  .rosary-intro p,
+  .rosary-steps,
+  .rosary-close-intro,
+  .rosary-close-steps { font-size: 1.08rem; }
+}
 
 /* Closing image: Our Lady on a transparent ground — a quiet benediction to end
    the page. No frame; she floats on the background, with the last words of the
