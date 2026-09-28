@@ -587,7 +587,7 @@ def render_categories(prayers: list[dict]) -> str:
         '  <img class="categories-bg" src="/assets/img/church.webp" alt="" '
         'width="2400" height="1600" loading="lazy" decoding="async">\n'
         '  <div class="categories-inner">\n'
-        '    <p class="categories-eyebrow">The collection</p>\n'
+        '    <p class="categories-eyebrow">Full collection</p>\n'
         '    <h2 class="categories-title" id="categories-title">Browse by category</h2>\n'
         '    <ul class="categories-list">\n'
         + "\n".join(rows) + "\n"

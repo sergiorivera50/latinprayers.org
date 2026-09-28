@@ -541,14 +541,39 @@
       target = position;
     }
 
+    // Where the chevron should land. The first band locks in place and only
+    // finishes revealing its words REVEAL_TO of a screen into the lock (see
+    // initLockReveal), so landing on the band's top edge, as this did before the
+    // bands locked, left the reader on a half-revealed band. Where the lock is
+    // on, aim past that point; where it is off (a phone, a short window, a band
+    // too tall for the window) the band's top is still the right place.
+    function chevronTarget() {
+      var band = sections[1];
+      var box = band.closest ? band.closest(".chapter-lock") : null;
+      var top = (box || band).getBoundingClientRect().top + window.scrollY;
+      var locked = box && !box.classList.contains("lock--free") &&
+        window.getComputedStyle(band).position === "sticky";
+      return locked ? top + Math.ceil(-REVEAL_TO * window.innerHeight) + 2 : top;
+    }
+
     if (chevron && sections.length > 1) {
       // initSmoothScroll leaves this one alone (see its selector) so that it
       // travels with the same weight as the wheel does.
       chevron.addEventListener("click", function (e) {
-        if (!takeover()) return;                         // plain anchor jump
+        if (!takeover()) {
+          // No wheel takeover (touch, reduced motion): the anchor jump is right
+          // unless the band is locked, where it too would stop half-revealed.
+          var goal = chevronTarget();
+          var box = sections[1].closest ? sections[1].closest(".chapter-lock") : null;
+          if (box && goal !== box.getBoundingClientRect().top + window.scrollY) {
+            e.preventDefault();
+            window.scrollTo(0, goal);                    // obeys scroll-behavior
+          }
+          return;
+        }
         e.preventDefault();
         resync();
-        target = reach(sections[1].offsetTop);
+        target = reach(chevronTarget());
         drive();
       });
     }
@@ -763,7 +788,7 @@
     // Every dark ground on the site. While the bar's lower edge is inside one of
     // these it is crossing a picture and keeps its dark veil; once it is past
     // them it is crossing the reading, and turns into the paper instead.
-    var grounds = document.querySelectorAll(".hero, .chapter, .feature, .categories, .page-band");
+    var grounds = document.querySelectorAll(".hero, .chapter, .feature, .quote, .categories, .page-band");
     // The phone layout, asked live like every other query on the page. There the
     // masthead stacks into two rows, and two rows pinned to the top of a phone
     // is a third of the screen spent on navigation.
@@ -1053,7 +1078,32 @@
         box: bands[i],
         stage: band,
         picture: band.querySelector(".chapter-bg"),
+        // .chapter--still keeps the picture beat's deepening scrim but not its
+        // push-in (the Rosary band: the statue is better left at rest).
+        push: band.classList.contains("chapter--still") ? 0 : BAND_PUSH,
         pieces: pieces
+      });
+    }
+    var quote = document.querySelector(".quote");
+    if (quote) {
+      // The thin quotation band between the Rosary and the categories. It does
+      // not lock (it is a pause, not a screen), so its reveal has its own window:
+      // from the moment it enters to when its middle nears the middle of the
+      // screen, rather than one timed against a screen-long hold.
+      locks.push({
+        box: quote,
+        stage: quote,
+        picture: null,
+        from: 1,
+        to: 0.35,
+        // The reference is left out: it simply stands under the verse while
+        // the words themselves arrive.
+        pieces: [
+          quote.querySelector(".quote-la"),
+          quote.querySelector(".quote-en")
+        ].filter(Boolean).map(function (el) {
+          return { el: el, dx: 0, dy: REVEAL_RISE };
+        })
       });
     }
     var index = document.querySelector(".categories");
@@ -1136,13 +1186,17 @@
           lock.picture.style.transform = "";
           lock.stage.style.removeProperty("--scrim-in");
         } else {
-          lock.picture.style.transform = "scale(" + (1 + (1 - q) * BAND_PUSH).toFixed(4) + ")";
+          lock.picture.style.transform = lock.push
+            ? "scale(" + (1 + (1 - q) * lock.push).toFixed(4) + ")"
+            : "";
           lock.stage.style.setProperty("--scrim-in",
             (BAND_SCRIM_FROM + (1 - BAND_SCRIM_FROM) * q).toFixed(3));
         }
       }
 
-      var p = clamp01((REVEAL_FROM - top) / (REVEAL_FROM - REVEAL_TO));
+      var from = lock.from !== undefined ? lock.from : REVEAL_FROM;
+      var to = lock.to !== undefined ? lock.to : REVEAL_TO;
+      var p = clamp01((from - top) / (from - to));
       var step = (1 - REVEAL_SPAN) / Math.max(lock.pieces.length - 1, 1);
       for (var i = 0; i < lock.pieces.length; i++) {
         var piece = lock.pieces[i];

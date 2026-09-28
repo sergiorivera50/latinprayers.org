@@ -406,17 +406,33 @@ split, so it does not need re-deciding:
   This is **not** the pinned stack recorded below as removed: nothing
   cross-fades and nothing is stacked; each band holds, then scrolls away as
   normal. The cost is length: the landing page is three screens longer.
+  **The hero's chevron aims past the first band's reveal**, not at its top
+  (`chevronTarget` in `initFloatScroll`): landing on the top edge of a locked
+  band leaves its words half-revealed, since the reveal only completes
+  `REVEAL_TO` of a screen into the lock. Where the lock is off it aims at the
+  top as before. If the reveal window changes, the chevron follows it.
   **The three locks share a mechanism but not a choreography.** Timing, easing
   and order are common (`REVEAL_FROM`/`REVEAL_TO`/`REVEAL_SPAN`); the movement
   follows each layout. The Prayer of the day is centred, so its pieces rise.
   A band is a place, then words about it: its picture settles first from a
-  slight push-in (`BAND_PUSH`) while its scrim deepens (the `--scrim-in` custom
+  slight push-in (`BAND_PUSH`; a band with `.chapter--still`, the Rosary, keeps
+  everything but the push-in) while its scrim deepens (the `--scrim-in` custom
   property on the band, read by its `::after`), finishing as the lock engages;
   then its words slide in sideways from the side they live on (`BAND_SLIDE`,
   mirrored on `.chapter--reverse`), the `.chapter-list` rows one at a time with
   the list's own hairline arriving unmoved ahead of them. Varying the direction
   and staging per layout was chosen over giving each section an unrelated
   effect, which would read as a showcase rather than one page.
+  **Between the Rosary band and the categories sits `.quote`**, a thin band of
+  words only on `--night`: Psalm 140:2 in the Vulgate with its Douay English
+  ("Dirigatur oratio mea sicut incensum…"), the verse the priest prays at the
+  offertory incensation of the traditional Mass, chosen because it is about
+  prayer and the page turns to the collection next. It is authored straight
+  into `templates/index.html`. It does not lock; `initLockReveal` fades its
+  Latin and English up (the reference is left still) on a window of its own (`from`/`to` on its lock entry, from
+  arrival to just before centre) since the shared window is timed against a
+  screen-long hold. It needs no feathers: the Rosary band closes into
+  `--night` above it and the categories' scrim opens out of it below.
   **The page closes on the categories, `.categories`** (`render_categories` in
   `build.py`): every category with its prayer count and the Latin titles of its
   first `CATEGORY_GLIMPSE` prayers, in two hairline-ruled columns on `--night`,

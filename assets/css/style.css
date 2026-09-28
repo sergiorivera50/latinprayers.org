@@ -1371,6 +1371,7 @@ body:has(.page-band) .site-header {
    Both rest at their ordinary values, so without JS nothing differs. */
 .chapter-lock > .chapter--band::after { opacity: var(--scrim-in, 1); }
 .chapter-lock .chapter-bg { will-change: transform; }
+.chapter-lock .chapter--still .chapter-bg { will-change: auto; }
 /* Off on phones and short windows (the query the Prayer of the day uses, and
    main.js asks), and wherever main.js finds the band taller than the window. */
 @media (max-width: 38rem), (max-height: 34rem) {
@@ -1379,6 +1380,59 @@ body:has(.page-band) .site-header {
 }
 .chapter-lock.lock--free { min-height: 0; }
 .chapter-lock.lock--free > .chapter--band { position: relative; }
+
+/* ---- The quotation: a thin pause between the Rosary band and the categories.
+   On --night with no picture, it is the one place on the page that is only
+   words: a verse of Scripture in Latin, its Douay English beneath, its
+   reference in gold. Psalm 140:2 is the verse the priest prays at the
+   offertory of the traditional Mass while incensing the altar, and it is about
+   prayer itself, which is what the page turns to next. It does not lock; it
+   fades up as it arrives (initLockReveal, on a window of its own). Its edges
+   need no feathering: the Rosary band above already closes into --night, and
+   the categories' scrim opens out of it below. */
+.quote {
+  background: var(--night);
+  padding: clamp(4.5rem, 16vh, 8.5rem) 1.5rem;
+  text-align: center;
+}
+.quote-inner {
+  max-width: 40rem;
+  margin: 0 auto;
+}
+.quote-la {
+  margin: 0;
+  font-family: var(--display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(1.35rem, 2.3vw, 1.7rem);
+  line-height: 1.4;
+  color: var(--ivory);
+}
+.quote-en {
+  margin: 0.9rem auto 0;
+  max-width: 34rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: rgba(246, 241, 231, 0.62);
+}
+/* The reference under a short gold rule. */
+.quote-cite {
+  margin-top: 1.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--dark-gold);
+}
+.quote-cite::before {
+  content: "";
+  display: block;
+  width: 2.5rem;
+  height: 1px;
+  margin: 0 auto 1rem;
+  background: rgba(215, 178, 100, 0.5);
+}
+.quote-cite cite { font-style: normal; }
 
 /* ---- The categories: the landing page's closing section. Every category in
    the collection, its count and a glimpse of its prayers, each linking to its
