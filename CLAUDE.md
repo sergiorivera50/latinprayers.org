@@ -417,6 +417,23 @@ split, so it does not need re-deciding:
   the list's own hairline arriving unmoved ahead of them. Varying the direction
   and staging per layout was chosen over giving each section an unrelated
   effect, which would read as a showcase rather than one page.
+  **The page closes on the categories, `.categories`** (`render_categories` in
+  `build.py`): every category with its prayer count and the Latin titles of its
+  first `CATEGORY_GLIMPSE` prayers, in two hairline-ruled columns on `--night`,
+  each row linking to `/prayers/#<slug>`, over St. Peter's dome
+  (`assets/img/church.webp`, a 2400px export of the full-size `.jpg`), dimmed
+  heavily but not blurred, since unlike the missal it has no lettering behind
+  the words. `category_slug` makes that anchor and
+  is shared with `build_prayers_page`, which now gives each `.category` the same
+  `id` (with `scroll-margin-top` to clear the masthead), so the two cannot
+  disagree; `group_by_category` is shared the same way. The long category
+  descriptions stay on `/prayers/`. It is the fourth lock (rows rising one by
+  one), but its box is `160svh`, not two screens: it is the last thing on the
+  page, so a full held screen after the reveal would be scrolling that moves
+  nothing. The copyright colophon moved into its stage from the Rosary band.
+  The Rosary band now has night on both sides, and a band with both
+  `.chapter--from-night` and `.chapter--into-night` carries both feathers in its
+  one free `::before` as two gradient layers.
   **Every band is at least one viewport tall (`100svh`).** The wheel is taken
   over and given weight on **every route**, not only this one (`initFloatScroll`
   in `main.js`): the weight is how the site scrolls, not a trick the landing page
@@ -537,7 +554,8 @@ split, so it does not need re-deciding:
   veil is right over a photograph and wrong over the reading, and the same page
   is both: a prayer opens on its band and runs onto ivory a screen later. So
   `initStickyHeader` asks on every frame whether the bar's own lower edge is
-  still inside one of the site's dark grounds (`.hero`, `.chapter`, `.page-band`)
+  still inside one of the site's dark grounds (`.hero`, `.chapter`, `.feature`,
+  `.categories`, `.page-band`)
   and, when it is not, the bar stops being chrome laid over the page and becomes
   the page's surface instead: the same frosting in the paper's colour with the
   paper's ink on it (ink 15.4:1, `--ink-soft` for the nav 5.7:1, `--gold-deep` on

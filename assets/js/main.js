@@ -763,7 +763,7 @@
     // Every dark ground on the site. While the bar's lower edge is inside one of
     // these it is crossing a picture and keeps its dark veil; once it is past
     // them it is crossing the reading, and turns into the paper instead.
-    var grounds = document.querySelectorAll(".hero, .chapter, .feature, .page-band");
+    var grounds = document.querySelectorAll(".hero, .chapter, .feature, .categories, .page-band");
     // The phone layout, asked live like every other query on the page. There the
     // masthead stacks into two rows, and two rows pinned to the top of a phone
     // is a third of the screen spent on navigation.
@@ -1054,6 +1054,23 @@
         stage: band,
         picture: band.querySelector(".chapter-bg"),
         pieces: pieces
+      });
+    }
+    var index = document.querySelector(".categories");
+    if (index) {
+      // Centred, like the Prayer of the day, so its pieces rise; the rows come
+      // one at a time, the same as a band's list.
+      var rows = Array.prototype.slice.call(index.querySelectorAll(".categories-list li"));
+      locks.push({
+        box: index,
+        stage: index.querySelector(".categories-stage"),
+        picture: null,
+        pieces: [
+          index.querySelector(".categories-eyebrow"),
+          index.querySelector(".categories-title")
+        ].concat(rows).filter(Boolean).map(function (el) {
+          return { el: el, dx: 0, dy: REVEAL_RISE };
+        })
       });
     }
     var feature = document.querySelector(".feature");

@@ -558,6 +558,49 @@ def render_daily(pool: list[dict]) -> str:
     )
 
 
+# How many of a category's prayers the landing page names beside it: enough to
+# show what the category is, few enough to stay on one line.
+CATEGORY_GLIMPSE = 3
+
+
+def render_categories(prayers: list[dict]) -> str:
+    """The landing page's closing section: every category, with its prayer count
+    and the first few of its prayers by name, each linking to its place on
+    /prayers/. Built from the data, so a new category or prayer appears here
+    without touching the template. The longer category descriptions stay on
+    /prayers/; ten of them would not fit one screen."""
+    rows = []
+    for category, items in group_by_category(prayers).items():
+        count = len(items)
+        names = " · ".join(esc(p["title"]) for p in items[:CATEGORY_GLIMPSE])
+        if count > CATEGORY_GLIMPSE:
+            names += " …"
+        rows.append(
+            f'      <li><a href="/prayers/#{category_slug(category)}">'
+            f'<span class="categories-name">{esc(category)}</span>'
+            f'<span class="categories-count">{count} {"prayer" if count == 1 else "prayers"}</span>'
+            f'<span class="categories-glimpse" lang="la">{names}</span></a></li>'
+        )
+    return (
+        '<section class="categories" aria-labelledby="categories-title">\n'
+        '  <div class="categories-stage">\n'
+        '  <img class="categories-bg" src="/assets/img/church.webp" alt="" '
+        'width="2400" height="1600" loading="lazy" decoding="async">\n'
+        '  <div class="categories-inner">\n'
+        '    <p class="categories-eyebrow">The collection</p>\n'
+        '    <h2 class="categories-title" id="categories-title">Browse by category</h2>\n'
+        '    <ul class="categories-list">\n'
+        + "\n".join(rows) + "\n"
+        '    </ul>\n'
+        '  </div>\n'
+        # The copyright, set into the foot of the last section (it was the
+        # Rosary band's until this section followed it).
+        f'  <p class="chapter-colophon">© {BUILD_YEAR} latinprayers.org. All rights reserved.</p>\n'
+        '  </div>\n'
+        '</section>'
+    )
+
+
 def build_home_page(prayers: list[dict], base_tpl: str, index_tpl: str) -> str:
     """The root page: the hero band and the chapter sections, one per
     destination, with the Prayer of the day between them (render_daily).
@@ -567,6 +610,7 @@ def build_home_page(prayers: list[dict], base_tpl: str, index_tpl: str) -> str:
     content = render(
         index_tpl,
         prayer_of_the_day=render_daily(daily_pool(prayers)),
+        categories=render_categories(prayers),
         prayer_count=str(len(prayers)),
         category_count=str(len({p["category"] for p in prayers})),
         # The landing page carries the copyright inside its last band rather than
@@ -594,17 +638,29 @@ def build_home_page(prayers: list[dict], base_tpl: str, index_tpl: str) -> str:
     )
 
 
-def build_prayers_page(
-    prayers: list[dict], base_tpl: str, index_tpl: str, descriptions: dict[str, str]
-) -> str:
-    # Group by category, preserving first-seen category order; sort within by order.
+def category_slug(category: str) -> str:
+    """The category's anchor on /prayers/ ("Acts of Faith, Hope, and Charity" ->
+    "acts-of-faith-hope-and-charity"), shared by that page and the landing
+    page's category list so the two can never disagree."""
+    return re.sub(r"[^a-z0-9]+", "-", category.lower()).strip("-")
+
+
+def group_by_category(prayers: list[dict]) -> dict[str, list[dict]]:
+    """Prayers grouped by category in first-seen order, each group sorted by
+    its `order` column."""
     categories: dict[str, list[dict]] = {}
     for prayer in prayers:
         categories.setdefault(prayer["category"], []).append(prayer)
-
-    blocks: list[str] = []
-    for category, items in categories.items():
+    for items in categories.values():
         items.sort(key=lambda p: (p["order"], p["title"]))
+    return categories
+
+
+def build_prayers_page(
+    prayers: list[dict], base_tpl: str, index_tpl: str, descriptions: dict[str, str]
+) -> str:
+    blocks: list[str] = []
+    for category, items in group_by_category(prayers).items():
         links = []
         for p in items:
             # Lowercased haystack for the optional client-side filter (main.js):
@@ -623,7 +679,7 @@ def build_prayers_page(
         desc = descriptions.get(category, "")
         desc_html = f'  <p class="category-desc">{esc(desc)}</p>\n' if desc else ""
         blocks.append(
-            '<section class="category">\n'
+            f'<section class="category" id="{category_slug(category)}">\n'
             f'  <h2 class="category-title">{esc(category)}</h2>\n'
             f"{desc_html}"
             '  <ul class="prayer-list">\n'

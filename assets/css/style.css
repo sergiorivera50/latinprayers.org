@@ -1380,6 +1380,151 @@ body:has(.page-band) .site-header {
 .chapter-lock.lock--free { min-height: 0; }
 .chapter-lock.lock--free > .chapter--band { position: relative; }
 
+/* ---- The categories: the landing page's closing section. Every category in
+   the collection, its count and a glimpse of its prayers, each linking to its
+   place on /prayers/. On --night like the Prayer of the day, with no picture:
+   it closes the page as an index, and a list reads best on a quiet ground. It
+   locks and reveals as the others do (initLockReveal); being centred, its
+   pieces rise. Its box is shorter than the others' two screens because it is
+   the last thing on the page: the page ends where the box does, and a full
+   screen of held stillness after the reveal would be scrolling that moves
+   nothing. The copyright sits in the foot of its stage.
+   Its ground is St. Peter's, looking up into the dome: the Church the whole
+   collection belongs to, closing the page. */
+.categories {
+  background: var(--night);
+  min-height: 160vh;
+  min-height: 160svh;
+}
+.categories-stage {
+  position: sticky;
+  top: 0;
+  isolation: isolate;            /* keeps the picture and scrim inside it */
+  display: flex;
+  align-items: center;
+  min-height: 100vh;
+  min-height: 100svh;
+}
+/* Unlike the missal behind the Prayer of the day it carries no lettering where
+   the words go (its inscription runs along the foot), so it is dimmed but not
+   blurred: the dome keeps its detail. The list spans the middle of the screen,
+   so the dimming is heavy and near even, a little lighter toward the corners;
+   the top and bottom close to exactly --night to meet the Rosary band above. */
+.categories-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 35%;
+}
+.categories-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(to bottom,
+      var(--night) 0%,
+      rgba(17, 15, 16, 0) 22%,
+      rgba(17, 15, 16, 0) 78%,
+      var(--night) 100%),
+    radial-gradient(ellipse 70% 75% at 50% 50%,
+      rgba(17, 15, 16, 0.88) 0%,
+      rgba(17, 15, 16, 0.82) 60%,
+      rgba(17, 15, 16, 0.7) 100%);
+}
+.categories-inner {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 54rem;
+  margin: 0 auto;
+  padding: clamp(3rem, 8vh, 4.5rem) 1.5rem clamp(4rem, 10vh, 5.5rem);
+  text-align: center;
+}
+.categories-eyebrow {
+  margin: 0 0 0.45rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--dark-gold);
+}
+.categories-title {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(1.55rem, 2.6vw, 1.85rem);
+  line-height: 1.15;
+  color: var(--ivory);
+  margin: 0 0 1.75rem;
+}
+/* Hairline-ruled rows in two columns, like the bands' own lists rather than
+   cards: the name and its count on one line, a glimpse of its prayers below. */
+.categories-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 2.5rem;
+  text-align: left;
+}
+.categories-list li { border-bottom: 1px solid var(--dark-line); }
+.categories-list li:nth-child(-n + 2) { border-top: 1px solid var(--dark-line); }
+.categories-list a {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  column-gap: 1rem;
+  padding: 0.7rem 0.15rem;
+  color: var(--ivory);
+  transition: color 0.15s var(--ease);
+}
+.categories-list a:hover, .categories-list a:focus-visible {
+  color: var(--dark-gold);
+  text-decoration: none;
+}
+.categories-name {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.15rem;
+  line-height: 1.2;
+}
+.categories-count {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--dark-gold);
+}
+/* The same soft halo as the Prayer of the day, against the dome's bright gold. */
+.categories-inner { text-shadow: 0 1px 12px rgba(17, 15, 16, 0.9), 0 0 2px rgba(17, 15, 16, 0.6); }
+.categories-glimpse {
+  grid-column: 1 / -1;
+  margin-top: 0.2rem;
+  font-style: italic;
+  font-size: 0.86rem;
+  color: rgba(246, 241, 231, 0.64);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.categories-list a:hover .categories-glimpse,
+.categories-list a:focus-visible .categories-glimpse { color: rgba(246, 241, 231, 0.82); }
+@media (max-width: 38rem) {
+  .categories-list { grid-template-columns: 1fr; }
+  .categories-list li:nth-child(2) { border-top: 0; }
+}
+/* Off where the other locks are off, and where main.js finds it too tall. */
+@media (max-width: 38rem), (max-height: 34rem) {
+  .categories { min-height: 0; }
+  .categories-stage { position: relative; min-height: 0; }
+}
+.categories.lock--free { min-height: 0; }
+.categories.lock--free .categories-stage { position: relative; min-height: 0; }
+
 /* The bands either side feather into the night rather than stopping against
    it. Their own vertical veils are light at the edges (the daylight photographs
    are meant to stay lit), so without this a lit photograph would cut hard
@@ -1403,6 +1548,17 @@ body:has(.page-band) .site-header {
 .chapter--from-night::before {
   top: 0;
   background: linear-gradient(to top, rgba(17, 15, 16, 0), var(--night));
+}
+/* A band with night on both sides (the Rosary, between the Prayer of the day
+   and the categories) has only the one pseudo-element free, the scrim being
+   ::after, so it spans the band and carries both feathers as two layers. */
+.chapter--from-night.chapter--into-night::before {
+  top: 0;
+  bottom: 0;
+  height: auto;
+  background:
+    linear-gradient(to bottom, var(--night), rgba(17, 15, 16, 0) clamp(7rem, 26vh, 14rem)),
+    linear-gradient(to top, var(--night), rgba(17, 15, 16, 0) clamp(7rem, 26vh, 14rem));
 }
 /* Doubled class: .chapter--dark sets border-block further down the file. */
 .chapter--dark.chapter--into-night { border-bottom: 0; }
@@ -1692,7 +1848,13 @@ body:has(.page-band) .site-header {
 /* --------------------------------------------------------------------------- */
 /* Homepage: category sections + prayer list                                    */
 /* --------------------------------------------------------------------------- */
-.category { margin: 0 auto 2.75rem; max-width: 46rem; }
+/* The landing page's category list links to each of these by id, so each
+   must clear the pinned masthead when it lands. */
+.category {
+  margin: 0 auto 2.75rem;
+  max-width: 46rem;
+  scroll-margin-top: calc(1.5rem + var(--anchor-clear));
+}
 .category-title {
   display: flex;
   align-items: center;
