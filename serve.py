@@ -20,6 +20,7 @@ it is not offered to the network) and can be turned off explicitly.
 from __future__ import annotations
 
 import argparse
+import importlib
 import sys
 import threading
 import time
@@ -32,7 +33,8 @@ import studio
 
 ROOT = Path(__file__).resolve().parent
 WATCH_DIRS = (build.TEMPLATE_DIR, build.ASSETS_DIR)
-WATCH_FILES = (build.DATA_FILE, ROOT / "build.py")
+BUILD_FILE = ROOT / "build.py"
+WATCH_FILES = (build.DATA_FILE, BUILD_FILE)
 
 
 def snapshot() -> dict[Path, float]:
@@ -70,6 +72,18 @@ def watch_loop(interval: float = 0.5) -> None:
         current = snapshot()
         if current != last:
             print("Change detected — rebuilding…")
+            # A change to build.py itself means nothing until the module is
+            # re-imported: without this the watcher kept rebuilding with the code
+            # it started with. reload() updates the module object in place, so
+            # studio.py's reference to it sees the new code as well. A syntax
+            # error keeps the old module and the last good build.
+            if current.get(BUILD_FILE) != last.get(BUILD_FILE):
+                try:
+                    importlib.reload(build)
+                except Exception as exc:
+                    sys.stderr.write(f"  build.py failed to load ({exc}) — fix it and save again\n")
+                    last = current
+                    continue
             safe_build()
             last = current
 

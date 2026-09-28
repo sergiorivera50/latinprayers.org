@@ -73,6 +73,19 @@ ORDINAL = {1: "First", 2: "Second", 3: "Third", 4: "Fourth", 5: "Fifth"}
 # Empty for now: the Manifesto lived here and has been removed.
 STANDALONE_PAGES: tuple[tuple[str, str, str], ...] = ()
 
+# The landing page's "Prayer of the day": every prayer short enough to hold one
+# pinned screen is in the rotation, in CSV order, so a new short prayer joins it
+# without a list to maintain and the long hymns and litanies never do. Two limits,
+# because either alone lets something through: lines alone admitted the Sacred
+# Heart Acts (a handful of "lines" that are whole paragraphs, 1500+ characters),
+# and characters alone would admit many short lines that stack up just as tall.
+# The characters are counted on whichever of Latin or English is longer, since
+# the taller column sets the height. At these limits the tallest prayer in the
+# pool renders about 640px high on a desktop window. See daily_index for how a
+# day picks one.
+DAILY_MAX_LINES = 11
+DAILY_MAX_CHARS = 400
+
 
 # --------------------------------------------------------------------------- #
 # Helpers
@@ -466,13 +479,94 @@ def build_prayer_page(
     )
 
 
+def _text_length(stanzas: list[list[str]]) -> int:
+    return sum(len(line) for stanza in stanzas for line in stanza)
+
+
+def daily_pool(prayers: list[dict]) -> list[dict]:
+    """The prayers the Prayer of the day rotates through; empty fails the build."""
+    pool = [
+        p for p in prayers
+        if sum(len(stanza) for stanza in p["latin"]) <= DAILY_MAX_LINES
+        and max(_text_length(p["latin"]), _text_length(p["english"])) <= DAILY_MAX_CHARS
+    ]
+    if not pool:
+        fail(
+            f"no prayer is within {DAILY_MAX_LINES} lines and {DAILY_MAX_CHARS} "
+            "characters for the Prayer of the day"
+        )
+    return pool
+
+
+def daily_index(day: datetime.date, size: int) -> int:
+    """Which prayer of the pool a calendar day shows: days since 1970-01-01,
+    wrapped round the pool. main.js (initDailyPrayer) makes the same count from
+    the reader's local date, so the two agree and the page built today already
+    shows today's prayer before any script has run."""
+    return (day.toordinal() - datetime.date(1970, 1, 1).toordinal()) % size
+
+
+def render_daily(pool: list[dict]) -> str:
+    """The night interlude on the landing page: one prayer set out whole, Latin
+    and English side by side, so the landing page shows the thing the site
+    offers rather than only describing it. Set straight onto the night, not on
+    the prayer page's card: that card is a page to sit and read, and on the
+    landing page it read as a widget pasted in.
+
+    The whole pool is emitted and all but one is `hidden`. The build's own day
+    is left showing, so without JS the reader still gets a real prayer (the one
+    for the day of the last deploy); main.js then swaps in the reader's day."""
+    today = daily_index(datetime.date.today(), len(pool))
+    items = []
+    for i, prayer in enumerate(pool):
+        hidden = "" if i == today else " hidden"
+        # One shared row per stanza, so stanza N of the Latin sits opposite
+        # stanza N of the English however differently the two wrap (as on the
+        # prayer pages; see .feature-text in style.css).
+        rows = max(len(prayer["latin"]), len(prayer["english"]), 1)
+        # "about this prayer" lands on the prayer page's own About section when
+        # it has one (the id build_prayer_page gives its heading); otherwise on
+        # the top of the page.
+        about = f'/prayers/{prayer["id"]}/'
+        if _split_paragraphs(prayer["context"]):
+            about += "#prayer-context-title"
+        items.append(
+            f'    <article class="daily"{hidden}>\n'
+            f'      <h3 class="feature-title" lang="la">{esc(prayer["title"])}</h3>\n'
+            f'      <div class="feature-text" style="grid-template-rows: repeat({rows}, auto)">\n'
+            '      <div class="feature-la" lang="la">\n'
+            f'{render_stanzas(prayer["latin"])}\n'
+            '      </div>\n'
+            '      <div class="feature-en" lang="en">\n'
+            f'{render_stanzas(prayer["english"])}\n'
+            '      </div>\n'
+            '      </div>\n'
+            f'      <p class="feature-more">Learn more <a href="{about}">about this prayer</a></p>\n'
+            '    </article>'
+        )
+    return (
+        '<section class="feature" aria-labelledby="feature-eyebrow">\n'
+        '  <div class="feature-stage">\n'
+        '  <img class="feature-bg" src="/assets/img/missal-opened.webp" alt="" '
+        'width="2400" height="1600" loading="lazy" decoding="async">\n'
+        '  <div class="feature-inner">\n'
+        '    <h2 class="feature-eyebrow" id="feature-eyebrow">Prayer of the day</h2>\n'
+        + "\n".join(items) + "\n"
+        '  </div>\n'
+        '  </div>\n'
+        '</section>'
+    )
+
+
 def build_home_page(prayers: list[dict], base_tpl: str, index_tpl: str) -> str:
     """The root page: the hero band and the chapter sections, one per
-    destination. It holds no prayer data of its own — the collection lives at
-    /prayers/ (build_prayers_page) — but the collection's chapter states its
-    size, and that count is taken from the data so it can never drift."""
+    destination, with the Prayer of the day between them (render_daily).
+    The collection itself lives at /prayers/ (build_prayers_page), but the
+    collection's chapter states its size, and that count is taken from the data
+    so it can never drift."""
     content = render(
         index_tpl,
+        prayer_of_the_day=render_daily(daily_pool(prayers)),
         prayer_count=str(len(prayers)),
         category_count=str(len({p["category"] for p in prayers})),
         # The landing page carries the copyright inside its last band rather than
@@ -862,6 +956,7 @@ def main() -> None:
     if "--check" in sys.argv[1:]:
         prayers = load_prayers()
         mysteries = load_mysteries()
+        daily_pool(prayers)
         templates = ["base.html", "prayer.html", "index.html", "prayers.html",
                      "404.html", "rosary.html"]
         templates += [f"{slug}.html" for slug, _, _ in STANDALONE_PAGES]

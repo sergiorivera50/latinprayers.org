@@ -353,6 +353,47 @@ split, so it does not need re-deciding:
   side the words hold. On phones the text runs full width, so the scrim becomes
   an even veil. Each band carries a `.chapter-list` glimpse of what it links to
   (a few prayers; the three sets of mysteries) above its call to action.
+  **Between the two bands sits the Prayer of the day, `.feature`**, on `--night`
+  (`#110f10`), set on a narrow 42rem measure so it reads from the centre. Its
+  ground is an open altar missal (`assets/img/missal-opened.webp`, a 2400px
+  export of the full-size `.jpg`) inside the sticky `.feature-stage`, so the
+  picture locks with the words. The missal's own printed Latin sits right behind
+  the prayer, so it is blurred slightly as well as dimmed (a radial scrim, heavy
+  in the centre, lighter at the sides) and the text carries a soft dark halo;
+  the scrim's top and bottom close to exactly `--night` to meet the bands. Its
+  pool is every prayer within `DAILY_MAX_LINES` Latin lines AND `DAILY_MAX_CHARS`
+  characters (on the longer of Latin/English), in CSV order, so there is no list
+  to maintain. Both limits are needed: lines alone let in the Sacred Heart Acts,
+  whose few "lines" are whole paragraphs (one rendered 2325px tall, pinned and
+  clipped). The limits aim at one pinned screen; for windows shorter than that,
+  `initDailyReveal` adds `feature--free` when today's prayer is taller than the
+  window, which drops the lock exactly as on a phone, and the stage never clips
+  (`clip-path` holds the blurred picture in instead of `overflow: hidden`), so
+  even without JS nothing is cut off. `render_daily` emits the whole pool with all
+  but one `hidden`; the visible one is the build day's pick, so without JS the
+  page still shows a real prayer. `initDailyPrayer` in `main.js` then shows the
+  reader's own day by the same count (`daily_index`: days since 1970-01-01 from
+  the LOCAL date, mod pool size); change one and you must change the other. The
+  text is set straight onto the ground (the prayer page's card was tried here
+  and read as a pasted-in widget), under only its eyebrow and Latin title, with
+  stanzas aligned across the two columns by subgrid rows as on prayer pages.
+  **It locks in place:** the section is `200svh` and its content a screen-high
+  `position: sticky` block, so the prayer holds in the middle of the screen for
+  a whole screen of scrolling. `initDailyReveal` keeps it hidden until the reader
+  has scrolled in, then brings its pieces up one after another (fade plus a
+  16px rise), tied to scroll position rather than a timer so it reverses on the
+  way back up; it is finished under a third of the way into the lock. Both are
+  off on phones and short windows (`max-width: 38rem` / `max-height: 34rem`,
+  one query shared by CSS and JS), where a pinned stacked prayer can outgrow the
+  screen and its foot would be unreachable; reduced motion drops the reveal but
+  keeps the lock. Nothing is hidden by CSS, so without JS the prayer simply
+  shows. `position: sticky` works here only because the site's full-bleed guard
+  is `overflow-x: clip`, not `hidden`: an `overflow: hidden` ancestor would
+  silently unpin it. It is deliberately not a `.chapter`: it is left out of the
+  text fade, though `main.js` lists it among the dark grounds for the masthead. The
+  bands either side carry `.chapter--into-night` / `.chapter--from-night`, which
+  feather their facing edge into exactly `--night` (a `::before` over the scrim)
+  and drop the 1px border there, so the joins have no seam.
   **Every band is at least one viewport tall (`100svh`).** The wheel is taken
   over and given weight on **every route**, not only this one (`initFloatScroll`
   in `main.js`): the weight is how the site scrolls, not a trick the landing page

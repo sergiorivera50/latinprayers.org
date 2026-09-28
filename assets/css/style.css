@@ -128,6 +128,9 @@
   --dark-deep:  #171715;   /* a layer below it (rails, chips) */
   --dark-gold:  #d7b264;   /* accent on the dark ground */
   --dark-line:  rgba(255, 255, 255, 0.09);
+  --night:      #110f10;   /* the Prayer of the day's ground on the landing page.
+                              The bands fade into exactly this
+                              (.chapter--into-night / --from-night). */
   --hero-canvas: #131212;  /* the ground Bonnat painted the Crucifixion on. The
                               root route's canvas and its hero's standing-in
                               colour are both this, so the page the painting
@@ -1166,6 +1169,219 @@ body:has(.page-band) .site-header {
 }
 .home .site-footer { display: none; }
 
+/* ---- The featured prayer: the interlude between the two bands. Two picture
+   bands in a row read as the same section twice; this one is their opposite
+   (no photograph, the prayer itself rather than a description of it), set on
+   --night so the page runs picture, night, picture. Its content is kept
+   spare: its name, the Latin title, the text, the way through.
+   It is NOT a .chapter, but main.js counts it among the dark grounds so the
+   masthead keeps its dark veil over it.
+   The text is set straight onto the night, as the hero sets its title, rather
+   than on the prayer page's open-book card: that card is a page to sit and
+   read, and here it read as a widget pasted onto the landing page. */
+/* The lock: the section is two screens tall and its stage is a screen-high
+   sticky block within it, so as the reader scrolls the prayer comes up to the
+   middle of the screen and stays there for a whole screen of scrolling before
+   the next band takes it away. The picture is inside the stage, so it locks
+   with the words. initDailyReveal in main.js brings the pieces in as the lock
+   engages; without JS they are simply there. */
+.feature {
+  background: var(--night);
+  min-height: 200vh;             /* fallback for engines without the v* units */
+  min-height: 200svh;
+}
+.feature-stage {
+  position: sticky;
+  top: 0;
+  isolation: isolate;            /* keeps the picture and scrim inside it */
+  display: flex;
+  align-items: center;
+  min-height: 100vh;
+  min-height: 100svh;
+}
+/* An open altar missal: the right picture for a prayer, and the wrong ground
+   for one, since its own printed Latin and red rubrics sit exactly where the
+   prayer's text goes. So it is softened as well as dimmed: a slight blur takes
+   its lettering down to texture, so it cannot be read against the words set
+   over it. clip-path keeps the blur inside the picture's own box; the stage
+   itself does not clip, so a prayer taller than the screen is never cut off. */
+.feature-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 45%;
+  filter: blur(2px);
+  clip-path: inset(0);
+}
+/* Heavy where the words are, lighter out at the sides so the candles and the
+   icon still show; and the top and bottom close to exactly --night, so the
+   stage meets the bands' own feathered edges without a seam. */
+.feature-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(to bottom,
+      var(--night) 0%,
+      rgba(17, 15, 16, 0) 22%,
+      rgba(17, 15, 16, 0) 78%,
+      var(--night) 100%),
+    radial-gradient(ellipse 60% 70% at 50% 50%,
+      rgba(17, 15, 16, 0.88) 0%,
+      rgba(17, 15, 16, 0.82) 55%,
+      rgba(17, 15, 16, 0.62) 100%);
+}
+/* A narrow measure, so both columns sit close to the centre line and the eye
+   never has far to travel from it. */
+.feature-inner {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: clamp(2rem, 6vh, 3.5rem) 1.5rem;
+  text-align: center;
+}
+/* No lock where a pinned screen could not hold the prayer: a phone, where the
+   two columns stack and a long prayer outgrows the screen (pinned, its foot
+   would be unreachable), and a window too short for any band. The section is
+   then as tall as its content, the picture behind it all. main.js asks the
+   same query and stands the reveal down with it. */
+@media (max-width: 38rem), (max-height: 34rem) {
+  .feature { min-height: 0; }
+  .feature-stage { position: relative; min-height: 0; }
+  .feature-inner { padding: clamp(3rem, 8vh, 4.5rem) 1.5rem; }
+}
+/* The same, set by main.js when today's prayer is taller than this window
+   (a short laptop screen): the pool is capped to fit a screen, but not every
+   screen. */
+.feature--free { min-height: 0; }
+.feature--free .feature-stage { position: relative; min-height: 0; }
+.feature--free .feature-inner { padding: clamp(3rem, 8vh, 4.5rem) 1.5rem; }
+.feature-title {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(1.55rem, 2.6vw, 1.85rem);
+  line-height: 1.15;
+  letter-spacing: 0.005em;
+  color: var(--ivory);
+  margin: 0 0 1.4rem;
+}
+/* The section's name, above whichever prayer the day has picked. */
+.feature-eyebrow {
+  margin: 0 0 0.45rem;
+  font-family: var(--serif);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--dark-gold);
+}
+/* Two columns meeting at a gold hairline, the Latin carrying the weight and the
+   English beside it as its quieter gloss.
+   The row count is emitted inline per prayer, one per stanza, and both columns
+   subgrid onto those rows so the stanzas line up across the rule (the prayer
+   pages' .prayer-body does the same). */
+.feature-text {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  row-gap: 0.85rem;
+  text-align: left;
+}
+.feature-la, .feature-en {
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: 1 / -1;
+}
+.feature-la { padding-right: 1.5rem; border-right: 1px solid rgba(215, 178, 100, 0.35); }
+.feature-en { padding-left: 1.5rem; }
+.feature .prayer-stanza { margin: 0; }
+.feature-la .prayer-stanza {
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: 1.1rem;
+  line-height: 1.55;
+  color: var(--ivory);
+}
+.feature-en .prayer-stanza {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 1.03rem;
+  line-height: 1.55;
+  color: rgba(246, 241, 231, 0.8);
+}
+/* A soft dark halo under the words, so the brighter patches of the missal
+   (its right-hand page above all) never come up against a letter's edge. */
+.feature-inner { text-shadow: 0 1px 12px rgba(17, 15, 16, 0.9), 0 0 2px rgba(17, 15, 16, 0.6); }
+/* The liturgical red is pitched for ivory paper; on black it takes the lifted
+   crimson the dark register uses. */
+.feature .vr { color: #d0616a; }
+@media (max-width: 38rem) {
+  /* Stacked: no shared rows; each column flows its own stanzas. */
+  .feature-text { display: block; }
+  .feature-la, .feature-en { display: block; }
+  .feature .prayer-stanza + .prayer-stanza { margin-top: 1em; }
+  .feature-la {
+    padding: 0 0 1.2rem;
+    border-right: 0;
+    border-bottom: 1px solid rgba(215, 178, 100, 0.35);
+  }
+  .feature-en { padding: 1.2rem 0 0; }
+}
+/* The way through is a line of text rather than a button, so the prayer and
+   not a call to action holds the middle of the screen; only its last words are
+   the link, in the dark ground's gold. */
+.feature-more {
+  margin: 1.5rem 0 0;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: rgba(246, 241, 231, 0.7);
+}
+.feature-more a {
+  color: var(--dark-gold);
+  text-decoration: underline;
+  text-decoration-color: rgba(215, 178, 100, 0.45);
+  text-underline-offset: 3px;
+  transition: color 0.15s var(--ease), text-decoration-color 0.15s var(--ease);
+}
+.feature-more a:hover, .feature-more a:focus-visible {
+  color: #e6c47b;
+  text-decoration-color: currentColor;
+}
+/* The bands either side feather into the night rather than stopping against
+   it. Their own vertical veils are light at the edges (the daylight photographs
+   are meant to stay lit), so without this a lit photograph would cut hard
+   against the black. The feather is laid ABOVE the scrim and ends in the exact
+   canvas colour, so the join has no seam; the text is lifted over it, and the
+   band's 1px border is dropped on the side that meets the night. */
+.chapter--into-night::before,
+.chapter--from-night::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 0;
+  height: clamp(7rem, 26vh, 14rem);
+  pointer-events: none;
+}
+.chapter--into-night::before {
+  bottom: 0;
+  background: linear-gradient(to bottom, rgba(17, 15, 16, 0), var(--night));
+}
+.chapter--from-night::before {
+  top: 0;
+  background: linear-gradient(to top, rgba(17, 15, 16, 0), var(--night));
+}
+/* Doubled class: .chapter--dark sets border-block further down the file. */
+.chapter--dark.chapter--into-night { border-bottom: 0; }
+.chapter--dark.chapter--from-night { border-top: 0; }
+.chapter--into-night .chapter-inner,
+.chapter--from-night .chapter-inner { position: relative; z-index: 1; }
+
 
 /* ---- The night chapter. Everything muted is restated against the dark ground:
    --ink-soft and --ink-faint are pitched for ivory and go murky on black, and
@@ -2105,7 +2321,10 @@ body:has(.page-band) .site-header {
   padding-top: 2rem;
   border-top: 1px solid var(--line);
 }
+/* The landing page's Prayer of the day links straight here
+   (#prayer-context-title), so the heading must clear the pinned masthead. */
 .prayer-context-title {
+  scroll-margin-top: calc(1.5rem + var(--anchor-clear));
   margin: 0 0 1.2rem;
   text-align: center;
   font-family: var(--display);
