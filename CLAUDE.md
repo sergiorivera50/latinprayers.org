@@ -366,7 +366,7 @@ split, so it does not need re-deciding:
   to maintain. Both limits are needed: lines alone let in the Sacred Heart Acts,
   whose few "lines" are whole paragraphs (one rendered 2325px tall, pinned and
   clipped). The limits aim at one pinned screen; for windows shorter than that,
-  `initDailyReveal` adds `feature--free` when today's prayer is taller than the
+  `initLockReveal` adds `lock--free` when today's prayer is taller than the
   window, which drops the lock exactly as on a phone, and the stage never clips
   (`clip-path` holds the blurred picture in instead of `overflow: hidden`), so
   even without JS nothing is cut off. `render_daily` emits the whole pool with all
@@ -379,7 +379,7 @@ split, so it does not need re-deciding:
   stanzas aligned across the two columns by subgrid rows as on prayer pages.
   **It locks in place:** the section is `200svh` and its content a screen-high
   `position: sticky` block, so the prayer holds in the middle of the screen for
-  a whole screen of scrolling. `initDailyReveal` keeps it hidden until the reader
+  a whole screen of scrolling. `initLockReveal` keeps it hidden until the reader
   has scrolled in, then brings its pieces up one after another (fade plus a
   16px rise), tied to scroll position rather than a timer so it reverses on the
   way back up; it is finished under a third of the way into the lock. Both are
@@ -394,6 +394,29 @@ split, so it does not need re-deciding:
   bands either side carry `.chapter--into-night` / `.chapter--from-night`, which
   feather their facing edge into exactly `--night` (a `::before` over the scrim)
   and drop the 1px border there, so the joins have no seam.
+  **The two bands lock in place too, at the maintainer's request, the same way
+  the Prayer of the day does.** Each band sits in a two-screen `.chapter-lock`
+  and is itself the `position: sticky` stage (it was already a screen tall and
+  positioned, so its picture, scrim and feathers hold still with it and nothing
+  inside changed). `initLockReveal` drives all three locks from one loop,
+  revealing each band's `.chapter-body` children in turn; `initTextFade` still
+  fades the body as a whole as the band leaves, and because one works on the
+  pieces and the other on their container the two compose. Same off-switches as
+  the Prayer of the day (phones, short windows, a stage taller than the window).
+  This is **not** the pinned stack recorded below as removed: nothing
+  cross-fades and nothing is stacked; each band holds, then scrolls away as
+  normal. The cost is length: the landing page is three screens longer.
+  **The three locks share a mechanism but not a choreography.** Timing, easing
+  and order are common (`REVEAL_FROM`/`REVEAL_TO`/`REVEAL_SPAN`); the movement
+  follows each layout. The Prayer of the day is centred, so its pieces rise.
+  A band is a place, then words about it: its picture settles first from a
+  slight push-in (`BAND_PUSH`) while its scrim deepens (the `--scrim-in` custom
+  property on the band, read by its `::after`), finishing as the lock engages;
+  then its words slide in sideways from the side they live on (`BAND_SLIDE`,
+  mirrored on `.chapter--reverse`), the `.chapter-list` rows one at a time with
+  the list's own hairline arriving unmoved ahead of them. Varying the direction
+  and staging per layout was chosen over giving each section an unrelated
+  effect, which would read as a showcase rather than one page.
   **Every band is at least one viewport tall (`100svh`).** The wheel is taken
   over and given weight on **every route**, not only this one (`initFloatScroll`
   in `main.js`): the weight is how the site scrolls, not a trick the landing page

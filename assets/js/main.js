@@ -987,19 +987,23 @@
     for (var i = 0; i < items.length; i++) items[i].hidden = i !== pick;
   }
 
-  // ---- Prayer of the day: the reveal -----------------------------------------
-  // The section is two screens tall and its content is pinned to the middle of
-  // the screen through it (see .feature in style.css). This keeps the prayer
-  // out of sight until the reader has scrolled into the section, then brings it
-  // in piece by piece (its name, the title, the Latin, the English, the line
-  // that leads on to the prayer's page) as the lock engages, each fading up and rising a few pixels. It is
-  // tied to the scroll position, not to a timer, so it runs backwards when the
-  // reader scrolls back up and can be stopped anywhere.
+  // ---- Locked sections: the reveal -----------------------------------------
+  // Three sections of the landing page lock in place: the two picture bands and
+  // the Prayer of the day. Each is a two-screen box holding a screen-high sticky
+  // stage (see .chapter-lock and .feature in style.css), so as the reader
+  // scrolls the stage comes up, holds still for a whole screen, and only then
+  // gives way to the next. This keeps each stage's words out of sight until the
+  // reader has scrolled into it, then brings them in piece by piece, each fading
+  // up and rising a few pixels. It is tied to the scroll position, not to a
+  // timer, so it runs backwards when the reader scrolls back up and can be
+  // stopped anywhere. (On the bands the words also fade OUT as the band leaves,
+  // by initTextFade, which works on the whole .chapter-body while this works on
+  // the pieces inside it, so the two compose rather than fight.)
   //
-  // The window is measured by where the section's top edge sits, as a share of
-  // the screen: nothing is shown while it is below REVEAL_FROM, everything once
-  // it is REVEAL_TO above the top. The lock lasts a whole screen, so the reveal
-  // is finished less than a third of the way into it and the prayer then holds
+  // The window is measured by where the box's top edge sits, as a share of the
+  // screen: nothing is shown while it is below REVEAL_FROM, everything once it
+  // is REVEAL_TO above the top. The lock lasts a whole screen, so the reveal is
+  // finished less than a third of the way into it and the stage then holds
   // still for the rest. Off where the lock is off (the same query as the CSS),
   // and under reduced motion; both are asked live and put everything back.
   var REVEAL_FROM = 0.45;
@@ -1007,57 +1011,143 @@
   var REVEAL_SPAN = 0.4;   // share of the window each piece takes to arrive
   var REVEAL_RISE = 16;    // px each piece travels up as it arrives
 
-  function initDailyReveal() {
+  // How each section arrives follows from how it is laid out, while the timing,
+  // easing and order are shared so the three still read as one page.
+  //   The Prayer of the day is centred and symmetrical: a text laid out for
+  //   reading, so its pieces simply rise into place.
+  //   A band is a place, then words about it: its picture settles first (from a
+  //   slight push-in to rest, as the hero's painting does on arrival) while the
+  //   scrim deepens on the text side, and then its words slide in sideways from
+  //   the side they live on (the left, or the right on a .chapter--reverse band),
+  //   the list row by row, since as one block it was the heaviest thing to land.
+  var BAND_SLIDE = 22;         // px a band's words travel in from their side
+  var BAND_PUSH = 0.16;        // how far a band's picture starts pushed in
+  var BAND_SCRIM_FROM = 0.55;  // the scrim's strength before it has deepened
+  var PICTURE_FROM = 1;        // picture beat: from the moment the band enters...
+  var PICTURE_TO = 0;          // ...to here (the moment the lock engages)
+
+  function lockedSections() {
+    var locks = [];
+    var bands = document.querySelectorAll(".chapter-lock");
+    for (var i = 0; i < bands.length; i++) {
+      var band = bands[i].querySelector(".chapter");
+      var body = band && band.querySelector(".chapter-body");
+      if (!body) continue;
+      var dx = band.classList.contains("chapter--reverse") ? BAND_SLIDE : -BAND_SLIDE;
+      var pieces = [];
+      for (var c = 0; c < body.children.length; c++) {
+        var child = body.children[c];
+        if (child.classList.contains("chapter-list")) {
+          // The list's own hairline comes with it, unmoved; its rows then
+          // arrive one at a time. (Moving the list too would move every row
+          // twice.)
+          pieces.push({ el: child, dx: 0, dy: 0 });
+          for (var r = 0; r < child.children.length; r++) {
+            pieces.push({ el: child.children[r], dx: dx, dy: 0 });
+          }
+        } else {
+          pieces.push({ el: child, dx: dx, dy: 0 });
+        }
+      }
+      locks.push({
+        box: bands[i],
+        stage: band,
+        picture: band.querySelector(".chapter-bg"),
+        pieces: pieces
+      });
+    }
+    var feature = document.querySelector(".feature");
+    var article = feature && feature.querySelector(".daily:not([hidden])");
+    if (article) {
+      locks.push({
+        box: feature,
+        stage: feature.querySelector(".feature-stage"),
+        picture: null,
+        pieces: [
+          feature.querySelector(".feature-eyebrow"),
+          article.querySelector(".feature-title"),
+          article.querySelector(".feature-la"),
+          article.querySelector(".feature-en"),
+          article.querySelector(".feature-more")
+        ].filter(Boolean).map(function (el) {
+          return { el: el, dx: 0, dy: REVEAL_RISE };
+        })
+      });
+    }
+    return locks;
+  }
+
+  function initLockReveal() {
     if (!window.matchMedia) return;
-    var section = document.querySelector(".feature");
-    var article = section && section.querySelector(".daily:not([hidden])");
-    if (!article) return;
-    var pieces = [
-      section.querySelector(".feature-eyebrow"),
-      article.querySelector(".feature-title"),
-      article.querySelector(".feature-la"),
-      article.querySelector(".feature-en"),
-      article.querySelector(".feature-more")
-    ].filter(Boolean);
+    var locks = lockedSections();
+    if (!locks.length) return;
     var still = window.matchMedia("(prefers-reduced-motion: reduce)");
     var unlocked = window.matchMedia("(max-width: 38rem), (max-height: 34rem)");
-    var inner = section.querySelector(".feature-inner");
-    var step = (1 - REVEAL_SPAN) / Math.max(pieces.length - 1, 1);
     var queued = false;
     var measuredH = 0;
 
-    // The pool is capped to fit a screen, but a short laptop window is shorter
-    // than most: if today's prayer is taller than this window, the lock stands
-    // down (feature--free) exactly as it does on a phone, rather than pinning a
-    // prayer whose foot the reader could not reach. Measured only when the
-    // window's height changes. Freeing the section can only make the block
-    // taller (its padding grows), so this cannot flip back and forth.
+    // Every stage is meant to fit a screen, but a short laptop window is
+    // shorter than most: a stage taller than this window has its lock stood
+    // down (lock--free) exactly as on a phone, rather than pinning something
+    // whose foot the reader could not reach. Measured only when the window's
+    // height changes. Freeing a stage can only make it taller (it drops its
+    // screen-high minimum, and the Prayer of the day's padding grows), so this
+    // cannot flip back and forth.
     function fit() {
       if (window.innerHeight === measuredH) return;
       measuredH = window.innerHeight;
-      section.classList.remove("feature--free");
-      if (inner.offsetHeight > measuredH) section.classList.add("feature--free");
+      for (var i = 0; i < locks.length; i++) {
+        var lock = locks[i];
+        lock.box.classList.remove("lock--free");
+        lock.free = lock.stage.offsetHeight > measuredH + 1;
+        if (lock.free) lock.box.classList.add("lock--free");
+      }
+    }
+
+    function clamp01(v) { return Math.min(Math.max(v, 0), 1); }
+    function smooth(t) { return t * t * (3 - 2 * t); }
+
+    function reveal(lock, off) {
+      var top = lock.box.getBoundingClientRect().top / window.innerHeight;
+
+      // The picture beat, bands only: it runs ahead of the words, from well
+      // before the lock to the moment it engages, so the place is at rest by
+      // the time anything is said about it.
+      if (lock.picture) {
+        var q = smooth(clamp01((PICTURE_FROM - top) / (PICTURE_FROM - PICTURE_TO)));
+        if (off || q === 1) {
+          lock.picture.style.transform = "";
+          lock.stage.style.removeProperty("--scrim-in");
+        } else {
+          lock.picture.style.transform = "scale(" + (1 + (1 - q) * BAND_PUSH).toFixed(4) + ")";
+          lock.stage.style.setProperty("--scrim-in",
+            (BAND_SCRIM_FROM + (1 - BAND_SCRIM_FROM) * q).toFixed(3));
+        }
+      }
+
+      var p = clamp01((REVEAL_FROM - top) / (REVEAL_FROM - REVEAL_TO));
+      var step = (1 - REVEAL_SPAN) / Math.max(lock.pieces.length - 1, 1);
+      for (var i = 0; i < lock.pieces.length; i++) {
+        var piece = lock.pieces[i];
+        var e = smooth(clamp01((p - i * step) / REVEAL_SPAN));
+        if (off || e === 1) {
+          piece.el.style.opacity = "";
+          piece.el.style.transform = "";
+        } else {
+          piece.el.style.opacity = String(Math.round(e * 1000) / 1000);
+          piece.el.style.transform = (piece.dx || piece.dy)
+            ? "translate(" + ((1 - e) * piece.dx).toFixed(1) + "px, " +
+              ((1 - e) * piece.dy).toFixed(1) + "px)"
+            : "";
+        }
+      }
     }
 
     function update() {
       queued = false;
       fit();
-      var off = still.matches || unlocked.matches ||
-        section.classList.contains("feature--free");
-      var top = section.getBoundingClientRect().top / window.innerHeight;
-      var p = Math.min(Math.max((REVEAL_FROM - top) / (REVEAL_FROM - REVEAL_TO), 0), 1);
-      for (var i = 0; i < pieces.length; i++) {
-        var el = pieces[i];
-        var t = Math.min(Math.max((p - i * step) / REVEAL_SPAN, 0), 1);
-        var e = t * t * (3 - 2 * t);
-        if (off || e === 1) {
-          el.style.opacity = "";
-          el.style.transform = "";
-        } else {
-          el.style.opacity = String(Math.round(e * 1000) / 1000);
-          el.style.transform = "translateY(" + ((1 - e) * REVEAL_RISE).toFixed(1) + "px)";
-        }
-      }
+      var off = still.matches || unlocked.matches;
+      for (var i = 0; i < locks.length; i++) reveal(locks[i], off || locks[i].free);
     }
     function queue() {
       if (queued) return;
@@ -1276,7 +1366,7 @@
     initTextFade();
     initStickyHeader();
     initDailyPrayer();
-    initDailyReveal();
+    initLockReveal();
     initCopyButtons();
     initShareDock();
   }

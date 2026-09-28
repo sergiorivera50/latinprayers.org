@@ -1183,7 +1183,7 @@ body:has(.page-band) .site-header {
    sticky block within it, so as the reader scrolls the prayer comes up to the
    middle of the screen and stays there for a whole screen of scrolling before
    the next band takes it away. The picture is inside the stage, so it locks
-   with the words. initDailyReveal in main.js brings the pieces in as the lock
+   with the words. initLockReveal in main.js brings the pieces in as the lock
    engages; without JS they are simply there. */
 .feature {
   background: var(--night);
@@ -1255,12 +1255,12 @@ body:has(.page-band) .site-header {
   .feature-stage { position: relative; min-height: 0; }
   .feature-inner { padding: clamp(3rem, 8vh, 4.5rem) 1.5rem; }
 }
-/* The same, set by main.js when today's prayer is taller than this window
-   (a short laptop screen): the pool is capped to fit a screen, but not every
-   screen. */
-.feature--free { min-height: 0; }
-.feature--free .feature-stage { position: relative; min-height: 0; }
-.feature--free .feature-inner { padding: clamp(3rem, 8vh, 4.5rem) 1.5rem; }
+/* The same, set by main.js (lock--free) when today's prayer is taller than
+   this window (a short laptop screen): the pool is capped to fit a screen, but
+   not every screen. */
+.feature.lock--free { min-height: 0; }
+.feature.lock--free .feature-stage { position: relative; min-height: 0; }
+.feature.lock--free .feature-inner { padding: clamp(3rem, 8vh, 4.5rem) 1.5rem; }
 .feature-title {
   font-family: var(--display);
   font-weight: 600;
@@ -1352,6 +1352,34 @@ body:has(.page-band) .site-header {
   color: #e6c47b;
   text-decoration-color: currentColor;
 }
+/* ---- The bands lock in place too, the same way the Prayer of the day does:
+   each band sits in a two-screen .chapter-lock and is itself the sticky stage,
+   so its picture, scrim and feathered edges all hold still with its words for
+   a whole screen of scrolling. initLockReveal in main.js brings the words in
+   piece by piece as the lock engages. The band is already a screen tall and
+   positioned (sticky, like relative, anchors its picture and scrim), so
+   nothing inside it changes.
+   This is not the pinned stack that was built and removed (see CLAUDE.md):
+   nothing cross-fades, each band simply holds, then scrolls away as usual. */
+.chapter-lock {
+  min-height: 200vh;             /* fallback for engines without the v* units */
+  min-height: 200svh;
+}
+.chapter-lock > .chapter--band { position: sticky; top: 0; }
+/* The picture beat (initLockReveal): the band's picture settles from a slight
+   push-in and its scrim deepens, through --scrim-in, before the words arrive.
+   Both rest at their ordinary values, so without JS nothing differs. */
+.chapter-lock > .chapter--band::after { opacity: var(--scrim-in, 1); }
+.chapter-lock .chapter-bg { will-change: transform; }
+/* Off on phones and short windows (the query the Prayer of the day uses, and
+   main.js asks), and wherever main.js finds the band taller than the window. */
+@media (max-width: 38rem), (max-height: 34rem) {
+  .chapter-lock { min-height: 0; }
+  .chapter-lock > .chapter--band { position: relative; }
+}
+.chapter-lock.lock--free { min-height: 0; }
+.chapter-lock.lock--free > .chapter--band { position: relative; }
+
 /* The bands either side feather into the night rather than stopping against
    it. Their own vertical veils are light at the edges (the daylight photographs
    are meant to stay lit), so without this a lit photograph would cut hard
